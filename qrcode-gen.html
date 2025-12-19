@@ -1,0 +1,151 @@
+<!-- 字符串转二维码单文件工具（原生HTML+qrious，无需构建，可直接用） -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二维码生成器 - 支持下载/复制</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin:0; padding:24px 8px 12px 8px; background:#f7f8fa; }
+    h1 { font-size: 22px; margin-bottom: 10px; }
+    textarea {
+      width:100%; min-height:64px; font-size:15px; font-family:monospace;
+      border:1px solid #d5d8db; border-radius:7px; padding:10px; box-sizing:border-box;
+      margin-bottom:12px;
+      resize:vertical;
+    }
+    .flex-row { display: flex; gap: 12px; align-items:center; margin-bottom:12px; }
+    button {
+      font-size: 16px;
+      min-width: 88px;
+      min-height: 44px;
+      margin-right:4px;
+      background: #105cff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition:background 0.17s;
+    }
+    button:active { background:#06396c; }
+    .btn-copy, .btn-dl { background:#03a772; }
+    .btn-copy:active, .btn-dl:active { background:#055c3b; }
+    .qr-preview {
+      background:#fff; border-radius:7px; box-shadow:0 1px 7px #0001; padding:18px; display:inline-block;
+      margin-bottom:12px;
+    }
+    .hide { display:none; }
+    #error-msg { color:#c42b2b; background:#fff1f1; border:1px solid #f2acac; border-radius:5px; padding:5px 10px; margin:0 0 8px 0; }
+    .debug-panel { border:1px dashed #bababa; margin:7px 0 0 0; background:#fcfcfd; padding:7px 10px; font-size:13px; }
+    @media (max-width:600px) {
+      button{ min-width:44px;font-size:15px; }
+      textarea{font-size:14px}
+      .qr-preview{padding:8px;}
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js" onerror="alert('依赖加载失败，请检查CDN链接')"></script>
+</head>
+<body>
+  <h1>二维码生成工具</h1>
+  <textarea id="input" placeholder="请输入待编码字符串（支持URL/文本）"></textarea>
+  <div class="flex-row">
+    <button id="gen-btn">生成二维码</button>
+    <button id="copy-btn" class="btn-copy">复制二维码</button>
+    <button id="dl-btn" class="btn-dl">下载二维码</button>
+    <label><input type="checkbox" id="debug-toggle"> 显示调试面板</label>
+  </div>
+  <div id="error-msg" class="hide"></div>
+  <div class="qr-preview hide" id="qr-wrap"><canvas id="qr-canvas"></canvas></div>
+  <div id="debug-panel" class="debug-panel" style="display:none"></div>
+  <script>
+    const input = document.getElementById('input');
+    const genBtn = document.getElementById('gen-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const dlBtn = document.getElementById('dl-btn');
+    const debugToggle = document.getElementById('debug-toggle');
+    const errorMsg = document.getElementById('error-msg');
+    const qrWrap = document.getElementById('qr-wrap');
+    const qrCanvas = document.getElementById('qr-canvas');
+    const debugPanel = document.getElementById('debug-panel');
+
+    let qr = null;
+    // 获取当前数据
+    function getStr() {
+      return input.value.trim();
+    }
+    // 渲染二维码
+    function renderQR() {
+      const str = getStr();
+      errorMsg.classList.add('hide');
+      qrWrap.classList.add('hide');
+      if (!str) {
+        errorMsg.textContent = '请输入内容'; errorMsg.classList.remove('hide');
+        return;
+      }
+      try {
+        if (!qr) qr = new QRious({element: qrCanvas, size: 224});
+        qr.set({value:str, size:224, background: 'white', foreground:'#222'});
+        qrWrap.classList.remove('hide');
+        debugPanel.innerText = debugToggle.checked ? 'base64:' + qr.toDataURL('image/png').slice(0,110)+'...\n文本:' + str : '';
+      } catch(e) {
+        errorMsg.textContent = '二维码生成失败：'+e.message;
+        errorMsg.classList.remove('hide');
+        qrWrap.classList.add('hide');
+        debugPanel.innerText = debugToggle.checked ? '异常：'+e.message+'\n原文:'+str : '';
+      }
+    }
+    genBtn.onclick = renderQR;
+    // 快捷键 Ctrl+Enter
+    input.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();renderQR();}});
+    // 复制二维码到剪贴板
+    copyBtn.onclick = function() {
+      if (qr && qrCanvas) {
+        qrCanvas.toBlob(function(blob) {
+          const item = new ClipboardItem({'image/png': blob});
+          navigator.clipboard.write([item]).then(function(){
+            copyBtn.textContent='已复制!';setTimeout(()=>copyBtn.textContent='复制二维码',1100);
+          },function(){
+            alert('复制失败，建议手动保存。');
+          });
+        });
+      } else {
+        alert('请先生成二维码');
+      }
+    };
+    // 下载二维码图片
+    dlBtn.onclick = function() {
+      if(qr&&qrCanvas) {
+        const url = qrCanvas.toDataURL("image/png");
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'qrcode.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        alert('请先生成二维码');
+      }
+    };
+    // 调试面板
+    debugToggle.onchange = function(){
+      debugPanel.style.display = debugToggle.checked ? '' : 'none';
+      if (qr && qrCanvas && debugToggle.checked) {
+        debugPanel.innerText = 'base64:' + qr.toDataURL('image/png').slice(0,110)+'...\n文本:' + getStr();
+      }
+    };
+    // 支持url参数自动生成
+    window.onload = function(){
+      const params = new URLSearchParams(location.search);
+      if(params.get('str')){
+        try{const val=decodeURIComponent(params.get('str'));input.value=val;renderQR();}catch{}}
+    };
+  </script>
+  <!--
+    工具元信息：
+    核心提示词：基于Simon Willison单文件哲学开发HTML工具，要求：1. 单个HTML文件，内嵌JS/CSS，无构建步骤，No React；2. 核心功能：字符串转二维码，支持下载与复制；3. 依赖：qrious@4.0.2（jsdelivr）；4. 交互：输入区、二维码显示、按钮；5. 状态存储：支持URL参数。 
+    依赖CDN：https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js
+    最后修改：2025-12-19
+  -->
+</body>
+</html>
+

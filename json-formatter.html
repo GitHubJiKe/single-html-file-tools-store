@@ -1,0 +1,222 @@
+<!-- JSON 格式化与字段折叠工具（单文件HTML实现，无需构建步骤）-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON 格式化与字段折叠工具</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #fafbfc; }
+    h1 { font-size: 22px; margin-bottom: 10px; }
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      resize: vertical;
+      font-family: monospace;
+      font-size: 15px;
+      border: 1px solid #dadada;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    .flex-row { display: flex; gap: 12px; margin-bottom: 10px; }
+    button {
+      font-size: 16px;
+      min-width: 88px;
+      min-height: 44px;
+      border: none;
+      border-radius: 6px;
+      background: #006aff;
+      color: #fff;
+      cursor: pointer;
+      margin: 0 4px 0 0;
+      transition: background 0.2s;
+    }
+    button:active { background: #00306e; }
+    .error { color: #cf2323; background: #fff6f6; border: 1px solid #f5c3c3; border-radius: 5px; padding: 5px 10px; margin-top: 6px; }
+    #json-tree {
+      margin: 8px 0 2px 0; font-family: monospace; white-space: pre; font-size: 15px;
+      border: 1px solid #eee; background: #fff; border-radius: 6px;
+      padding: 10px; overflow-x: auto; min-height: 40px;
+    }
+    .json-key { color: #0366d6; }
+    .json-string { color: #24a148; }
+    .json-number { color: #b08810; }
+    .json-boolean { color: #e36209; }
+    .json-null { color: #8c8c8c; font-style: italic; }
+    .fold-arrow { cursor: pointer; color: #888; user-select: none; margin-right: 2px; font-weight: bold; }
+    .copy-btn { background: #00a86b; }
+    .copy-btn:active { background: #004e32; }
+    .debug-panel { border:1px dashed #bababa; margin:8px 0 0 0; background:#fcfcfd; padding:7px 10px; font-size:13px; }
+    @media (max-width: 600px) {
+      button { min-width: 44px; font-size: 15px; }
+      textarea, #json-tree { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>JSON 格式化与字段折叠工具</h1>
+  <textarea id="input" placeholder="请输入 JSON 字符串"></textarea>
+  <div class="flex-row">
+    <button id="format-btn">格式化</button>
+    <button id="copy-btn" class="copy-btn">一键复制</button>
+    <label><input type="checkbox" id="debug-toggle"> 显示调试面板</label>
+  </div>
+  <div id="error-msg" class="error" style="display:none"></div>
+  <div id="json-tree"></div>
+  <div id="debug-panel" class="debug-panel" style="display:none"></div>
+  <script>
+    // 获取元素
+    const input = document.getElementById('input');
+    const formatBtn = document.getElementById('format-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const errorMsg = document.getElementById('error-msg');
+    const jsonTree = document.getElementById('json-tree');
+    const debugPanel = document.getElementById('debug-panel');
+    const debugToggle = document.getElementById('debug-toggle');
+
+    let lastValidObj = null;
+    let lastFormattedText = '';
+    let foldState = {};
+
+    function syntaxHighlight(key, value) {
+      if (typeof value === 'string') return '<span class="json-string">"'+escapeHtml(value)+'"</span>';
+      if (typeof value === 'number') return '<span class="json-number">'+value+'</span>';
+      if (typeof value === 'boolean') return '<span class="json-boolean">'+value+'</span>';
+      if (value === null) return '<span class="json-null">null</span>';
+      // 未知，渲染原样
+      return String(value);
+    }
+    // 防注入 XSS
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, function(s) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[s];
+      });
+    }
+    // 树的递归渲染
+    function renderTree(obj, path='root', deep=0) {
+      const pad = '&nbsp;'.repeat(deep*2);
+      if (Array.isArray(obj)) {
+        const id = path;
+        const folded = foldState[id];
+        let html = pad + `<span class="fold-arrow" data-id="${id}">${folded? '▶':'▼'}</span>` + '<span>[</span><br>';
+        if (!folded) {
+          obj.forEach((v, i) => {
+            html += renderTree(v, path + '.' + i, deep + 1) + '<br>';
+          });
+        } else {
+          html += pad + '&nbsp;&nbsp;...<br>';
+        }
+        html += pad + '<span>]</span>';
+        return html;
+      } else if (typeof obj === 'object' && obj !== null) {
+        const id = path;
+        const folded = foldState[id];
+        let html = pad + `<span class="fold-arrow" data-id="${id}">${folded? '▶':'▼'}</span>` + '<span>{</span><br>';
+        if (!folded) {
+          const keys = Object.keys(obj);
+          keys.forEach((k, i) => {
+            const v = obj[k];
+            html += pad + '&nbsp;&nbsp;<span class="json-key">"' + escapeHtml(k) + '"</span>: ';
+            html += renderTree(v, path+'.'+k, deep+1);
+            if (i !== keys.length - 1) html += ',';
+            html += '<br>';
+          });
+        } else {
+          html += pad + '&nbsp;&nbsp;...<br>';
+        }
+        html += pad + '<span>}</span>';
+        return html;
+      } else {
+        return pad + syntaxHighlight('', obj);
+      }
+    }
+    // 格式化触发
+    function handleFormat() {
+      const text = input.value.trim();
+      errorMsg.style.display = 'none';
+      foldState = {}; // 重置折叠状态
+      if (!text) {
+        jsonTree.innerHTML = '';
+        lastValidObj = null;
+        lastFormattedText = '';
+        debugPanel.innerText = '';
+        return;
+      }
+      try {
+        const obj = JSON.parse(text);
+        lastValidObj = obj;
+        lastFormattedText = JSON.stringify(obj, null, 2);
+        jsonTree.innerHTML = renderTree(obj);
+        debugPanel.innerText = debugToggle.checked ? lastFormattedText : '';
+      } catch(e) {
+        lastValidObj = null;
+        lastFormattedText = '';
+        jsonTree.innerHTML = '';
+        errorMsg.innerText = 'JSON 语法错误：' + e.message;
+        errorMsg.style.display = 'block';
+        debugPanel.innerText = debugToggle.checked ? input.value : '';
+      }
+    }
+    // 折叠/展开逻辑
+    jsonTree.addEventListener('click', function(e) {
+      if (e.target.classList.contains('fold-arrow')) {
+        const id = e.target.dataset.id;
+        foldState[id] = !foldState[id];
+        if (lastValidObj) jsonTree.innerHTML = renderTree(lastValidObj);
+      }
+    });
+    formatBtn.onclick = handleFormat;
+    // 输入框 支持Ctrl+Enter格式化
+    input.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleFormat();
+      }
+    });
+    // 复制一键
+    copyBtn.onclick = function() {
+      if (!lastFormattedText) {
+        alert('无格式化内容可复制');
+        return;
+      }
+      navigator.clipboard.writeText(lastFormattedText).then(_=>{
+        copyBtn.textContent = '已复制!';
+        setTimeout(()=>copyBtn.textContent = '一键复制', 1100);
+      }, ()=>{
+        alert('复制失败');
+      });
+    };
+    // 调试面板
+    debugToggle.onchange = function() {
+      debugPanel.style.display = debugToggle.checked ? '' : 'none';
+      debugPanel.innerText = debugToggle.checked ? (lastFormattedText||input.value) : '';
+    };
+    // 加载时自动格式化（如url带参数）
+    window.onload = function() {
+      const params = new URLSearchParams(location.search);
+      if (params.get('json')) {
+        try {
+          const val = decodeURIComponent(params.get('json'));
+          input.value = val;
+          handleFormat();
+        } catch {}
+      }
+    };
+  </script>
+  <!--
+    工具元信息：
+    核心提示词：基于Simon Willison单文件哲学开发HTML工具，要求：1. 单个HTML文件，内嵌JS/CSS，无构建步骤，No React；2. 核心功能：JSON字符串格式化、语法检查、字段折叠、一键复制；3. 依赖：无依赖，仅原生API；4. 交互：多功能按钮，错误高亮提示，复制按钮、折叠、调试面板；5. 状态存储：URL参数或本地变量。
+    依赖CDN：无
+    最后修改：2025-12-19
+  -->
+</body>
+</html>
+
