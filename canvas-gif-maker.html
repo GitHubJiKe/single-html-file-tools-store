@@ -1,0 +1,655 @@
+<!-- Canvas 画图与 GIF 动图制作工具（单文件HTML实现，无需构建步骤）-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas 画图与 GIF 动图制作工具</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .main-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+    }
+    
+    /* 左侧九宫格区域 */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .grid-item {
+      position: relative;
+      aspect-ratio: 1;
+      background: white;
+      border: 2px dashed #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .grid-item:hover {
+      border-color: #006aff;
+      transform: scale(1.05);
+    }
+    .grid-item.filled {
+      border-style: solid;
+      border-color: #006aff;
+    }
+    .grid-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .grid-item .placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #999;
+      font-size: 32px;
+    }
+    .grid-item .delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: rgba(220, 53, 69, 0.9);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .grid-item.filled:hover .delete-btn {
+      display: flex;
+    }
+    
+    /* GIF 控制区域 */
+    .gif-controls {
+      background: #f9f9f9;
+      padding: 16px;
+      border-radius: 8px;
+    }
+    .control-group {
+      margin-bottom: 12px;
+    }
+    .control-group label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .slider-container input[type="range"] {
+      flex: 1;
+    }
+    .slider-value {
+      min-width: 60px;
+      text-align: right;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    /* 右侧画布区域 */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .canvas-container {
+      display: flex;
+      justify-content: center;
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    #drawCanvas {
+      border: 2px solid #ddd;
+      cursor: crosshair;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* 工具栏 */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      background: #f9f9f9;
+      padding: 16px;
+      border-radius: 8px;
+    }
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toolbar-group label {
+      font-size: 14px;
+      color: #666;
+      white-space: nowrap;
+    }
+    .color-picker {
+      width: 50px;
+      height: 40px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    
+    /* 按钮样式 */
+    button {
+      padding: 10px 20px;
+      font-size: 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    .btn-primary {
+      background: #006aff;
+      color: white;
+    }
+    .btn-primary:hover { background: #0056cc; }
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    .btn-success:hover { background: #218838; }
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    .btn-danger:hover { background: #c82333; }
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover { background: #5a6268; }
+    
+    .file-input {
+      display: none;
+    }
+    
+    .info-box {
+      background: #e7f3ff;
+      border: 1px solid #b3d9ff;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 14px;
+      color: #004085;
+    }
+    
+    .status-message {
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 12px;
+      font-size: 14px;
+      display: none;
+    }
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status-message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .status-message.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    
+    @media (max-width: 1024px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+      .left-panel {
+        order: 2;
+      }
+      .right-panel {
+        order: 1;
+      }
+    }
+  </style>
+  <!-- 使用 gifshot 库进行 GIF 编码 -->
+  <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Canvas 画图与 GIF 动图制作工具</h1>
+    
+    <div class="main-layout">
+      <!-- 左侧：九宫格和 GIF 控制 -->
+      <div class="left-panel">
+        <div class="grid-container" id="gridContainer">
+          <!-- 九宫格将通过 JS 动态生成 -->
+        </div>
+        
+        <div class="gif-controls">
+          <div class="control-group">
+            <label>帧切换速度</label>
+            <div class="slider-container">
+              <input type="range" id="frameDelay" min="100" max="2000" value="500" step="50">
+              <span class="slider-value" id="frameDelayValue">500ms</span>
+            </div>
+          </div>
+          
+          <button class="btn-success" id="generateGifBtn" style="width: 100%; margin-top: 12px;" disabled>
+            🎬 合成 GIF 动图
+          </button>
+          
+          <div class="status-message" id="gifStatus"></div>
+        </div>
+        
+        <div class="info-box">
+          <strong>使用说明：</strong><br>
+          • 在右侧画布绘画后点击"完成"添加到九宫格<br>
+          • 点击九宫格格子可上传本地图片<br>
+          • 至少需要 3 张图片才能合成 GIF<br>
+          • 最多支持 9 张图片
+        </div>
+      </div>
+      
+      <!-- 右侧：画布和工具栏 -->
+      <div class="right-panel">
+        <div class="toolbar">
+          <div class="toolbar-group">
+            <label>背景色:</label>
+            <input type="color" id="bgColor" class="color-picker" value="#ffffff">
+          </div>
+          
+          <div class="toolbar-group">
+            <label>画笔色:</label>
+            <input type="color" id="penColor" class="color-picker" value="#000000">
+          </div>
+          
+          <div class="toolbar-group">
+            <label>画笔粗细:</label>
+            <input type="range" id="penSize" min="1" max="20" value="3">
+            <span id="penSizeValue">3px</span>
+          </div>
+          
+          <button class="btn-secondary" id="clearBtn">清空画布</button>
+          <button class="btn-primary" id="finishBtn">✓ 完成</button>
+          <button class="btn-secondary" id="uploadToCanvasBtn">📁 上传图片到画布</button>
+          <input type="file" id="uploadToCanvas" class="file-input" accept="image/*">
+        </div>
+        
+        <div class="canvas-container">
+          <canvas id="drawCanvas" width="500" height="500"></canvas>
+        </div>
+        
+        <div class="status-message" id="canvasStatus"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 隐藏的文件上传输入 -->
+  <input type="file" id="uploadToGrid" class="file-input" accept="image/*">
+
+  <script>
+    // 全局变量
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    const gridContainer = document.getElementById('gridContainer');
+    const bgColorInput = document.getElementById('bgColor');
+    const penColorInput = document.getElementById('penColor');
+    const penSizeInput = document.getElementById('penSize');
+    const penSizeValue = document.getElementById('penSizeValue');
+    const clearBtn = document.getElementById('clearBtn');
+    const finishBtn = document.getElementById('finishBtn');
+    const generateGifBtn = document.getElementById('generateGifBtn');
+    const frameDelayInput = document.getElementById('frameDelay');
+    const frameDelayValue = document.getElementById('frameDelayValue');
+    const uploadToCanvasBtn = document.getElementById('uploadToCanvasBtn');
+    const uploadToCanvasInput = document.getElementById('uploadToCanvas');
+    const uploadToGridInput = document.getElementById('uploadToGrid');
+    const canvasStatus = document.getElementById('canvasStatus');
+    const gifStatus = document.getElementById('gifStatus');
+    
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let gridImages = Array(9).fill(null); // 存储九宫格图片，初始化为 9 个 null
+    let currentUploadIndex = -1; // 当前上传到哪个格子
+    
+    // 初始化画布
+    function initCanvas() {
+      ctx.fillStyle = bgColorInput.value;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // 初始化九宫格
+    function initGrid() {
+      gridContainer.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const gridItem = document.createElement('div');
+        gridItem.className = 'grid-item';
+        gridItem.dataset.index = i;
+        gridItem.innerHTML = '<div class="placeholder">+</div>';
+        
+        // 点击格子上传图片
+        gridItem.addEventListener('click', function(e) {
+          if (e.target.classList.contains('delete-btn')) return;
+          currentUploadIndex = i;
+          uploadToGridInput.click();
+        });
+        
+        gridContainer.appendChild(gridItem);
+      }
+    }
+    
+    // 更新九宫格显示
+    function updateGrid() {
+      const items = gridContainer.querySelectorAll('.grid-item');
+      items.forEach((item, index) => {
+        if (gridImages[index]) {
+          item.classList.add('filled');
+          item.innerHTML = `
+            <img src="${gridImages[index]}" alt="Frame ${index + 1}">
+            <button class="delete-btn" onclick="deleteGridImage(${index})">×</button>
+          `;
+        } else {
+          item.classList.remove('filled');
+          item.innerHTML = '<div class="placeholder">+</div>';
+        }
+      });
+      
+      // 更新生成按钮状态
+      const filledCount = gridImages.filter(img => img).length;
+      generateGifBtn.disabled = filledCount < 3;
+      generateGifBtn.textContent = `🎬 合成 GIF 动图 (${filledCount}/9)`;
+    }
+    
+    // 删除九宫格图片
+    window.deleteGridImage = function(index) {
+      gridImages[index] = null;
+      updateGrid();
+      showStatus(canvasStatus, `已删除第 ${index + 1} 张图片`, 'info');
+    };
+    
+    // 绘画功能
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    
+    // 触摸支持
+    canvas.addEventListener('touchstart', handleTouch);
+    canvas.addEventListener('touchmove', handleTouch);
+    canvas.addEventListener('touchend', stopDrawing);
+    
+    function startDrawing(e) {
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      lastX = e.clientX - rect.left;
+      lastY = e.clientY - rect.top;
+    }
+    
+    function draw(e) {
+      if (!isDrawing) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      ctx.strokeStyle = penColorInput.value;
+      ctx.lineWidth = penSizeInput.value;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      
+      lastX = x;
+      lastY = y;
+    }
+    
+    function stopDrawing() {
+      isDrawing = false;
+    }
+    
+    function handleTouch(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      canvas.dispatchEvent(mouseEvent);
+    }
+    
+    // 背景色变更
+    bgColorInput.addEventListener('change', function() {
+      ctx.fillStyle = this.value;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    });
+    
+    // 画笔粗细显示
+    penSizeInput.addEventListener('input', function() {
+      penSizeValue.textContent = this.value + 'px';
+    });
+    
+    // 帧延迟显示
+    frameDelayInput.addEventListener('input', function() {
+      frameDelayValue.textContent = this.value + 'ms';
+    });
+    
+    // 清空画布
+    clearBtn.addEventListener('click', function() {
+      if (confirm('确定要清空画布吗？')) {
+        initCanvas();
+        showStatus(canvasStatus, '画布已清空', 'info');
+      }
+    });
+    
+    // 完成绘画，添加到九宫格
+    finishBtn.addEventListener('click', function() {
+      const emptyIndex = gridImages.findIndex(img => !img);
+      if (emptyIndex === -1) {
+        showStatus(canvasStatus, '九宫格已满，请先删除一些图片', 'error');
+        return;
+      }
+      
+      const dataURL = canvas.toDataURL('image/png');
+      gridImages[emptyIndex] = dataURL;
+      updateGrid();
+      initCanvas();
+      showStatus(canvasStatus, `已添加到第 ${emptyIndex + 1} 个格子`, 'success');
+    });
+    
+    // 上传图片到画布
+    uploadToCanvasBtn.addEventListener('click', function() {
+      uploadToCanvasInput.click();
+    });
+    
+    uploadToCanvasInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          // 清空画布并绘制图片
+          ctx.fillStyle = bgColorInput.value;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // 居中绘制，保持比例
+          const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+          const x = (canvas.width - img.width * scale) / 2;
+          const y = (canvas.height - img.height * scale) / 2;
+          ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+          
+          showStatus(canvasStatus, '图片已加载到画布，可以继续编辑', 'success');
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+      this.value = '';
+    });
+    
+    // 上传图片到九宫格
+    uploadToGridInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          // 创建临时 canvas 调整图片大小
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = 500;
+          tempCanvas.height = 500;
+          const tempCtx = tempCanvas.getContext('2d');
+          
+          // 白色背景
+          tempCtx.fillStyle = '#ffffff';
+          tempCtx.fillRect(0, 0, 500, 500);
+          
+          // 居中绘制
+          const scale = Math.min(500 / img.width, 500 / img.height);
+          const x = (500 - img.width * scale) / 2;
+          const y = (500 - img.height * scale) / 2;
+          tempCtx.drawImage(img, x, y, img.width * scale, img.height * scale);
+          
+          gridImages[currentUploadIndex] = tempCanvas.toDataURL('image/png');
+          updateGrid();
+          showStatus(canvasStatus, `已上传到第 ${currentUploadIndex + 1} 个格子`, 'success');
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+      this.value = '';
+    });
+    
+    // 生成 GIF
+    generateGifBtn.addEventListener('click', function() {
+      const validImages = gridImages.filter(img => img);
+      if (validImages.length < 3) {
+        showStatus(gifStatus, '至少需要 3 张图片才能生成 GIF', 'error');
+        return;
+      }
+      
+      showStatus(gifStatus, '正在生成 GIF，请稍候...', 'info');
+      generateGifBtn.disabled = true;
+      
+      const delay = parseInt(frameDelayInput.value) / 1000; // gifshot 使用秒为单位
+      
+      // 使用 gifshot 生成 GIF
+      gifshot.createGIF({
+        images: validImages,
+        gifWidth: 500,
+        gifHeight: 500,
+        interval: delay,
+        numFrames: validImages.length,
+        frameDuration: 1,
+        sampleInterval: 10,
+        numWorkers: 2
+      }, function(obj) {
+        if (!obj.error) {
+          // 将 base64 转换为 blob 并下载
+          const base64Data = obj.image;
+          
+          // 转换 base64 为 blob
+          fetch(base64Data)
+            .then(res => res.blob())
+            .then(blob => {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `animation-${Date.now()}.gif`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+              
+              showStatus(gifStatus, `GIF 动图已生成并下载！(${validImages.length} 帧)`, 'success');
+              generateGifBtn.disabled = false;
+            })
+            .catch(err => {
+              showStatus(gifStatus, 'GIF 下载失败：' + err.message, 'error');
+              generateGifBtn.disabled = false;
+            });
+        } else {
+          showStatus(gifStatus, 'GIF 生成失败：' + obj.error, 'error');
+          generateGifBtn.disabled = false;
+        }
+      });
+    });
+    
+    // 显示状态消息
+    function showStatus(element, message, type) {
+      element.textContent = message;
+      element.className = `status-message ${type}`;
+      element.style.display = 'block';
+      
+      if (type === 'success' || type === 'info') {
+        setTimeout(() => {
+          element.style.display = 'none';
+        }, 3000);
+      }
+    }
+    
+    // 初始化
+    initCanvas();
+    initGrid();
+    updateGrid();
+  </script>
+
+  <!--
+    工具元信息：
+    核心提示词：基于Simon Willison单文件哲学开发HTML工具，要求：1. 单个HTML文件，内嵌JS/CSS，无构建步骤，No React；2. 核心功能：Canvas绘画、九宫格管理、GIF动图合成；3. 依赖：gifshot@0.4.5（CDN）；4. 交互：画布绘画、颜色选择、图片上传、GIF生成下载；5. 状态存储：内存中管理图片数组。
+    依赖CDN：https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js
+    最后修改：2025-12-22
+  -->
+</body>
+</html>
