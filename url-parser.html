@@ -1,0 +1,338 @@
+<!-- URL 解析工具（单文件HTML实现，无需构建步骤）-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL 解析工具 - 验证与结构化</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #fafbfc; }
+    h1 { font-size: 22px; margin-bottom: 10px; }
+    .input-section { margin-bottom: 16px; }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+      font-family: monospace;
+      font-size: 15px;
+      border: 1px solid #dadada;
+      border-radius: 6px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .flex-row { display: flex; gap: 12px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+    button {
+      font-size: 16px;
+      min-width: 88px;
+      min-height: 44px;
+      border: none;
+      border-radius: 6px;
+      background: #006aff;
+      color: #fff;
+      cursor: pointer;
+      margin: 0 4px 0 0;
+      transition: background 0.2s;
+    }
+    button:active { background: #00306e; }
+    .copy-btn { background: #00a86b; }
+    .copy-btn:active { background: #004e32; }
+    .clear-btn { background: #6c757d; }
+    .clear-btn:active { background: #3d4349; }
+    .status { 
+      padding: 8px 12px; 
+      border-radius: 6px; 
+      font-size: 14px; 
+      font-weight: 500;
+      display: inline-block;
+    }
+    .status.valid { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .status.invalid { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .error { 
+      color: #cf2323; 
+      background: #fff6f6; 
+      border: 1px solid #f5c3c3; 
+      border-radius: 5px; 
+      padding: 8px 12px; 
+      margin-top: 10px; 
+    }
+    #result-section { margin-top: 16px; }
+    #json-output {
+      margin: 8px 0;
+      font-family: monospace;
+      white-space: pre;
+      font-size: 14px;
+      border: 1px solid #eee;
+      background: #fff;
+      border-radius: 6px;
+      padding: 12px;
+      overflow-x: auto;
+      min-height: 40px;
+    }
+    .json-key { color: #0366d6; font-weight: 500; }
+    .json-string { color: #24a148; }
+    .json-number { color: #b08810; }
+    .json-boolean { color: #e36209; }
+    .json-null { color: #8c8c8c; font-style: italic; }
+    .info-box {
+      background: #e7f3ff;
+      border: 1px solid #b3d9ff;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-top: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .info-box strong { color: #004085; }
+    .debug-panel { 
+      border: 1px dashed #bababa; 
+      margin: 8px 0 0 0; 
+      background: #fcfcfd; 
+      padding: 7px 10px; 
+      font-size: 13px; 
+    }
+    @media (max-width: 600px) {
+      button { min-width: 44px; font-size: 15px; }
+      textarea, #json-output { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>URL 解析工具</h1>
+  
+  <div class="input-section">
+    <textarea id="input" placeholder="请输入 URL（例如：https://example.com:8080/path?key=value#hash）"></textarea>
+    <div class="flex-row">
+      <button id="parse-btn">解析 URL</button>
+      <button id="copy-btn" class="copy-btn">复制 JSON</button>
+      <button id="clear-btn" class="clear-btn">清空</button>
+      <label><input type="checkbox" id="debug-toggle"> 显示调试面板</label>
+    </div>
+  </div>
+
+  <div id="result-section" style="display:none">
+    <div class="flex-row">
+      <span id="status" class="status"></span>
+    </div>
+    <div id="error-msg" class="error" style="display:none"></div>
+    <div id="json-output"></div>
+    <div class="info-box">
+      <strong>解析说明：</strong>使用浏览器原生 URL API 解析，支持完整的 URL 结构分析，包括协议、主机、端口、路径、查询参数和哈希值。
+    </div>
+  </div>
+
+  <div id="debug-panel" class="debug-panel" style="display:none"></div>
+
+  <script>
+    const input = document.getElementById('input');
+    const parseBtn = document.getElementById('parse-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const debugToggle = document.getElementById('debug-toggle');
+    const resultSection = document.getElementById('result-section');
+    const statusEl = document.getElementById('status');
+    const errorMsg = document.getElementById('error-msg');
+    const jsonOutput = document.getElementById('json-output');
+    const debugPanel = document.getElementById('debug-panel');
+
+    let lastParsedData = null;
+    let lastJsonString = '';
+
+    // HTML 转义防止 XSS
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, function(s) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[s];
+      });
+    }
+
+    // 语法高亮渲染 JSON
+    function syntaxHighlight(json) {
+      json = JSON.stringify(json, null, 2);
+      json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        let cls = 'json-number';
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = 'json-key';
+          } else {
+            cls = 'json-string';
+          }
+        } else if (/true|false/.test(match)) {
+          cls = 'json-boolean';
+        } else if (/null/.test(match)) {
+          cls = 'json-null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+      });
+    }
+
+    // 解析查询参数为对象
+    function parseQueryParams(searchParams) {
+      const params = {};
+      for (const [key, value] of searchParams.entries()) {
+        if (params[key]) {
+          // 处理重复参数
+          if (Array.isArray(params[key])) {
+            params[key].push(value);
+          } else {
+            params[key] = [params[key], value];
+          }
+        } else {
+          params[key] = value;
+        }
+      }
+      return params;
+    }
+
+    // 解析 URL
+    function parseURL() {
+      const urlString = input.value.trim();
+      errorMsg.style.display = 'none';
+      resultSection.style.display = 'none';
+
+      if (!urlString) {
+        errorMsg.textContent = '请输入 URL';
+        errorMsg.style.display = 'block';
+        resultSection.style.display = 'block';
+        lastParsedData = null;
+        lastJsonString = '';
+        return;
+      }
+
+      try {
+        // 使用原生 URL API 解析
+        const url = new URL(urlString);
+        
+        // 构建解析结果对象
+        const parsedData = {
+          valid: true,
+          original: urlString,
+          protocol: url.protocol,
+          hostname: url.hostname,
+          port: url.port || null,
+          host: url.host,
+          origin: url.origin,
+          pathname: url.pathname,
+          search: url.search,
+          searchParams: parseQueryParams(url.searchParams),
+          hash: url.hash,
+          href: url.href,
+          username: url.username || null,
+          password: url.password ? '***' : null // 隐藏密码
+        };
+
+        lastParsedData = parsedData;
+        lastJsonString = JSON.stringify(parsedData, null, 2);
+
+        // 显示结果
+        statusEl.textContent = '✓ URL 合法';
+        statusEl.className = 'status valid';
+        jsonOutput.innerHTML = syntaxHighlight(parsedData);
+        resultSection.style.display = 'block';
+
+        // 更新调试面板
+        if (debugToggle.checked) {
+          debugPanel.innerText = '原始输入: ' + urlString + '\n\n' + 
+                                  'URL 对象属性:\n' + 
+                                  Object.keys(url).map(k => `  ${k}: ${url[k]}`).join('\n');
+        }
+
+      } catch (e) {
+        // URL 无效
+        const errorData = {
+          valid: false,
+          original: urlString,
+          error: e.message,
+          suggestion: '请检查 URL 格式，确保包含协议（如 http:// 或 https://）'
+        };
+
+        lastParsedData = errorData;
+        lastJsonString = JSON.stringify(errorData, null, 2);
+
+        statusEl.textContent = '✗ URL 无效';
+        statusEl.className = 'status invalid';
+        errorMsg.textContent = '解析失败：' + e.message;
+        errorMsg.style.display = 'block';
+        jsonOutput.innerHTML = syntaxHighlight(errorData);
+        resultSection.style.display = 'block';
+
+        // 更新调试面板
+        if (debugToggle.checked) {
+          debugPanel.innerText = '原始输入: ' + urlString + '\n\n错误: ' + e.message + '\n\n' +
+                                  '提示: 确保 URL 包含协议（http:// 或 https://）';
+        }
+      }
+    }
+
+    // 复制 JSON 到剪贴板
+    function copyJSON() {
+      if (!lastJsonString) {
+        alert('没有可复制的内容');
+        return;
+      }
+      navigator.clipboard.writeText(lastJsonString).then(() => {
+        copyBtn.textContent = '已复制!';
+        setTimeout(() => copyBtn.textContent = '复制 JSON', 1100);
+      }, () => {
+        alert('复制失败');
+      });
+    }
+
+    // 清空输入和结果
+    function clearAll() {
+      input.value = '';
+      resultSection.style.display = 'none';
+      errorMsg.style.display = 'none';
+      jsonOutput.innerHTML = '';
+      lastParsedData = null;
+      lastJsonString = '';
+      debugPanel.innerText = '';
+    }
+
+    // 事件绑定
+    parseBtn.onclick = parseURL;
+    copyBtn.onclick = copyJSON;
+    clearBtn.onclick = clearAll;
+
+    // 支持 Ctrl+Enter 快捷键
+    input.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        parseURL();
+      }
+    });
+
+    // 调试面板切换
+    debugToggle.onchange = function() {
+      debugPanel.style.display = debugToggle.checked ? '' : 'none';
+      if (debugToggle.checked && lastParsedData) {
+        if (lastParsedData.valid) {
+          debugPanel.innerText = '原始输入: ' + lastParsedData.original + '\n\n' +
+                                  'JSON 输出:\n' + lastJsonString;
+        } else {
+          debugPanel.innerText = '原始输入: ' + lastParsedData.original + '\n\n' +
+                                  '错误: ' + lastParsedData.error;
+        }
+      }
+    };
+
+    // 支持 URL 参数自动解析
+    window.onload = function() {
+      const params = new URLSearchParams(location.search);
+      if (params.get('url')) {
+        try {
+          const val = decodeURIComponent(params.get('url'));
+          input.value = val;
+          parseURL();
+        } catch {}
+      }
+    };
+  </script>
+
+  <!--
+    工具元信息：
+    核心提示词：基于Simon Willison单文件哲学开发HTML工具，要求：1. 单个HTML文件，内嵌JS/CSS，无构建步骤，No React；2. 核心功能：URL解析、合法性验证、JSON结构化输出；3. 依赖：无依赖，使用原生URL API；4. 交互：输入框、解析按钮、复制按钮、语法高亮显示、调试面板；5. 状态存储：支持URL参数传递。
+    依赖CDN：无
+    最后修改：2025-12-22
+  -->
+</body>
+</html>
