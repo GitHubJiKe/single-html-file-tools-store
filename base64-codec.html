@@ -1,0 +1,491 @@
+<!-- Base64 编解码工具（单文件HTML实现，无需构建步骤）-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base64 编解码工具</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #fafbfc; }
+    h1 { font-size: 22px; margin-bottom: 10px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #e1e4e8;
+    }
+    .tab {
+      padding: 10px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      color: #586069;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      color: #006aff;
+      border-bottom-color: #006aff;
+    }
+    .tab:hover { color: #006aff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .section { margin-bottom: 20px; }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #24292e;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      font-family: monospace;
+      font-size: 14px;
+      border: 1px solid #dadada;
+      border-radius: 6px;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    .flex-row { display: flex; gap: 12px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+    button {
+      font-size: 16px;
+      min-width: 88px;
+      min-height: 44px;
+      border: none;
+      border-radius: 6px;
+      background: #006aff;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+      padding: 0 16px;
+    }
+    button:active { background: #00306e; }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .encode-btn { background: #28a745; }
+    .encode-btn:active { background: #1e7e34; }
+    .decode-btn { background: #dc3545; }
+    .decode-btn:active { background: #a71d2a; }
+    .copy-btn { background: #00a86b; }
+    .copy-btn:active { background: #004e32; }
+    .clear-btn { background: #6c757d; }
+    .clear-btn:active { background: #3d4349; }
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .file-input-label {
+      display: inline-block;
+      padding: 10px 16px;
+      background: #6f42c1;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      min-height: 44px;
+      line-height: 24px;
+    }
+    .file-input-label:active { background: #4e2d8f; }
+    .file-info {
+      display: inline-block;
+      margin-left: 12px;
+      color: #586069;
+      font-size: 14px;
+    }
+    .info-box {
+      background: #e7f3ff;
+      border: 1px solid #b3d9ff;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-top: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .info-box strong { color: #004085; }
+    .error {
+      color: #cf2323;
+      background: #fff6f6;
+      border: 1px solid #f5c3c3;
+      border-radius: 5px;
+      padding: 8px 12px;
+      margin-top: 10px;
+    }
+    .success {
+      color: #155724;
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-radius: 5px;
+      padding: 8px 12px;
+      margin-top: 10px;
+    }
+    .debug-panel {
+      border: 1px dashed #bababa;
+      margin: 8px 0 0 0;
+      background: #fcfcfd;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: monospace;
+    }
+    @media (max-width: 600px) {
+      button, .file-input-label { min-width: 44px; font-size: 15px; padding: 0 12px; }
+      textarea { font-size: 13px; }
+      .tab { padding: 8px 12px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Base64 编解码工具</h1>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="text">文本编解码</button>
+      <button class="tab" data-tab="file">文件编解码</button>
+    </div>
+
+    <!-- 文本编解码 -->
+    <div id="text-tab" class="tab-content active">
+      <div class="section">
+        <div class="section-title">输入文本</div>
+        <textarea id="text-input" placeholder="请输入要编码的文本或 Base64 字符串"></textarea>
+        <div class="flex-row">
+          <button id="text-encode-btn" class="encode-btn">编码 (Encode)</button>
+          <button id="text-decode-btn" class="decode-btn">解码 (Decode)</button>
+          <button id="text-copy-btn" class="copy-btn">复制结果</button>
+          <button id="text-clear-btn" class="clear-btn">清空</button>
+          <label><input type="checkbox" id="text-debug-toggle"> 显示调试信息</label>
+        </div>
+        <div id="text-message" style="display:none"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">输出结果</div>
+        <textarea id="text-output" placeholder="编码或解码结果将显示在这里" readonly></textarea>
+        <div class="info-box">
+          <strong>使用说明：</strong>编码将文本转换为 Base64 字符串，解码将 Base64 字符串还原为原始文本。支持中文和特殊字符。
+        </div>
+      </div>
+
+      <div id="text-debug-panel" class="debug-panel" style="display:none"></div>
+    </div>
+
+    <!-- 文件编解码 -->
+    <div id="file-tab" class="tab-content">
+      <div class="section">
+        <div class="section-title">文件编码</div>
+        <div class="flex-row">
+          <div class="file-input-wrapper">
+            <input type="file" id="file-encode-input" accept="*/*">
+            <label class="file-input-label">选择文件</label>
+          </div>
+          <span id="file-encode-info" class="file-info">未选择文件</span>
+        </div>
+        <button id="file-encode-btn" class="encode-btn" disabled>编码文件</button>
+        <button id="file-encode-copy-btn" class="copy-btn">复制 Base64</button>
+        <button id="file-encode-download-btn" class="copy-btn">下载 Base64 文本</button>
+        <div id="file-encode-message" style="display:none"></div>
+        <textarea id="file-encode-output" placeholder="文件的 Base64 编码结果" readonly></textarea>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Base64 解码为文件</div>
+        <textarea id="file-decode-input" placeholder="请粘贴 Base64 字符串（支持 Data URL 格式）"></textarea>
+        <div class="flex-row">
+          <button id="file-decode-btn" class="decode-btn">解码并下载</button>
+          <label>
+            文件名: <input type="text" id="file-decode-name" placeholder="decoded-file" style="padding: 8px; border: 1px solid #dadada; border-radius: 4px;">
+          </label>
+        </div>
+        <div id="file-decode-message" style="display:none"></div>
+        <div class="info-box">
+          <strong>提示：</strong>支持 Data URL 格式（如 data:image/png;base64,...）和纯 Base64 字符串。解码后可直接下载文件。
+        </div>
+      </div>
+
+      <div id="file-debug-panel" class="debug-panel" style="display:none"></div>
+    </div>
+  </div>
+
+  <script>
+    // Tab 切换
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(tc => tc.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tabName + '-tab').classList.add('active');
+      });
+    });
+
+    // ========== 文本编解码 ==========
+    const textInput = document.getElementById('text-input');
+    const textOutput = document.getElementById('text-output');
+    const textEncodeBtn = document.getElementById('text-encode-btn');
+    const textDecodeBtn = document.getElementById('text-decode-btn');
+    const textCopyBtn = document.getElementById('text-copy-btn');
+    const textClearBtn = document.getElementById('text-clear-btn');
+    const textMessage = document.getElementById('text-message');
+    const textDebugToggle = document.getElementById('text-debug-toggle');
+    const textDebugPanel = document.getElementById('text-debug-panel');
+
+    // 文本编码
+    textEncodeBtn.onclick = function() {
+      const text = textInput.value;
+      textMessage.style.display = 'none';
+      
+      if (!text) {
+        showMessage(textMessage, '请输入要编码的文本', 'error');
+        return;
+      }
+
+      try {
+        // 使用 btoa 编码，但需要先处理 Unicode 字符
+        const encoded = btoa(unescape(encodeURIComponent(text)));
+        textOutput.value = encoded;
+        showMessage(textMessage, '编码成功！', 'success');
+        
+        if (textDebugToggle.checked) {
+          textDebugPanel.innerText = `原始文本长度: ${text.length} 字符\n编码后长度: ${encoded.length} 字符\n编码方式: UTF-8 → Base64`;
+        }
+      } catch (e) {
+        showMessage(textMessage, '编码失败：' + e.message, 'error');
+      }
+    };
+
+    // 文本解码
+    textDecodeBtn.onclick = function() {
+      const text = textInput.value.trim();
+      textMessage.style.display = 'none';
+      
+      if (!text) {
+        showMessage(textMessage, '请输入要解码的 Base64 字符串', 'error');
+        return;
+      }
+
+      try {
+        // 使用 atob 解码，然后处理 Unicode 字符
+        const decoded = decodeURIComponent(escape(atob(text)));
+        textOutput.value = decoded;
+        showMessage(textMessage, '解码成功！', 'success');
+        
+        if (textDebugToggle.checked) {
+          textDebugPanel.innerText = `Base64 长度: ${text.length} 字符\n解码后长度: ${decoded.length} 字符\n解码方式: Base64 → UTF-8`;
+        }
+      } catch (e) {
+        showMessage(textMessage, '解码失败：可能不是有效的 Base64 字符串', 'error');
+        if (textDebugToggle.checked) {
+          textDebugPanel.innerText = `错误: ${e.message}`;
+        }
+      }
+    };
+
+    // 复制结果
+    textCopyBtn.onclick = function() {
+      if (!textOutput.value) {
+        showMessage(textMessage, '没有可复制的内容', 'error');
+        return;
+      }
+      navigator.clipboard.writeText(textOutput.value).then(() => {
+        textCopyBtn.textContent = '已复制!';
+        setTimeout(() => textCopyBtn.textContent = '复制结果', 1100);
+      }, () => {
+        showMessage(textMessage, '复制失败', 'error');
+      });
+    };
+
+    // 清空
+    textClearBtn.onclick = function() {
+      textInput.value = '';
+      textOutput.value = '';
+      textMessage.style.display = 'none';
+      textDebugPanel.innerText = '';
+    };
+
+    // 调试面板切换
+    textDebugToggle.onchange = function() {
+      textDebugPanel.style.display = textDebugToggle.checked ? '' : 'none';
+    };
+
+    // ========== 文件编解码 ==========
+    const fileEncodeInput = document.getElementById('file-encode-input');
+    const fileEncodeInfo = document.getElementById('file-encode-info');
+    const fileEncodeBtn = document.getElementById('file-encode-btn');
+    const fileEncodeOutput = document.getElementById('file-encode-output');
+    const fileEncodeCopyBtn = document.getElementById('file-encode-copy-btn');
+    const fileEncodeDownloadBtn = document.getElementById('file-encode-download-btn');
+    const fileEncodeMessage = document.getElementById('file-encode-message');
+
+    const fileDecodeInput = document.getElementById('file-decode-input');
+    const fileDecodeBtn = document.getElementById('file-decode-btn');
+    const fileDecodeName = document.getElementById('file-decode-name');
+    const fileDecodeMessage = document.getElementById('file-decode-message');
+
+    let selectedFile = null;
+
+    // 文件选择
+    fileEncodeInput.onchange = function(e) {
+      selectedFile = e.target.files[0];
+      if (selectedFile) {
+        const sizeMB = (selectedFile.size / 1024 / 1024).toFixed(2);
+        fileEncodeInfo.textContent = `${selectedFile.name} (${sizeMB} MB)`;
+        fileEncodeBtn.disabled = false;
+      } else {
+        fileEncodeInfo.textContent = '未选择文件';
+        fileEncodeBtn.disabled = true;
+      }
+    };
+
+    // 文件编码
+    fileEncodeBtn.onclick = function() {
+      if (!selectedFile) return;
+      
+      fileEncodeMessage.style.display = 'none';
+      fileEncodeBtn.disabled = true;
+      fileEncodeBtn.textContent = '编码中...';
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const base64 = e.target.result; // Data URL 格式
+          fileEncodeOutput.value = base64;
+          showMessage(fileEncodeMessage, `编码成功！文件大小: ${(selectedFile.size / 1024).toFixed(2)} KB`, 'success');
+        } catch (err) {
+          showMessage(fileEncodeMessage, '编码失败：' + err.message, 'error');
+        } finally {
+          fileEncodeBtn.disabled = false;
+          fileEncodeBtn.textContent = '编码文件';
+        }
+      };
+      reader.onerror = function() {
+        showMessage(fileEncodeMessage, '读取文件失败', 'error');
+        fileEncodeBtn.disabled = false;
+        fileEncodeBtn.textContent = '编码文件';
+      };
+      reader.readAsDataURL(selectedFile);
+    };
+
+    // 复制 Base64
+    fileEncodeCopyBtn.onclick = function() {
+      if (!fileEncodeOutput.value) {
+        showMessage(fileEncodeMessage, '请先编码文件', 'error');
+        return;
+      }
+      navigator.clipboard.writeText(fileEncodeOutput.value).then(() => {
+        fileEncodeCopyBtn.textContent = '已复制!';
+        setTimeout(() => fileEncodeCopyBtn.textContent = '复制 Base64', 1100);
+      }, () => {
+        showMessage(fileEncodeMessage, '复制失败', 'error');
+      });
+    };
+
+    // 下载 Base64 文本
+    fileEncodeDownloadBtn.onclick = function() {
+      if (!fileEncodeOutput.value) {
+        showMessage(fileEncodeMessage, '请先编码文件', 'error');
+        return;
+      }
+      const blob = new Blob([fileEncodeOutput.value], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (selectedFile ? selectedFile.name : 'file') + '.base64.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showMessage(fileEncodeMessage, 'Base64 文本已下载', 'success');
+    };
+
+    // Base64 解码为文件
+    fileDecodeBtn.onclick = function() {
+      const base64String = fileDecodeInput.value.trim();
+      fileDecodeMessage.style.display = 'none';
+
+      if (!base64String) {
+        showMessage(fileDecodeMessage, '请输入 Base64 字符串', 'error');
+        return;
+      }
+
+      try {
+        let base64Data = base64String;
+        let mimeType = 'application/octet-stream';
+        
+        // 检查是否是 Data URL 格式
+        if (base64String.startsWith('data:')) {
+          const matches = base64String.match(/^data:([^;]+);base64,(.+)$/);
+          if (matches) {
+            mimeType = matches[1];
+            base64Data = matches[2];
+          } else {
+            throw new Error('无效的 Data URL 格式');
+          }
+        }
+
+        // 解码 Base64
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        // 创建 Blob 并下载
+        const blob = new Blob([bytes], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileDecodeName.value || 'decoded-file';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showMessage(fileDecodeMessage, `解码成功！文件已下载 (${(blob.size / 1024).toFixed(2)} KB)`, 'success');
+      } catch (e) {
+        showMessage(fileDecodeMessage, '解码失败：' + e.message, 'error');
+      }
+    };
+
+    // 工具函数：显示消息
+    function showMessage(element, message, type) {
+      element.textContent = message;
+      element.className = type;
+      element.style.display = 'block';
+    }
+
+    // 支持 URL 参数
+    window.onload = function() {
+      const params = new URLSearchParams(location.search);
+      if (params.get('text')) {
+        try {
+          textInput.value = decodeURIComponent(params.get('text'));
+        } catch {}
+      }
+    };
+  </script>
+
+  <!--
+    工具元信息：
+    核心提示词：基于Simon Willison单文件哲学开发HTML工具，要求：1. 单个HTML文件，内嵌JS/CSS，无构建步骤，No React；2. 核心功能：Base64编码解码，支持文本和文件；3. 依赖：无依赖，使用原生API（btoa/atob/FileReader）；4. 交互：Tab切换、文件上传、编码解码按钮、复制下载功能；5. 状态存储：支持URL参数传递文本。
+    依赖CDN：无
+    最后修改：2025-12-22
+  -->
+</body>
+</html>
