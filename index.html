@@ -1,0 +1,240 @@
+<!-- 工具站点落地页（单文件HTML实现，无需构建步骤）-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在线工具集 - 简单实用的Web工具</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      color: white;
+      padding: 40px 20px;
+      margin-bottom: 40px;
+    }
+    h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    .subtitle {
+      font-size: 18px;
+      opacity: 0.95;
+      font-weight: 300;
+    }
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .tool-card {
+      background: white;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .tool-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    }
+    .tool-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .tool-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #1a202c;
+    }
+    .tool-desc {
+      font-size: 15px;
+      color: #4a5568;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .tool-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      background: #edf2f7;
+      color: #4a5568;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    footer {
+      text-align: center;
+      color: white;
+      padding: 30px 20px;
+      opacity: 0.9;
+    }
+    footer a {
+      color: white;
+      text-decoration: underline;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+      display: block;
+    }
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+    @media (max-width: 768px) {
+      h1 { font-size: 36px; }
+      .subtitle { font-size: 16px; }
+      .tools-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .tool-card { padding: 20px; }
+      .stats { gap: 24px; }
+      .stat-number { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🛠️ 在线工具集</h1>
+      <p class="subtitle">简单、快速、无需安装的实用Web工具</p>
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-number" id="tool-count">2</span>
+          <span class="stat-label">个工具</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">100%</span>
+          <span class="stat-label">免费开源</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">0</span>
+          <span class="stat-label">依赖安装</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="tools-grid" id="tools-container">
+        <!-- 工具卡片将通过 JavaScript 动态生成 -->
+      </div>
+    </main>
+
+    <footer>
+      <p>所有工具均基于单文件HTML实现，无需构建步骤，可直接使用</p>
+      <p style="margin-top: 10px; font-size: 14px;">遵循 <a href="https://simonwillison.net/2025/Dec/10/html-tools/" target="_blank">Simon Willison 单文件哲学</a></p>
+    </footer>
+  </div>
+
+  <script>
+    // 工具数据配置
+    const tools = [
+      {
+        id: 'json-formatter',
+        title: 'JSON 格式化工具',
+        description: '快速格式化和美化JSON数据，支持语法高亮、字段折叠、一键复制，帮助开发者更好地查看和调试JSON结构',
+        icon: '📋',
+        url: './json-formatter.html',
+        tags: ['JSON', '格式化', '开发工具']
+      },
+      {
+        id: 'qrcode-gen',
+        title: '二维码生成器',
+        description: '将文本或URL快速转换为二维码图片，支持在线预览、一键复制和下载，适用于分享链接、名片等场景',
+        icon: '📱',
+        url: './qrcode-gen.html',
+        tags: ['二维码', '图片生成', '实用工具']
+      }
+    ];
+
+    // 渲染工具卡片
+    function renderTools() {
+      const container = document.getElementById('tools-container');
+      const toolCount = document.getElementById('tool-count');
+      
+      toolCount.textContent = tools.length;
+      
+      tools.forEach(tool => {
+        const card = document.createElement('a');
+        card.className = 'tool-card';
+        card.href = tool.url;
+        
+        card.innerHTML = `
+          <div class="tool-icon">${tool.icon}</div>
+          <div class="tool-title">${tool.title}</div>
+          <div class="tool-desc">${tool.description}</div>
+          <div class="tool-tags">
+            ${tool.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+
+    // 页面加载时渲染工具
+    window.addEventListener('DOMContentLoaded', renderTools);
+
+    // 添加简单的点击统计（使用 localStorage）
+    document.addEventListener('click', function(e) {
+      const card = e.target.closest('.tool-card');
+      if (card) {
+        const toolId = tools.find(t => card.href.includes(t.url))?.id;
+        if (toolId) {
+          const stats = JSON.parse(localStorage.getItem('tool-stats') || '{}');
+          stats[toolId] = (stats[toolId] || 0) + 1;
+          localStorage.setItem('tool-stats', JSON.stringify(stats));
+        }
+      }
+    });
+  </script>
+
+  <!--
+    工具元信息：
+    核心提示词：基于Simon Willison单文件哲学开发HTML工具站点落地页，要求：1. 单个HTML文件，内嵌JS/CSS，无构建步骤，No React；2. 核心功能：展示工具列表，提供导航链接，美观的UI设计；3. 依赖：无依赖，仅原生API；4. 交互：卡片式布局，悬停效果，响应式设计；5. 状态存储：使用localStorage记录点击统计。
+    依赖CDN：无
+    最后修改：2025-12-22
+  -->
+</body>
+</html>
