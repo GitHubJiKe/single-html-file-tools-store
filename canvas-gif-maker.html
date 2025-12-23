@@ -255,6 +255,134 @@
         order: 1;
       }
     }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        padding: 16px;
+        border-radius: 8px;
+      }
+      h1 {
+        font-size: 20px;
+        margin-bottom: 16px;
+      }
+      .main-layout {
+        gap: 16px;
+      }
+      
+      /* 九宫格优化 */
+      .grid-container {
+        padding: 8px;
+        gap: 6px;
+      }
+      .grid-item .placeholder {
+        font-size: 24px;
+      }
+      .grid-item .delete-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+        display: flex; /* 移动端始终显示删除按钮 */
+      }
+      
+      /* GIF 控制区域 */
+      .gif-controls {
+        padding: 12px;
+      }
+      .control-group {
+        margin-bottom: 10px;
+      }
+      .control-group label {
+        font-size: 13px;
+      }
+      .slider-value {
+        font-size: 13px;
+        min-width: 50px;
+      }
+      
+      /* 画布容器 */
+      .canvas-container {
+        padding: 12px;
+        overflow-x: auto;
+      }
+      #drawCanvas {
+        max-width: 100%;
+        height: auto;
+        touch-action: none;
+      }
+      
+      /* 工具栏 */
+      .toolbar {
+        padding: 12px;
+        gap: 8px;
+      }
+      .toolbar-group {
+        gap: 6px;
+      }
+      .toolbar-group label {
+        font-size: 13px;
+      }
+      .color-picker {
+        width: 40px;
+        height: 36px;
+      }
+      button {
+        padding: 8px 14px;
+        font-size: 14px;
+      }
+      
+      /* 信息框 */
+      .info-box {
+        padding: 10px;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      
+      /* 状态消息 */
+      .status-message {
+        font-size: 13px;
+        padding: 8px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      body {
+        padding: 5px;
+      }
+      .container {
+        padding: 12px;
+      }
+      h1 {
+        font-size: 18px;
+        margin-bottom: 12px;
+      }
+      
+      /* 工具栏紧凑布局 */
+      .toolbar {
+        padding: 10px;
+        gap: 6px;
+      }
+      .toolbar-group {
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+      
+      /* 画布适配小屏幕 */
+      .canvas-container {
+        padding: 8px;
+      }
+      
+      /* 九宫格更紧凑 */
+      .grid-container {
+        padding: 6px;
+        gap: 4px;
+      }
+    }
   </style>
   <!-- 使用 gifshot 库进行 GIF 编码 -->
   <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
@@ -360,6 +488,19 @@
     
     // 初始化画布
     function initCanvas() {
+      // 响应式画布尺寸
+      const containerWidth = canvas.parentElement.clientWidth - 40;
+      const maxSize = 500;
+      
+      if (window.innerWidth <= 768) {
+        const size = Math.min(containerWidth, maxSize);
+        canvas.width = size;
+        canvas.height = size;
+      } else {
+        canvas.width = maxSize;
+        canvas.height = maxSize;
+      }
+      
       ctx.fillStyle = bgColorInput.value;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
@@ -420,23 +561,28 @@
     canvas.addEventListener('mouseout', stopDrawing);
     
     // 触摸支持
-    canvas.addEventListener('touchstart', handleTouch);
-    canvas.addEventListener('touchmove', handleTouch);
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchcancel', stopDrawing);
     
     function startDrawing(e) {
       isDrawing = true;
       const rect = canvas.getBoundingClientRect();
-      lastX = e.clientX - rect.left;
-      lastY = e.clientY - rect.top;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      lastX = (e.clientX - rect.left) * scaleX;
+      lastY = (e.clientY - rect.top) * scaleY;
     }
     
     function draw(e) {
       if (!isDrawing) return;
       
       const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
       
       ctx.strokeStyle = penColorInput.value;
       ctx.lineWidth = penSizeInput.value;
@@ -456,14 +602,40 @@
       isDrawing = false;
     }
     
-    function handleTouch(e) {
+    function handleTouchStart(e) {
       e.preventDefault();
+      isDrawing = true;
       const touch = e.touches[0];
-      const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
-        clientX: touch.clientX,
-        clientY: touch.clientY
-      });
-      canvas.dispatchEvent(mouseEvent);
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      lastX = (touch.clientX - rect.left) * scaleX;
+      lastY = (touch.clientY - rect.top) * scaleY;
+    }
+    
+    function handleTouchMove(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (touch.clientX - rect.left) * scaleX;
+      const y = (touch.clientY - rect.top) * scaleY;
+      
+      ctx.strokeStyle = penColorInput.value;
+      ctx.lineWidth = penSizeInput.value;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      
+      lastX = x;
+      lastY = y;
     }
     
     // 背景色变更
@@ -638,6 +810,26 @@
         }, 3000);
       }
     }
+    
+    // 窗口大小变化时调整画布
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        // 保存当前画布内容
+        const imageData = canvas.toDataURL();
+        
+        // 重新初始化画布
+        initCanvas();
+        
+        // 恢复画布内容
+        const img = new Image();
+        img.onload = function() {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = imageData;
+      }, 300);
+    });
     
     // 初始化
     initCanvas();

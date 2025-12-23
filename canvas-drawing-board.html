@@ -493,7 +493,7 @@
         ctx.globalCompositeOperation = 'source-over';
       } else if (currentTool === 'eraser') {
         ctx.strokeStyle = bgColorInput.value;
-        ctx.globalCompositeOperation = 'destination-out';
+        ctx.globalCompositeOperation = 'source-over';
       }
       
       ctx.lineWidth = penSizeInput.value;
@@ -541,15 +541,19 @@
     
     // 背景色变更
     bgColorInput.addEventListener('change', function() {
-      // 保存当前画布内容
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      // 保存当前画布内容为图片
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(canvas, 0, 0);
       
       // 填充新背景色
       ctx.fillStyle = this.value;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // 恢复画布内容
-      ctx.putImageData(imageData, 0, 0);
+    //   ctx.drawImage(tempCanvas, 0, 0);
       
       saveState();
       showStatus('背景色已更新', 'success');
