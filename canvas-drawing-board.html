@@ -1,0 +1,874 @@
+<!-- Canvas 在线画图工具（单文件HTML实现，无需构建步骤）-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Canvas 在线画图工具</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      padding: 10px;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 16px;
+      color: #333;
+      text-align: center;
+    }
+    
+    /* 工具栏 */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      align-items: center;
+    }
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tool-group label {
+      font-size: 14px;
+      color: #666;
+      white-space: nowrap;
+    }
+    .color-picker {
+      width: 50px;
+      height: 40px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .size-input {
+      width: 60px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    /* 按钮样式 */
+    button {
+      padding: 10px 16px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: #006aff;
+      color: white;
+    }
+    .btn-primary:hover { background: #0056cc; }
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    .btn-danger:hover { background: #c82333; }
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    .btn-success:hover { background: #218838; }
+    
+    .btn-tool {
+      background: white;
+      border: 2px solid #ddd;
+      color: #333;
+    }
+    .btn-tool:hover {
+      border-color: #006aff;
+      color: #006aff;
+    }
+    .btn-tool.active {
+      background: #006aff;
+      color: white;
+      border-color: #006aff;
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+    
+    .file-input {
+      display: none;
+    }
+    
+    /* 图片调整控制面板 */
+    .image-control-panel {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .control-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-weight: 600;
+      color: #856404;
+    }
+    .control-header span {
+      flex: 1;
+    }
+    .control-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .control-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .control-item label {
+      font-size: 14px;
+      color: #856404;
+      min-width: 50px;
+    }
+    .control-item input[type="range"] {
+      flex: 1;
+    }
+    .control-item span {
+      min-width: 50px;
+      text-align: right;
+      font-weight: 600;
+      color: #856404;
+    }
+    .control-tips {
+      font-size: 13px;
+      color: #856404;
+      padding: 8px;
+      background: rgba(255, 193, 7, 0.1);
+      border-radius: 4px;
+    }
+    
+    /* Canvas 容器 */
+    .canvas-container {
+      display: flex;
+      justify-content: center;
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 8px;
+      overflow: auto;
+    }
+    #drawCanvas {
+      border: 2px solid #ddd;
+      cursor: crosshair;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      touch-action: none;
+    }
+    #drawCanvas.eraser {
+      cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" fill="white" stroke="black" stroke-width="2"/></svg>') 12 12, auto;
+    }
+    
+    /* 状态提示 */
+    .status-message {
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 12px;
+      font-size: 14px;
+      display: none;
+      text-align: center;
+    }
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status-message.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+      body { padding: 5px; }
+      .container { padding: 12px; }
+      h1 { font-size: 18px; margin-bottom: 12px; }
+      .toolbar {
+        gap: 8px;
+        padding: 10px;
+      }
+      .tool-group {
+        gap: 6px;
+      }
+      .tool-group label {
+        font-size: 13px;
+      }
+      button {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+      .color-picker {
+        width: 40px;
+        height: 36px;
+      }
+      .size-input {
+        width: 50px;
+        padding: 6px;
+        font-size: 13px;
+      }
+      .canvas-container {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Canvas 在线画图工具</h1>
+    
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <!-- 工具选择 -->
+      <div class="tool-group">
+        <button id="penBtn" class="btn-tool active" title="画笔">✏️ 画笔</button>
+        <button id="eraserBtn" class="btn-tool" title="橡皮擦">🧹 橡皮擦</button>
+      </div>
+      
+      <!-- 颜色选择 -->
+      <div class="tool-group">
+        <label>背景色:</label>
+        <input type="color" id="bgColor" class="color-picker" value="#ffffff">
+      </div>
+      
+      <div class="tool-group">
+        <label>画笔色:</label>
+        <input type="color" id="penColor" class="color-picker" value="#000000">
+      </div>
+      
+      <!-- 画笔粗细 -->
+      <div class="tool-group">
+        <label>粗细:</label>
+        <input type="number" id="penSize" class="size-input" min="1" max="50" value="3">
+        <span id="penSizeDisplay">3px</span>
+      </div>
+      
+      <!-- 操作按钮 -->
+      <div class="tool-group">
+        <button id="undoBtn" class="btn-secondary" title="撤销 (Ctrl+Z)" disabled>↶ 撤销</button>
+        <button id="redoBtn" class="btn-secondary" title="重做 (Ctrl+Y)" disabled>↷ 重做</button>
+      </div>
+      
+      <div class="tool-group">
+        <button id="uploadImageBtn" class="btn-primary" title="上传图片">📷 上传图片</button>
+        <input type="file" id="uploadImageInput" class="file-input" accept="image/*">
+      </div>
+      
+      <div class="tool-group">
+        <button id="clearBtn" class="btn-danger" title="清空画布">🗑️ 清空</button>
+        <button id="downloadBtn" class="btn-success" title="下载图片">💾 下载</button>
+      </div>
+    </div>
+    
+    <!-- 图片调整控制面板 -->
+    <div id="imageControlPanel" class="image-control-panel" style="display: none;">
+      <div class="control-header">
+        <span>📐 调整图片大小和位置</span>
+        <button id="confirmImageBtn" class="btn-success btn-sm">✓ 确认</button>
+        <button id="cancelImageBtn" class="btn-secondary btn-sm">✕ 取消</button>
+      </div>
+      <div class="control-body">
+        <div class="control-item">
+          <label>缩放:</label>
+          <input type="range" id="imageScale" min="10" max="200" value="100" step="5">
+          <span id="imageScaleValue">100%</span>
+        </div>
+        <div class="control-tips">
+          💡 拖动图片可移动位置，拖动滑块可调整大小
+        </div>
+      </div>
+    </div>
+    
+    <!-- Canvas 画布 -->
+    <div class="canvas-container">
+      <canvas id="drawCanvas" width="800" height="600"></canvas>
+    </div>
+    
+    <!-- 状态消息 -->
+    <div class="status-message" id="statusMessage"></div>
+  </div>
+
+  <script>
+    // 全局变量
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    const bgColorInput = document.getElementById('bgColor');
+    const penColorInput = document.getElementById('penColor');
+    const penSizeInput = document.getElementById('penSize');
+    const penSizeDisplay = document.getElementById('penSizeDisplay');
+    const penBtn = document.getElementById('penBtn');
+    const eraserBtn = document.getElementById('eraserBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    const redoBtn = document.getElementById('redoBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const statusMessage = document.getElementById('statusMessage');
+    const uploadImageBtn = document.getElementById('uploadImageBtn');
+    const uploadImageInput = document.getElementById('uploadImageInput');
+    const imageControlPanel = document.getElementById('imageControlPanel');
+    const imageScale = document.getElementById('imageScale');
+    const imageScaleValue = document.getElementById('imageScaleValue');
+    const confirmImageBtn = document.getElementById('confirmImageBtn');
+    const cancelImageBtn = document.getElementById('cancelImageBtn');
+    
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let currentTool = 'pen'; // 'pen' or 'eraser'
+    
+    // 历史记录管理
+    let history = [];
+    let historyStep = -1;
+    const MAX_HISTORY = 50;
+    
+    // 图片上传相关
+    let uploadedImage = null;
+    let imageX = 0;
+    let imageY = 0;
+    let imageWidth = 0;
+    let imageHeight = 0;
+    let originalImageWidth = 0;
+    let originalImageHeight = 0;
+    let isDraggingImage = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let isImageMode = false;
+    let tempCanvasState = null;
+    
+    // 初始化画布
+    function initCanvas() {
+      // 设置画布尺寸（响应式）
+      const containerWidth = canvas.parentElement.clientWidth - 40;
+      const maxWidth = 800;
+      const maxHeight = 600;
+      
+      if (window.innerWidth <= 768) {
+        canvas.width = Math.min(containerWidth, maxWidth);
+        canvas.height = Math.min(canvas.width * 0.75, maxHeight);
+      } else {
+        canvas.width = maxWidth;
+        canvas.height = maxHeight;
+      }
+      
+      // 填充背景色
+      ctx.fillStyle = bgColorInput.value;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // 保存初始状态
+      saveState();
+    }
+    
+    // 保存画布状态到历史记录
+    function saveState() {
+      // 移除当前步骤之后的所有历史记录
+      if (historyStep < history.length - 1) {
+        history = history.slice(0, historyStep + 1);
+      }
+      
+      // 保存当前状态
+      const imageData = canvas.toDataURL();
+      history.push(imageData);
+      
+      // 限制历史记录数量
+      if (history.length > MAX_HISTORY) {
+        history.shift();
+      } else {
+        historyStep++;
+      }
+      
+      updateUndoRedoButtons();
+    }
+    
+    // 恢复画布状态
+    function restoreState(index) {
+      if (index >= 0 && index < history.length) {
+        const img = new Image();
+        img.onload = function() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+        };
+        img.src = history[index];
+        historyStep = index;
+        updateUndoRedoButtons();
+      }
+    }
+    
+    // 更新撤销/重做按钮状态
+    function updateUndoRedoButtons() {
+      undoBtn.disabled = historyStep <= 0;
+      redoBtn.disabled = historyStep >= history.length - 1;
+    }
+    
+    // 撤销
+    function undo() {
+      if (historyStep > 0) {
+        restoreState(historyStep - 1);
+      }
+    }
+    
+    // 重做
+    function redo() {
+      if (historyStep < history.length - 1) {
+        restoreState(historyStep + 1);
+      }
+    }
+    
+    // 绘画功能
+    function startDrawing(e) {
+      if (isImageMode) return; // 图片模式下禁用绘画
+      
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      
+      if (e.type.includes('touch')) {
+        lastX = (e.touches[0].clientX - rect.left) * scaleX;
+        lastY = (e.touches[0].clientY - rect.top) * scaleY;
+      } else {
+        lastX = (e.clientX - rect.left) * scaleX;
+        lastY = (e.clientY - rect.top) * scaleY;
+      }
+    }
+    
+    function draw(e) {
+      if (!isDrawing || isImageMode) return; // 图片模式下禁用绘画
+      
+      e.preventDefault();
+      
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      
+      let x, y;
+      if (e.type.includes('touch')) {
+        x = (e.touches[0].clientX - rect.left) * scaleX;
+        y = (e.touches[0].clientY - rect.top) * scaleY;
+      } else {
+        x = (e.clientX - rect.left) * scaleX;
+        y = (e.clientY - rect.top) * scaleY;
+      }
+      
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      
+      if (currentTool === 'pen') {
+        ctx.strokeStyle = penColorInput.value;
+        ctx.globalCompositeOperation = 'source-over';
+      } else if (currentTool === 'eraser') {
+        ctx.strokeStyle = bgColorInput.value;
+        ctx.globalCompositeOperation = 'destination-out';
+      }
+      
+      ctx.lineWidth = penSizeInput.value;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      
+      lastX = x;
+      lastY = y;
+    }
+    
+    function stopDrawing() {
+      if (isDrawing) {
+        isDrawing = false;
+        saveState();
+      }
+    }
+    
+    // 事件监听
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    
+    // 触摸事件
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchcancel', stopDrawing);
+    
+    // 工具切换
+    penBtn.addEventListener('click', function() {
+      currentTool = 'pen';
+      penBtn.classList.add('active');
+      eraserBtn.classList.remove('active');
+      canvas.classList.remove('eraser');
+    });
+    
+    eraserBtn.addEventListener('click', function() {
+      currentTool = 'eraser';
+      eraserBtn.classList.add('active');
+      penBtn.classList.remove('active');
+      canvas.classList.add('eraser');
+    });
+    
+    // 背景色变更
+    bgColorInput.addEventListener('change', function() {
+      // 保存当前画布内容
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
+      // 填充新背景色
+      ctx.fillStyle = this.value;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // 恢复画布内容
+      ctx.putImageData(imageData, 0, 0);
+      
+      saveState();
+      showStatus('背景色已更新', 'success');
+    });
+    
+    // 画笔粗细显示
+    penSizeInput.addEventListener('input', function() {
+      penSizeDisplay.textContent = this.value + 'px';
+    });
+    
+    // 撤销/重做
+    undoBtn.addEventListener('click', undo);
+    redoBtn.addEventListener('click', redo);
+    
+    // 键盘快捷键
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z' || e.key === 'Z') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            redo();
+          } else {
+            undo();
+          }
+        } else if (e.key === 'y' || e.key === 'Y') {
+          e.preventDefault();
+          redo();
+        }
+      }
+    });
+    
+    // 清空画布
+    clearBtn.addEventListener('click', function() {
+      if (confirm('确定要清空画布吗？此操作不可撤销。')) {
+        ctx.fillStyle = bgColorInput.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        saveState();
+        showStatus('画布已清空', 'info');
+      }
+    });
+    
+    // 下载图片
+    downloadBtn.addEventListener('click', function() {
+      try {
+        const dataURL = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = `drawing-${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showStatus('图片已下载', 'success');
+      } catch (error) {
+        showStatus('下载失败：' + error.message, 'error');
+      }
+    });
+    
+    // 上传图片
+    uploadImageBtn.addEventListener('click', function() {
+      uploadImageInput.click();
+    });
+    
+    uploadImageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          // 保存当前画布状态
+          tempCanvasState = canvas.toDataURL();
+          
+          // 设置图片
+          uploadedImage = img;
+          originalImageWidth = img.width;
+          originalImageHeight = img.height;
+          
+          // 计算初始位置和大小（居中显示，适应画布）
+          const scale = Math.min(canvas.width / img.width, canvas.height / img.height, 1);
+          imageWidth = img.width * scale;
+          imageHeight = img.height * scale;
+          imageX = (canvas.width - imageWidth) / 2;
+          imageY = (canvas.height - imageHeight) / 2;
+          
+          // 进入图片调整模式
+          isImageMode = true;
+          imageControlPanel.style.display = 'block';
+          imageScale.value = 100;
+          imageScaleValue.textContent = '100%';
+          
+          // 禁用绘画功能
+          canvas.style.cursor = 'move';
+          
+          // 绘制图片
+          drawImageOnCanvas();
+          
+          showStatus('图片已加载，请调整位置和大小', 'info');
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+      this.value = '';
+    });
+    
+    // 绘制图片到画布
+    function drawImageOnCanvas() {
+      if (!uploadedImage) return;
+      
+      // 恢复画布状态
+      if (tempCanvasState) {
+        const img = new Image();
+        img.onload = function() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          
+          // 绘制上传的图片
+          ctx.drawImage(uploadedImage, imageX, imageY, imageWidth, imageHeight);
+          
+          // 绘制边框和控制点
+          ctx.strokeStyle = '#006aff';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 5]);
+          ctx.strokeRect(imageX, imageY, imageWidth, imageHeight);
+          ctx.setLineDash([]);
+        };
+        img.src = tempCanvasState;
+      }
+    }
+    
+    // 图片缩放
+    imageScale.addEventListener('input', function() {
+      const scale = this.value / 100;
+      imageScaleValue.textContent = this.value + '%';
+      
+      // 计算新的宽高（保持中心点不变）
+      const centerX = imageX + imageWidth / 2;
+      const centerY = imageY + imageHeight / 2;
+      
+      imageWidth = originalImageWidth * scale * Math.min(canvas.width / originalImageWidth, canvas.height / originalImageHeight, 1);
+      imageHeight = originalImageHeight * scale * Math.min(canvas.width / originalImageWidth, canvas.height / originalImageHeight, 1);
+      
+      imageX = centerX - imageWidth / 2;
+      imageY = centerY - imageHeight / 2;
+      
+      drawImageOnCanvas();
+    });
+    
+    // 图片拖拽
+    canvas.addEventListener('mousedown', function(e) {
+      if (!isImageMode) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      
+      // 检查是否点击在图片上
+      if (x >= imageX && x <= imageX + imageWidth && y >= imageY && y <= imageY + imageHeight) {
+        isDraggingImage = true;
+        dragStartX = x - imageX;
+        dragStartY = y - imageY;
+      }
+    });
+    
+    canvas.addEventListener('mousemove', function(e) {
+      if (!isImageMode || !isDraggingImage) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      
+      imageX = x - dragStartX;
+      imageY = y - dragStartY;
+      
+      drawImageOnCanvas();
+    });
+    
+    canvas.addEventListener('mouseup', function() {
+      if (isImageMode) {
+        isDraggingImage = false;
+      }
+    });
+    
+    // 触摸支持（图片拖拽）
+    canvas.addEventListener('touchstart', function(e) {
+      if (!isImageMode) return;
+      
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.touches[0].clientX - rect.left) * scaleX;
+      const y = (e.touches[0].clientY - rect.top) * scaleY;
+      
+      if (x >= imageX && x <= imageX + imageWidth && y >= imageY && y <= imageY + imageHeight) {
+        isDraggingImage = true;
+        dragStartX = x - imageX;
+        dragStartY = y - imageY;
+      }
+    }, { passive: false });
+    
+    canvas.addEventListener('touchmove', function(e) {
+      if (!isImageMode || !isDraggingImage) return;
+      
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.touches[0].clientX - rect.left) * scaleX;
+      const y = (e.touches[0].clientY - rect.top) * scaleY;
+      
+      imageX = x - dragStartX;
+      imageY = y - dragStartY;
+      
+      drawImageOnCanvas();
+    }, { passive: false });
+    
+    canvas.addEventListener('touchend', function() {
+      if (isImageMode) {
+        isDraggingImage = false;
+      }
+    });
+    
+    // 确认图片
+    confirmImageBtn.addEventListener('click', function() {
+      if (!uploadedImage) return;
+      
+      // 将图片绘制到画布
+      const img = new Image();
+      img.onload = function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(uploadedImage, imageX, imageY, imageWidth, imageHeight);
+        
+        // 退出图片模式
+        exitImageMode();
+        
+        // 保存状态
+        saveState();
+        
+        showStatus('图片已添加到画布', 'success');
+      };
+      img.src = tempCanvasState;
+    });
+    
+    // 取消图片
+    cancelImageBtn.addEventListener('click', function() {
+      if (!tempCanvasState) return;
+      
+      // 恢复画布状态
+      const img = new Image();
+      img.onload = function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = tempCanvasState;
+      
+      // 退出图片模式
+      exitImageMode();
+      
+      showStatus('已取消图片上传', 'info');
+    });
+    
+    // 退出图片模式
+    function exitImageMode() {
+      isImageMode = false;
+      uploadedImage = null;
+      tempCanvasState = null;
+      imageControlPanel.style.display = 'none';
+      canvas.style.cursor = currentTool === 'eraser' ? 'url(...)' : 'crosshair';
+      if (currentTool === 'eraser') {
+        canvas.classList.add('eraser');
+      }
+    }
+    
+    // 显示状态消息
+    function showStatus(message, type) {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message ${type}`;
+      statusMessage.style.display = 'block';
+      
+      setTimeout(() => {
+        statusMessage.style.display = 'none';
+      }, 3000);
+    }
+    
+    // 窗口大小变化时调整画布
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        // 保存当前画布内容
+        const imageData = canvas.toDataURL();
+        
+        // 重新初始化画布
+        initCanvas();
+        
+        // 恢复画布内容
+        const img = new Image();
+        img.onload = function() {
+          ctx.drawImage(img, 0, 0);
+        };
+        img.src = imageData;
+      }, 300);
+    });
+    
+    // 初始化
+    initCanvas();
+  </script>
+
+  <!--
+    工具元信息：
+    核心提示词：基于Simon Willison单文件哲学开发HTML工具，要求：1. 单个HTML文件，内嵌JS/CSS，无构建步骤，No React；2. 核心功能：Canvas绘画、撤销重做、橡皮擦、下载图片；3. 依赖：无依赖，使用原生Canvas API；4. 交互：画笔/橡皮擦切换、颜色选择、粗细调节、撤销重做、清空下载；5. 状态存储：内存中管理历史记录数组。
+    依赖CDN：无
+    最后修改：2025-12-22
+  -->
+</body>
+</html>
