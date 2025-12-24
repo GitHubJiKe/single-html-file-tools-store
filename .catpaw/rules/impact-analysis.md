@@ -1,7 +1,5 @@
 ---
 alwaysApply: true
-description: Project-wide dependency and impact analysis rules
-globs: '**/*.{ts,tsx,js,jsx,py,go,java}'
 ---
 
 You must reason about this codebase using a dependency graph mindset.

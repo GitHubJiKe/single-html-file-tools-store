@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Rule: 自动生成工具文档
 
 ## 触发条件

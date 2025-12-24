@@ -1,0 +1,1595 @@
+<!-- 在线简历制作工具（单文件HTML实现，无需构建步骤）-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在线简历制作工具</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #f5f5f7;
+      overflow-x: hidden;
+    }
+    .container {
+      display: flex;
+      height: 100vh;
+      flex-direction: column;
+    }
+    
+    /* 头部工具栏 */
+    .header {
+      background: white;
+      padding: 12px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      z-index: 100;
+    }
+    .header h1 {
+      font-size: 20px;
+      color: #1d1d1f;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .theme-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .theme-selector label {
+      font-size: 14px;
+      color: #666;
+    }
+    .theme-selector select {
+      padding: 6px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      background: white;
+    }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: #0071e3;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #0077ed;
+    }
+    .btn-secondary {
+      background: #f5f5f7;
+      color: #1d1d1f;
+    }
+    .btn-secondary:hover {
+      background: #e8e8ed;
+    }
+    .btn-danger {
+      background: #ff3b30;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #ff453a;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+    
+    /* 主内容区 */
+    .main-content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      gap: 1px;
+      background: #d2d2d7;
+    }
+    .editor-panel, .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: white;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      border-bottom: 1px solid #e5e5ea;
+      background: #fafafa;
+      color: #1d1d1f;
+    }
+    
+    /* 编辑器区域 */
+    .editor-content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .form-section {
+      background: white;
+      border: 1px solid #e5e5ea;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .form-section h3 {
+      font-size: 18px;
+      color: #1d1d1f;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #0071e3;
+    }
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    
+    /* 头像上传 */
+    .avatar-upload {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .avatar-preview {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid #e5e5ea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #f5f5f7;
+      position: relative;
+    }
+    .avatar-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .avatar-placeholder {
+      font-size: 32px;
+      color: #999;
+    }
+    .avatar-upload input[type="file"] {
+      display: none;
+    }
+    .avatar-upload-btn {
+      padding: 8px 16px;
+      background: #f5f5f7;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .avatar-upload-btn:hover {
+      background: #e8e8ed;
+    }
+    
+    /* 动态列表 */
+    .dynamic-list {
+      margin-top: 12px;
+    }
+    .dynamic-item {
+      background: #fafafa;
+      border: 1px solid #e5e5ea;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .dynamic-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .dynamic-item-title {
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+    .dynamic-item-remove {
+      background: none;
+      border: none;
+      color: #ff3b30;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+    }
+    .add-item-btn {
+      width: 100%;
+      padding: 10px;
+      background: white;
+      border: 2px dashed #d2d2d7;
+      border-radius: 8px;
+      color: #0071e3;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .add-item-btn:hover {
+      border-color: #0071e3;
+      background: #f5f5f7;
+    }
+    
+    /* 技能星级 */
+    .skill-rating {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .skill-rating .star {
+      font-size: 20px;
+      cursor: pointer;
+      color: #d2d2d7;
+      transition: color 0.2s;
+    }
+    .skill-rating .star.active {
+      color: #ffcc00;
+    }
+    
+    /* 预览区域 */
+    .preview-content {
+      flex: 1;
+      padding: 40px;
+      overflow-y: auto;
+      background: #f5f5f7;
+    }
+    .resume-preview {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      min-height: 1000px;
+    }
+    
+    /* 简历主题样式 */
+    /* 经典蓝 */
+    .theme-classic-blue .resume-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+    .theme-classic-blue .resume-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid white;
+      margin: 0 auto 20px;
+      overflow: hidden;
+      background: white;
+    }
+    .theme-classic-blue .resume-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .theme-classic-blue .resume-name {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .theme-classic-blue .resume-title {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    .theme-classic-blue .resume-contact {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .theme-classic-blue .resume-body {
+      padding: 40px;
+    }
+    .theme-classic-blue .resume-section {
+      margin-bottom: 32px;
+    }
+    .theme-classic-blue .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #667eea;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+    
+    /* 现代绿 */
+    .theme-modern-green .resume-header {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+    .theme-modern-green .resume-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid white;
+      margin: 0 auto 20px;
+      overflow: hidden;
+      background: white;
+    }
+    .theme-modern-green .resume-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .theme-modern-green .resume-name {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .theme-modern-green .resume-title {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    .theme-modern-green .resume-contact {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .theme-modern-green .resume-body {
+      padding: 40px;
+    }
+    .theme-modern-green .resume-section {
+      margin-bottom: 32px;
+    }
+    .theme-modern-green .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #11998e;
+      border-bottom: 2px solid #11998e;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+    
+    /* 优雅紫 */
+    .theme-elegant-purple .resume-header {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      color: #5a4a7a;
+      padding: 40px;
+      text-align: center;
+    }
+    .theme-elegant-purple .resume-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid white;
+      margin: 0 auto 20px;
+      overflow: hidden;
+      background: white;
+    }
+    .theme-elegant-purple .resume-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .theme-elegant-purple .resume-name {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .theme-elegant-purple .resume-title {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    .theme-elegant-purple .resume-contact {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .theme-elegant-purple .resume-body {
+      padding: 40px;
+    }
+    .theme-elegant-purple .resume-section {
+      margin-bottom: 32px;
+    }
+    .theme-elegant-purple .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #8e44ad;
+      border-bottom: 2px solid #8e44ad;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+    
+    /* 极简黑 */
+    .theme-minimal-black .resume-header {
+      background: #1d1d1f;
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+    .theme-minimal-black .resume-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid white;
+      margin: 0 auto 20px;
+      overflow: hidden;
+      background: white;
+    }
+    .theme-minimal-black .resume-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .theme-minimal-black .resume-name {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .theme-minimal-black .resume-title {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    .theme-minimal-black .resume-contact {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .theme-minimal-black .resume-body {
+      padding: 40px;
+    }
+    .theme-minimal-black .resume-section {
+      margin-bottom: 32px;
+    }
+    .theme-minimal-black .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1d1d1f;
+      border-bottom: 2px solid #1d1d1f;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+    
+    /* 通用简历样式 */
+    .basic-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .info-item {
+      font-size: 14px;
+    }
+    .info-label {
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .info-value {
+      color: #1d1d1f;
+      font-weight: 500;
+    }
+    .work-item {
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #e5e5ea;
+    }
+    .work-item:last-child {
+      border-bottom: none;
+    }
+    .work-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .work-company {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+    .work-period {
+      font-size: 14px;
+      color: #666;
+    }
+    .work-position {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .work-content {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #333;
+      white-space: pre-wrap;
+    }
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .skill-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .skill-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1d1d1f;
+    }
+    .skill-stars {
+      color: #ffcc00;
+      font-size: 16px;
+    }
+    .other-info {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #333;
+      white-space: pre-wrap;
+    }
+    
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      font-size: 14px;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+    
+    /* 导出菜单 */
+    .export-menu {
+      position: relative;
+    }
+    .export-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: white;
+      border: 1px solid #e5e5ea;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      min-width: 150px;
+      display: none;
+      z-index: 100;
+    }
+    .export-dropdown.show {
+      display: block;
+    }
+    .export-option {
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .export-option:hover {
+      background: #f5f5f7;
+    }
+    .export-option:first-child {
+      border-radius: 8px 8px 0 0;
+    }
+    .export-option:last-child {
+      border-radius: 0 0 8px 8px;
+    }
+    
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      .main-content {
+        flex-direction: column;
+      }
+      .editor-panel, .preview-panel {
+        max-height: 50vh;
+      }
+      .header h1 {
+        font-size: 16px;
+      }
+      .toolbar {
+        width: 100%;
+      }
+      .btn {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      .preview-content {
+        padding: 20px;
+      }
+      .resume-preview {
+        transform: scale(0.85);
+        transform-origin: top center;
+      }
+      .basic-info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 头部工具栏 -->
+    <div class="header">
+      <h1>📄 在线简历制作</h1>
+      <div class="toolbar">
+        <div class="theme-selector">
+          <label>主题：</label>
+          <select id="themeSelect">
+            <option value="classic-blue">经典蓝</option>
+            <option value="modern-green">现代绿</option>
+            <option value="elegant-purple">优雅紫</option>
+            <option value="minimal-black">极简黑</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary" onclick="document.getElementById('importInput').click()">📤 导入</button>
+        <div class="export-menu">
+          <button class="btn btn-primary" onclick="toggleExportMenu()">📥 导出</button>
+          <div class="export-dropdown" id="exportMenu">
+            <div class="export-option" onclick="exportMarkdown()">📝 Markdown</div>
+            <div class="export-option" onclick="exportJSON()">📋 JSON</div>
+            <div class="export-option" onclick="exportPNG()">🖼️ PNG</div>
+            <div class="export-option" onclick="exportPDF()">📄 PDF</div>
+          </div>
+        </div>
+        <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空</button>
+        <input type="file" id="importInput" accept=".json" style="display: none;" onchange="handleImportJSON(event)">
+      </div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 编辑器面板 -->
+      <div class="editor-panel">
+        <div class="panel-header">编辑简历</div>
+        <div class="editor-content">
+          <!-- 基本信息 -->
+          <div class="form-section">
+            <h3>👤 基本信息</h3>
+            
+            <div class="avatar-upload">
+              <div class="avatar-preview" id="avatarPreview">
+                <span class="avatar-placeholder">📷</span>
+              </div>
+              <label class="avatar-upload-btn">
+                上传头像
+                <input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(event)">
+              </label>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>姓名 *</label>
+                <input type="text" id="name" placeholder="请输入姓名" oninput="updatePreview()">
+              </div>
+              <div class="form-group">
+                <label>年龄</label>
+                <input type="number" id="age" placeholder="请输入年龄" oninput="updatePreview()">
+              </div>
+              <div class="form-group">
+                <label>性别</label>
+                <input type="text" id="gender" placeholder="请输入性别" oninput="updatePreview()">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>院校</label>
+                <input type="text" id="school" placeholder="请输入院校" oninput="updatePreview()">
+              </div>
+              <div class="form-group">
+                <label>专业</label>
+                <input type="text" id="major" placeholder="请输入专业" oninput="updatePreview()">
+              </div>
+              <div class="form-group">
+                <label>学历</label>
+                <input type="text" id="education" placeholder="请输入学历" oninput="updatePreview()">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>职业</label>
+              <input type="text" id="profession" placeholder="请输入职业" oninput="updatePreview()">
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>邮箱</label>
+                <input type="email" id="email" placeholder="请输入邮箱" oninput="updatePreview()">
+              </div>
+              <div class="form-group">
+                <label>电话</label>
+                <input type="tel" id="phone" placeholder="请输入电话" oninput="updatePreview()">
+              </div>
+              <div class="form-group">
+                <label>微信</label>
+                <input type="text" id="wechat" placeholder="请输入微信号" oninput="updatePreview()">
+              </div>
+            </div>
+          </div>
+          
+          <!-- 工作经历 -->
+          <div class="form-section">
+            <h3>💼 工作经历</h3>
+            <div class="dynamic-list" id="workList"></div>
+            <button class="add-item-btn" onclick="addWorkExperience()">+ 添加工作经历</button>
+          </div>
+          
+          <!-- 核心技能 -->
+          <div class="form-section">
+            <h3>⭐ 核心技能</h3>
+            <div class="dynamic-list" id="skillList"></div>
+            <button class="add-item-btn" onclick="addSkill()">+ 添加技能</button>
+          </div>
+          
+          <!-- 其他信息 -->
+          <div class="form-section">
+            <h3>✨ 其他信息</h3>
+            <div class="form-group">
+              <textarea id="otherInfo" placeholder="在这里添加其他想要展示的信息，比如个人优势、获奖经历、项目经验等..." oninput="updatePreview()"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 预览面板 -->
+      <div class="preview-panel">
+        <div class="panel-header">简历预览</div>
+        <div class="preview-content">
+          <div class="resume-preview theme-classic-blue" id="resumePreview">
+            <!-- 预览内容将通过 JavaScript 动态生成 -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast 提示 -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <script>
+    // 全局状态（带默认示例数据）
+    let resumeData = {
+      avatar: '',
+      name: '张三',
+      age: '28',
+      gender: '男',
+      school: '清华大学',
+      major: '计算机科学与技术',
+      education: '本科',
+      profession: '前端开发工程师',
+      email: 'zhangsan@example.com',
+      phone: '138-0000-0000',
+      wechat: 'zhangsan_dev',
+      workExperiences: [
+        {
+          company: '某互联网科技公司',
+          period: '2021.07 - 至今',
+          position: '高级前端工程师',
+          content: '负责公司核心产品的前端架构设计与开发\n- 主导前端技术栈升级，性能优化提升 40%\n- 带领 5 人团队完成多个重点项目\n- 建立前端代码规范和自动化测试体系'
+        },
+        {
+          company: '某创业公司',
+          period: '2019.07 - 2021.06',
+          position: '前端工程师',
+          content: '参与公司多个 Web 应用的开发与维护\n- 独立完成用户管理系统的前端开发\n- 优化页面加载速度，首屏时间减少 50%\n- 参与移动端 H5 页面开发'
+        }
+      ],
+      skills: [
+        { name: 'JavaScript/TypeScript', level: 5 },
+        { name: 'React/Vue', level: 5 },
+        { name: 'Node.js', level: 4 },
+        { name: 'Webpack/Vite', level: 4 },
+        { name: 'CSS/Sass', level: 5 },
+        { name: 'Git', level: 4 }
+      ],
+      otherInfo: '• 热爱技术，保持学习新技术的热情\n• 具备良好的团队协作能力和沟通能力\n• GitHub 开源项目贡献者，Star 数 2000+\n• 技术博客累计阅读量 10 万+\n• 获得公司年度优秀员工奖'
+    };
+    
+    // IndexedDB 初始化
+    let db;
+    const DB_NAME = 'ResumeBuilderDB';
+    const STORE_NAME = 'resumes';
+    
+    function initDB() {
+      const request = indexedDB.open(DB_NAME, 1);
+      
+      request.onerror = () => {
+        console.error('IndexedDB 打开失败');
+        // 即使数据库打开失败，也要显示默认数据
+        restoreFormData();
+        updatePreview(true); // 跳过收集表单数据，直接使用 resumeData
+      };
+      
+      request.onsuccess = (event) => {
+        db = event.target.result;
+        loadFromDB();
+      };
+      
+      request.onupgradeneeded = (event) => {
+        db = event.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+        }
+      };
+    }
+    
+    // 保存到 IndexedDB
+    function saveToDB() {
+      if (!db) return;
+      
+      const transaction = db.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const data = {
+        id: 'current',
+        ...resumeData,
+        lastModified: new Date().toISOString()
+      };
+      store.put(data);
+    }
+    
+    // 从 IndexedDB 加载
+    function loadFromDB() {
+      if (!db) return;
+      
+      const transaction = db.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get('current');
+      
+      request.onsuccess = (event) => {
+        const data = event.target.result;
+        if (data) {
+          // 有历史数据，加载历史数据
+          resumeData = { ...data };
+          delete resumeData.id;
+          delete resumeData.lastModified;
+          restoreFormData();
+          updatePreview(true); // 跳过收集表单数据，使用加载的数据
+          showToast('已加载上次编辑的内容');
+        } else {
+          // 首次打开，使用默认示例数据
+          restoreFormData();
+          updatePreview(true); // 跳过收集表单数据，使用默认数据
+          showToast('欢迎使用！这是一份示例简历，您可以直接编辑');
+        }
+      };
+    }
+    
+    // 恢复表单数据
+    function restoreFormData() {
+      // 基本信息
+      document.getElementById('name').value = resumeData.name || '';
+      document.getElementById('age').value = resumeData.age || '';
+      document.getElementById('gender').value = resumeData.gender || '';
+      document.getElementById('school').value = resumeData.school || '';
+      document.getElementById('major').value = resumeData.major || '';
+      document.getElementById('education').value = resumeData.education || '';
+      document.getElementById('profession').value = resumeData.profession || '';
+      document.getElementById('email').value = resumeData.email || '';
+      document.getElementById('phone').value = resumeData.phone || '';
+      document.getElementById('wechat').value = resumeData.wechat || '';
+      document.getElementById('otherInfo').value = resumeData.otherInfo || '';
+      
+      // 头像
+      if (resumeData.avatar) {
+        const avatarPreview = document.getElementById('avatarPreview');
+        avatarPreview.innerHTML = `<img src="${resumeData.avatar}" alt="头像">`;
+      }
+      
+      // 工作经历 - 使用 skipUpdate 参数避免多次触发预览更新
+      resumeData.workExperiences.forEach(work => {
+        addWorkExperience(work, true);
+      });
+      
+      // 技能 - 使用 skipUpdate 参数避免多次触发预览更新
+      resumeData.skills.forEach(skill => {
+        addSkill(skill, true);
+      });
+    }
+    
+    // 收集表单数据
+    function collectFormData() {
+      resumeData.name = document.getElementById('name').value;
+      resumeData.age = document.getElementById('age').value;
+      resumeData.gender = document.getElementById('gender').value;
+      resumeData.school = document.getElementById('school').value;
+      resumeData.major = document.getElementById('major').value;
+      resumeData.education = document.getElementById('education').value;
+      resumeData.profession = document.getElementById('profession').value;
+      resumeData.email = document.getElementById('email').value;
+      resumeData.phone = document.getElementById('phone').value;
+      resumeData.wechat = document.getElementById('wechat').value;
+      resumeData.otherInfo = document.getElementById('otherInfo').value;
+      
+      // 收集工作经历
+      resumeData.workExperiences = [];
+      document.querySelectorAll('#workList .dynamic-item').forEach(item => {
+        const id = item.dataset.id;
+        resumeData.workExperiences.push({
+          company: document.getElementById(`work-company-${id}`).value,
+          period: document.getElementById(`work-period-${id}`).value,
+          position: document.getElementById(`work-position-${id}`).value,
+          content: document.getElementById(`work-content-${id}`).value
+        });
+      });
+      
+      // 收集技能
+      resumeData.skills = [];
+      document.querySelectorAll('#skillList .dynamic-item').forEach(item => {
+        const id = item.dataset.id;
+        const stars = item.querySelectorAll('.star.active').length;
+        resumeData.skills.push({
+          name: document.getElementById(`skill-name-${id}`).value,
+          level: stars
+        });
+      });
+    }
+    
+    // 添加工作经历
+    let workIdCounter = 0;
+    function addWorkExperience(data = null, skipUpdate = false) {
+      const id = workIdCounter++;
+      const workList = document.getElementById('workList');
+      const item = document.createElement('div');
+      item.className = 'dynamic-item';
+      item.dataset.id = id;
+      
+      item.innerHTML = `
+        <div class="dynamic-item-header">
+          <span class="dynamic-item-title">工作经历 ${workList.children.length + 1}</span>
+          <button class="dynamic-item-remove" onclick="removeWorkExperience(${id})">×</button>
+        </div>
+        <div class="form-group">
+          <label>公司名称</label>
+          <input type="text" id="work-company-${id}" value="${data?.company || ''}" placeholder="请输入公司名称" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>起止时间</label>
+          <input type="text" id="work-period-${id}" value="${data?.period || ''}" placeholder="如：2020.01 - 2023.12" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>职位/职称</label>
+          <input type="text" id="work-position-${id}" value="${data?.position || ''}" placeholder="请输入职位" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>工作内容</label>
+          <textarea id="work-content-${id}" placeholder="描述主要工作内容和成果..." oninput="updatePreview()">${data?.content || ''}</textarea>
+        </div>
+      `;
+      
+      workList.appendChild(item);
+      if (!skipUpdate) {
+        updatePreview();
+      }
+    }
+    
+    // 删除工作经历
+    function removeWorkExperience(id) {
+      const item = document.querySelector(`#workList .dynamic-item[data-id="${id}"]`);
+      if (item) {
+        item.remove();
+        updatePreview();
+      }
+    }
+    
+    // 添加技能
+    let skillIdCounter = 0;
+    function addSkill(data = null, skipUpdate = false) {
+      const id = skillIdCounter++;
+      const skillList = document.getElementById('skillList');
+      const item = document.createElement('div');
+      item.className = 'dynamic-item';
+      item.dataset.id = id;
+      
+      item.innerHTML = `
+        <div class="dynamic-item-header">
+          <span class="dynamic-item-title">技能 ${skillList.children.length + 1}</span>
+          <button class="dynamic-item-remove" onclick="removeSkill(${id})">×</button>
+        </div>
+        <div class="form-group">
+          <label>技能名称</label>
+          <input type="text" id="skill-name-${id}" value="${data?.name || ''}" placeholder="如：JavaScript" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>熟练程度</label>
+          <div class="skill-rating" id="skill-rating-${id}">
+            ${[1,2,3,4,5].map(i => `<span class="star ${data && i <= data.level ? 'active' : ''}" onclick="setSkillLevel(${id}, ${i})">★</span>`).join('')}
+          </div>
+        </div>
+      `;
+      
+      skillList.appendChild(item);
+      if (!skipUpdate) {
+        updatePreview();
+      }
+    }
+    
+    // 删除技能
+    function removeSkill(id) {
+      const item = document.querySelector(`#skillList .dynamic-item[data-id="${id}"]`);
+      if (item) {
+        item.remove();
+        updatePreview();
+      }
+    }
+    
+    // 设置技能等级
+    function setSkillLevel(skillId, level) {
+      const rating = document.getElementById(`skill-rating-${skillId}`);
+      const stars = rating.querySelectorAll('.star');
+      stars.forEach((star, index) => {
+        if (index < level) {
+          star.classList.add('active');
+        } else {
+          star.classList.remove('active');
+        }
+      });
+      updatePreview();
+    }
+    
+    // 头像上传
+    function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resumeData.avatar = e.target.result;
+        const avatarPreview = document.getElementById('avatarPreview');
+        avatarPreview.innerHTML = `<img src="${e.target.result}" alt="头像">`;
+        updatePreview();
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    // 更新预览
+    function updatePreview(skipCollect = false) {
+      if (!skipCollect) {
+        collectFormData();
+      }
+      saveToDB();
+      
+      const preview = document.getElementById('resumePreview');
+      const theme = document.getElementById('themeSelect').value;
+      preview.className = `resume-preview theme-${theme}`;
+      
+      // 生成预览 HTML
+      let html = '';
+      
+      // 头部
+      html += '<div class="resume-header">';
+      if (resumeData.avatar) {
+        html += `<div class="resume-avatar"><img src="${resumeData.avatar}" alt="头像"></div>`;
+      }
+      html += `<div class="resume-name">${resumeData.name || '姓名'}</div>`;
+      html += `<div class="resume-title">${resumeData.profession || '职业'}</div>`;
+      
+      // 联系方式
+      const contacts = [];
+      if (resumeData.email) contacts.push(`📧 ${resumeData.email}`);
+      if (resumeData.phone) contacts.push(`📱 ${resumeData.phone}`);
+      if (resumeData.wechat) contacts.push(`💬 ${resumeData.wechat}`);
+      if (contacts.length > 0) {
+        html += `<div class="resume-contact">${contacts.join(' | ')}</div>`;
+      }
+      html += '</div>';
+      
+      // 主体
+      html += '<div class="resume-body">';
+      
+      // 基本信息
+      const hasBasicInfo = resumeData.age || resumeData.gender || resumeData.school || resumeData.major || resumeData.education;
+      if (hasBasicInfo) {
+        html += '<div class="resume-section">';
+        html += '<div class="section-title">基本信息</div>';
+        html += '<div class="basic-info-grid">';
+        if (resumeData.age) html += `<div class="info-item"><div class="info-label">年龄</div><div class="info-value">${resumeData.age}</div></div>`;
+        if (resumeData.gender) html += `<div class="info-item"><div class="info-label">性别</div><div class="info-value">${resumeData.gender}</div></div>`;
+        if (resumeData.school) html += `<div class="info-item"><div class="info-label">院校</div><div class="info-value">${resumeData.school}</div></div>`;
+        if (resumeData.major) html += `<div class="info-item"><div class="info-label">专业</div><div class="info-value">${resumeData.major}</div></div>`;
+        if (resumeData.education) html += `<div class="info-item"><div class="info-label">学历</div><div class="info-value">${resumeData.education}</div></div>`;
+        html += '</div></div>';
+      }
+      
+      // 工作经历
+      if (resumeData.workExperiences.length > 0) {
+        html += '<div class="resume-section">';
+        html += '<div class="section-title">工作经历</div>';
+        resumeData.workExperiences.forEach(work => {
+          html += '<div class="work-item">';
+          html += `<div class="work-header">`;
+          html += `<div class="work-company">${work.company || '公司名称'}</div>`;
+          html += `<div class="work-period">${work.period || '时间'}</div>`;
+          html += `</div>`;
+          if (work.position) html += `<div class="work-position">${work.position}</div>`;
+          if (work.content) html += `<div class="work-content">${work.content}</div>`;
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      // 核心技能
+      if (resumeData.skills.length > 0) {
+        html += '<div class="resume-section">';
+        html += '<div class="section-title">核心技能</div>';
+        html += '<div class="skills-grid">';
+        resumeData.skills.forEach(skill => {
+          if (skill.name) {
+            html += '<div class="skill-item">';
+            html += `<div class="skill-name">${skill.name}</div>`;
+            html += `<div class="skill-stars">${'★'.repeat(skill.level)}${'☆'.repeat(5 - skill.level)}</div>`;
+            html += '</div>';
+          }
+        });
+        html += '</div></div>';
+      }
+      
+      // 其他信息
+      if (resumeData.otherInfo) {
+        html += '<div class="resume-section">';
+        html += '<div class="section-title">其他信息</div>';
+        html += `<div class="other-info">${resumeData.otherInfo}</div>`;
+        html += '</div>';
+      }
+      
+      // 空状态
+      if (!hasBasicInfo && resumeData.workExperiences.length === 0 && resumeData.skills.length === 0 && !resumeData.otherInfo) {
+        html += '<div class="empty-state">';
+        html += '<div class="empty-state-icon">📝</div>';
+        html += '<div>开始填写你的简历吧</div>';
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      
+      preview.innerHTML = html;
+    }
+    
+    // 主题切换
+    document.getElementById('themeSelect').addEventListener('change', () => {
+      updatePreview();
+    });
+    
+    // 清空所有内容
+    function clearAll() {
+      if (!confirm('确定要清空所有内容吗？此操作不可恢复！')) return;
+      
+      resumeData = {
+        avatar: '',
+        name: '',
+        age: '',
+        gender: '',
+        school: '',
+        major: '',
+        education: '',
+        profession: '',
+        email: '',
+        phone: '',
+        wechat: '',
+        workExperiences: [],
+        skills: [],
+        otherInfo: ''
+      };
+      
+      // 清空表单
+      document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+      document.getElementById('avatarPreview').innerHTML = '<span class="avatar-placeholder">📷</span>';
+      document.getElementById('workList').innerHTML = '';
+      document.getElementById('skillList').innerHTML = '';
+      workIdCounter = 0;
+      skillIdCounter = 0;
+      
+      updatePreview();
+      saveToDB();
+      showToast('已清空所有内容');
+    }
+    
+    // 导出菜单
+    function toggleExportMenu() {
+      const menu = document.getElementById('exportMenu');
+      menu.classList.toggle('show');
+    }
+    
+    // 点击外部关闭菜单
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('exportMenu');
+      const exportBtn = e.target.closest('.export-menu');
+      if (!exportBtn && menu.classList.contains('show')) {
+        menu.classList.remove('show');
+      }
+    });
+    
+    // 导出 Markdown
+    function exportMarkdown() {
+      collectFormData();
+      let md = `# ${resumeData.name || '简历'}\n\n`;
+      
+      // 基本信息
+      md += `## 基本信息\n\n`;
+      if (resumeData.profession) md += `**职业**: ${resumeData.profession}\n\n`;
+      if (resumeData.age) md += `**年龄**: ${resumeData.age}\n\n`;
+      if (resumeData.gender) md += `**性别**: ${resumeData.gender}\n\n`;
+      if (resumeData.school) md += `**院校**: ${resumeData.school}\n\n`;
+      if (resumeData.major) md += `**专业**: ${resumeData.major}\n\n`;
+      if (resumeData.education) md += `**学历**: ${resumeData.education}\n\n`;
+      
+      // 联系方式
+      md += `## 联系方式\n\n`;
+      if (resumeData.email) md += `- 📧 ${resumeData.email}\n`;
+      if (resumeData.phone) md += `- 📱 ${resumeData.phone}\n`;
+      if (resumeData.wechat) md += `- 💬 ${resumeData.wechat}\n`;
+      md += `\n`;
+      
+      // 工作经历
+      if (resumeData.workExperiences.length > 0) {
+        md += `## 工作经历\n\n`;
+        resumeData.workExperiences.forEach(work => {
+          md += `### ${work.company}\n\n`;
+          md += `**时间**: ${work.period}\n\n`;
+          if (work.position) md += `**职位**: ${work.position}\n\n`;
+          if (work.content) md += `${work.content}\n\n`;
+        });
+      }
+      
+      // 核心技能
+      if (resumeData.skills.length > 0) {
+        md += `## 核心技能\n\n`;
+        resumeData.skills.forEach(skill => {
+          md += `- ${skill.name}: ${'★'.repeat(skill.level)}${'☆'.repeat(5 - skill.level)}\n`;
+        });
+        md += `\n`;
+      }
+      
+      // 其他信息
+      if (resumeData.otherInfo) {
+        md += `## 其他信息\n\n${resumeData.otherInfo}\n`;
+      }
+      
+      downloadFile(md, 'resume.md', 'text/markdown');
+      toggleExportMenu();
+      showToast('Markdown 导出成功');
+    }
+    
+    // 导出 JSON
+    function exportJSON() {
+      collectFormData();
+      const json = JSON.stringify(resumeData, null, 2);
+      downloadFile(json, 'resume.json', 'application/json');
+      toggleExportMenu();
+      showToast('JSON 导出成功');
+    }
+    
+    // 导入 JSON
+    function handleImportJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // 验证文件类型
+      if (!file.name.endsWith('.json')) {
+        showToast('请选择 JSON 文件', 'error');
+        event.target.value = ''; // 清空文件选择
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          
+          // 验证数据结构
+          if (!validateResumeData(importedData)) {
+            showToast('JSON 数据格式不正确', 'error');
+            return;
+          }
+          
+          // 确认导入
+          if (!confirm('导入将覆盖当前所有内容，是否继续？')) {
+            return;
+          }
+          
+          // 清空现有表单
+          document.getElementById('workList').innerHTML = '';
+          document.getElementById('skillList').innerHTML = '';
+          workIdCounter = 0;
+          skillIdCounter = 0;
+          
+          // 更新数据
+          resumeData = {
+            avatar: importedData.avatar || '',
+            name: importedData.name || '',
+            age: importedData.age || '',
+            gender: importedData.gender || '',
+            school: importedData.school || '',
+            major: importedData.major || '',
+            education: importedData.education || '',
+            profession: importedData.profession || '',
+            email: importedData.email || '',
+            phone: importedData.phone || '',
+            wechat: importedData.wechat || '',
+            workExperiences: Array.isArray(importedData.workExperiences) ? importedData.workExperiences : [],
+            skills: Array.isArray(importedData.skills) ? importedData.skills : [],
+            otherInfo: importedData.otherInfo || ''
+          };
+          
+          // 恢复表单数据
+          restoreFormData();
+          
+          // 更新预览并保存
+          updatePreview(true);
+          saveToDB();
+          
+          showToast('导入成功');
+        } catch (error) {
+          console.error('导入失败:', error);
+          showToast('JSON 文件解析失败', 'error');
+        }
+      };
+      
+      reader.onerror = () => {
+        showToast('文件读取失败', 'error');
+      };
+      
+      reader.readAsText(file);
+      
+      // 清空文件选择，允许重复导入同一文件
+      event.target.value = '';
+    }
+    
+    // 验证简历数据结构
+    function validateResumeData(data) {
+      if (!data || typeof data !== 'object') {
+        return false;
+      }
+      
+      // 检查必要的字段类型
+      const stringFields = ['avatar', 'name', 'age', 'gender', 'school', 'major', 'education', 'profession', 'email', 'phone', 'wechat', 'otherInfo'];
+      for (const field of stringFields) {
+        if (data[field] !== undefined && typeof data[field] !== 'string') {
+          return false;
+        }
+      }
+      
+      // 检查工作经历数组
+      if (data.workExperiences !== undefined) {
+        if (!Array.isArray(data.workExperiences)) {
+          return false;
+        }
+        for (const work of data.workExperiences) {
+          if (typeof work !== 'object' || 
+              (work.company !== undefined && typeof work.company !== 'string') ||
+              (work.period !== undefined && typeof work.period !== 'string') ||
+              (work.position !== undefined && typeof work.position !== 'string') ||
+              (work.content !== undefined && typeof work.content !== 'string')) {
+            return false;
+          }
+        }
+      }
+      
+      // 检查技能数组
+      if (data.skills !== undefined) {
+        if (!Array.isArray(data.skills)) {
+          return false;
+        }
+        for (const skill of data.skills) {
+          if (typeof skill !== 'object' ||
+              (skill.name !== undefined && typeof skill.name !== 'string') ||
+              (skill.level !== undefined && (typeof skill.level !== 'number' || skill.level < 0 || skill.level > 5))) {
+            return false;
+          }
+        }
+      }
+      
+      return true;
+    }
+    
+    // 导出 PNG
+    async function exportPNG() {
+      toggleExportMenu();
+      showToast('正在生成 PNG...');
+      
+      const element = document.getElementById('resumePreview');
+      try {
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff'
+        });
+        
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'resume.png';
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('PNG 导出成功');
+        });
+      } catch (error) {
+        showToast('PNG 导出失败', 'error');
+        console.error(error);
+      }
+    }
+    
+    // 导出 PDF
+    async function exportPDF() {
+      toggleExportMenu();
+      showToast('正在生成 PDF...');
+      
+      const element = document.getElementById('resumePreview');
+      try {
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff'
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        
+        // A4 纸张尺寸（mm）
+        const pageWidth = 210;
+        const pageHeight = 297;
+        
+        // 计算图片在 PDF 中的尺寸
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // 如果内容高度小于一页，直接添加
+        if (imgHeight <= pageHeight) {
+          pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        } else {
+          // 内容超过一页，需要分页
+          let heightLeft = imgHeight;
+          let position = 0;
+          
+          // 添加第一页
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+          
+          // 添加后续页面
+          while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+          }
+        }
+        
+        pdf.save('resume.pdf');
+        showToast('PDF 导出成功');
+      } catch (error) {
+        showToast('PDF 导出失败', 'error');
+        console.error(error);
+      }
+    }
+    
+    // 下载文件
+    function downloadFile(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    // Toast 提示
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+    
+    // 初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      initDB();
+      // 不在这里调用 updatePreview()，等待 loadFromDB() 完成后再调用
+    });
+    
+    // 页面卸载前保存
+    window.addEventListener('beforeunload', () => {
+      saveToDB();
+    });
+  </script>
+</body>
+</html>
