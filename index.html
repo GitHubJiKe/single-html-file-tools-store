@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>在线工具集 - 简单实用的Web工具</title>
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -210,7 +211,7 @@
       <p class="subtitle">简单、快速、无需安装的实用Web工具</p>
       <div class="stats">
         <div class="stat-item">
-          <span class="stat-number" id="tool-count">8</span>
+          <span class="stat-number" id="tool-count">11</span>
           <span class="stat-label">个工具</span>
         </div>
         <div class="stat-item">
@@ -322,6 +323,30 @@
         icon: '📄',
         url: './resume-builder.html',
         tags: ['简历', '求职', '导出', 'PDF', 'IndexedDB']
+      },
+      {
+        id: 'image-mosaic',
+        title: '图片马赛克处理工具',
+        description: '上传图片后添加马赛克效果，支持像素化、模糊、毛玻璃、网格4种马赛克类型，可选择区域处理，处理后可下载',
+        icon: '🎨',
+        url: './image-mosaic.html',
+        tags: ['图片', '马赛克', '隐私', '模糊', '像素化']
+      },
+      {
+        id: 'excel-to-json',
+        title: 'Excel 转 JSON 工具',
+        description: '在线解析Excel文件并转换为JSON格式，支持.xlsx和.xls文件，支持多工作表，可选首行作为表头，实时预览JSON结构',
+        icon: '📊',
+        url: './excel-to-json.html',
+        tags: ['Excel', 'JSON', '转换', '数据处理', '开发工具']
+      },
+      {
+        id: 'epub-reader',
+        title: 'EPUB 电子书阅读器',
+        description: '在线阅读EPUB电子书，支持IndexedDB本地存储书籍和阅读进度，支持翻页阅读、目录导航、进度管理，完美适配移动端',
+        icon: '📚',
+        url: './epub-reader.html',
+        tags: ['EPUB', '电子书', '阅读器', 'IndexedDB', '移动端']
       }
     ];
 

@@ -1,0 +1,718 @@
+<!-- Excel转JSON工具（单文件HTML实现，无需构建步骤）-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel转JSON工具</title>
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    /* 头部 */
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .header p {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    
+    /* 主内容区 */
+    .main-content {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    
+    /* 上传区域 */
+    .upload-section {
+      padding: 40px;
+      text-align: center;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .upload-area {
+      border: 3px dashed #667eea;
+      border-radius: 12px;
+      padding: 60px 40px;
+      background: #f8f9fa;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .upload-area:hover {
+      border-color: #764ba2;
+      background: #f0f0ff;
+    }
+    
+    .upload-area.dragover {
+      border-color: #28a745;
+      background: #e8f5e9;
+    }
+    
+    .upload-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .upload-area h3 {
+      font-size: 20px;
+      color: #495057;
+      margin-bottom: 10px;
+    }
+    
+    .upload-area p {
+      font-size: 14px;
+      color: #6c757d;
+    }
+    
+    input[type="file"] {
+      display: none;
+    }
+    
+    .file-info {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e7f3ff;
+      border-radius: 8px;
+      display: none;
+    }
+    
+    .file-info.active {
+      display: block;
+    }
+    
+    .file-info-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .file-name {
+      font-weight: 600;
+      color: #495057;
+    }
+    
+    .file-size {
+      color: #6c757d;
+      font-size: 14px;
+    }
+    
+    .btn-clear {
+      padding: 6px 15px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .btn-clear:hover {
+      background: #c82333;
+    }
+    
+    /* 工具栏 */
+    .toolbar {
+      padding: 20px 40px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+    }
+    
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .tool-group label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #495057;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    .btn-success:hover {
+      background: #218838;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    select, input[type="checkbox"] {
+      cursor: pointer;
+    }
+    
+    select {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .checkbox-wrapper input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+    
+    /* 预览区域 */
+    .preview-section {
+      padding: 40px;
+      display: none;
+    }
+    
+    .preview-section.active {
+      display: block;
+    }
+    
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .preview-header h3 {
+      font-size: 18px;
+      color: #495057;
+    }
+    
+    .preview-stats {
+      font-size: 14px;
+      color: #6c757d;
+    }
+    
+    .sheet-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .sheet-tab {
+      padding: 10px 20px;
+      background: #e9ecef;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #495057;
+      transition: all 0.3s;
+    }
+    
+    .sheet-tab:hover {
+      background: #dee2e6;
+    }
+    
+    .sheet-tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .json-preview {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 20px;
+      border-radius: 12px;
+      max-height: 600px;
+      overflow: auto;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    
+    .json-preview pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 80px 40px;
+      color: #6c757d;
+    }
+    
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .empty-state h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #495057;
+    }
+    
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      z-index: 1000;
+      opacity: 0;
+      transform: translateX(400px);
+      transition: all 0.3s;
+      font-size: 14px;
+      max-width: 300px;
+    }
+    
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    
+    .toast.success {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .toast.error {
+      background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+    }
+    
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 24px;
+      }
+      .upload-section {
+        padding: 20px;
+      }
+      .upload-area {
+        padding: 40px 20px;
+      }
+      .toolbar {
+        padding: 15px 20px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .tool-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn {
+        justify-content: center;
+      }
+      .preview-section {
+        padding: 20px;
+      }
+      .json-preview {
+        max-height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 头部 -->
+    <div class="header">
+      <h1>📊 Excel转JSON工具</h1>
+      <p>上传Excel文件，快速转换为JSON格式</p>
+    </div>
+    
+    <!-- 主内容 -->
+    <div class="main-content">
+      <!-- 上传区域 -->
+      <div class="upload-section">
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">📄</div>
+          <h3>点击或拖拽上传Excel文件</h3>
+          <p>支持 .xlsx、.xls 格式</p>
+        </div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls">
+        
+        <div class="file-info" id="fileInfo">
+          <div class="file-info-content">
+            <div>
+              <span class="file-name" id="fileName"></span>
+              <span class="file-size" id="fileSize"></span>
+            </div>
+            <button class="btn-clear" onclick="clearFile()">清除文件</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 工具栏 -->
+      <div class="toolbar">
+        <div class="tool-group">
+          <label>🔧 转换选项</label>
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="firstRowAsHeader" checked>
+            <label for="firstRowAsHeader">首行作为表头</label>
+          </div>
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="includeEmpty">
+            <label for="includeEmpty">包含空值</label>
+          </div>
+        </div>
+        
+        <div class="tool-group">
+          <button class="btn btn-primary" id="convertBtn" disabled onclick="convertToJSON()">
+            ⚡ 转换为JSON
+          </button>
+          <button class="btn btn-success" id="downloadBtn" disabled onclick="downloadJSON()">
+            ⬇ 下载JSON
+          </button>
+        </div>
+      </div>
+      
+      <!-- 预览区域 -->
+      <div class="preview-section" id="previewSection">
+        <div class="preview-header">
+          <h3>JSON预览</h3>
+          <div class="preview-stats" id="previewStats"></div>
+        </div>
+        
+        <div class="sheet-tabs" id="sheetTabs"></div>
+        
+        <div class="json-preview" id="jsonPreview">
+          <pre id="jsonContent"></pre>
+        </div>
+      </div>
+      
+      <!-- 空状态 -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-state-icon">📭</div>
+        <h3>还没有上传文件</h3>
+        <p>上传Excel文件后，即可转换为JSON格式</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast 提示 -->
+  <div class="toast" id="toast"></div>
+  
+  <!-- SheetJS 库 -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <script>
+    // 全局变量
+    let currentFile = null;
+    let workbook = null;
+    let jsonData = {};
+    let currentSheet = null;
+    
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const convertBtn = document.getElementById('convertBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const previewSection = document.getElementById('previewSection');
+    const emptyState = document.getElementById('emptyState');
+    const sheetTabs = document.getElementById('sheetTabs');
+    const jsonContent = document.getElementById('jsonContent');
+    const previewStats = document.getElementById('previewStats');
+    
+    // 文件上传
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // 拖拽上传
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleFile(files[0]);
+      }
+    });
+    
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        handleFile(file);
+      }
+    }
+    
+    function handleFile(file) {
+      // 检查文件类型
+      const validTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel'
+      ];
+      
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls)$/i)) {
+        showToast('请上传有效的Excel文件 (.xlsx 或 .xls)', 'error');
+        return;
+      }
+      
+      currentFile = file;
+      
+      // 显示文件信息
+      fileName.textContent = file.name;
+      fileSize.textContent = ` (${formatFileSize(file.size)})`;
+      fileInfo.classList.add('active');
+      
+      // 启用转换按钮
+      convertBtn.disabled = false;
+      
+      // 读取文件
+      readExcelFile(file);
+      
+      showToast('文件上传成功', 'success');
+    }
+    
+    function readExcelFile(file) {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          workbook = XLSX.read(data, { type: 'array' });
+          
+          showToast('Excel文件解析成功', 'success');
+        } catch (error) {
+          showToast('Excel文件解析失败: ' + error.message, 'error');
+          console.error(error);
+        }
+      };
+      
+      reader.onerror = () => {
+        showToast('文件读取失败', 'error');
+      };
+      
+      reader.readAsArrayBuffer(file);
+    }
+    
+    function convertToJSON() {
+      if (!workbook) {
+        showToast('请先上传Excel文件', 'error');
+        return;
+      }
+      
+      const firstRowAsHeader = document.getElementById('firstRowAsHeader').checked;
+      const includeEmpty = document.getElementById('includeEmpty').checked;
+      
+      jsonData = {};
+      
+      // 转换所有工作表
+      workbook.SheetNames.forEach(sheetName => {
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // 转换为JSON
+        const data = XLSX.utils.sheet_to_json(worksheet, {
+          header: firstRowAsHeader ? undefined : 1,
+          defval: includeEmpty ? null : undefined,
+          blankrows: false
+        });
+        
+        jsonData[sheetName] = data;
+      });
+      
+      // 显示预览
+      displayPreview();
+      
+      // 启用下载按钮
+      downloadBtn.disabled = false;
+      
+      showToast('转换成功', 'success');
+    }
+    
+    function displayPreview() {
+      // 隐藏空状态
+      emptyState.style.display = 'none';
+      previewSection.classList.add('active');
+      
+      // 创建工作表标签
+      sheetTabs.innerHTML = '';
+      const sheetNames = Object.keys(jsonData);
+      
+      sheetNames.forEach((sheetName, index) => {
+        const tab = document.createElement('button');
+        tab.className = 'sheet-tab';
+        tab.textContent = sheetName;
+        tab.onclick = () => showSheet(sheetName);
+        
+        if (index === 0) {
+          tab.classList.add('active');
+          currentSheet = sheetName;
+        }
+        
+        sheetTabs.appendChild(tab);
+      });
+      
+      // 显示第一个工作表
+      if (sheetNames.length > 0) {
+        showSheet(sheetNames[0]);
+      }
+    }
+    
+    function showSheet(sheetName) {
+      currentSheet = sheetName;
+      
+      // 更新标签状态
+      const tabs = sheetTabs.querySelectorAll('.sheet-tab');
+      tabs.forEach(tab => {
+        if (tab.textContent === sheetName) {
+          tab.classList.add('active');
+        } else {
+          tab.classList.remove('active');
+        }
+      });
+      
+      // 显示JSON内容
+      const data = jsonData[sheetName];
+      jsonContent.textContent = JSON.stringify(data, null, 2);
+      
+      // 更新统计信息
+      const rowCount = data.length;
+      const colCount = rowCount > 0 ? Object.keys(data[0]).length : 0;
+      previewStats.textContent = `${rowCount} 行 × ${colCount} 列`;
+    }
+    
+    function downloadJSON() {
+      if (!jsonData || Object.keys(jsonData).length === 0) {
+        showToast('没有可下载的数据', 'error');
+        return;
+      }
+      
+      // 如果只有一个工作表，直接下载该工作表的数据
+      // 如果有多个工作表，下载所有工作表的数据（以对象形式）
+      const sheetNames = Object.keys(jsonData);
+      let dataToDownload;
+      let filename;
+      
+      if (sheetNames.length === 1) {
+        dataToDownload = jsonData[sheetNames[0]];
+        filename = `${sheetNames[0]}_${Date.now()}.json`;
+      } else {
+        dataToDownload = jsonData;
+        filename = `excel_data_${Date.now()}.json`;
+      }
+      
+      const jsonString = JSON.stringify(dataToDownload, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      
+      URL.revokeObjectURL(url);
+      
+      showToast('JSON文件下载成功', 'success');
+    }
+    
+    function clearFile() {
+      currentFile = null;
+      workbook = null;
+      jsonData = {};
+      currentSheet = null;
+      
+      fileInput.value = '';
+      fileInfo.classList.remove('active');
+      convertBtn.disabled = true;
+      downloadBtn.disabled = true;
+      previewSection.classList.remove('active');
+      emptyState.style.display = 'block';
+      
+      showToast('文件已清除', 'success');
+    }
+    
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+    
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

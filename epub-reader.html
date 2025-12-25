@@ -1,0 +1,1077 @@
+<!-- EPUB电子书阅读器（单文件HTML实现，无需构建步骤）-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EPUB电子书阅读器</title>
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* 头部 */
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .header p {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    
+    /* 主内容 */
+    .main-content {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    
+    /* 书架视图 */
+    .library-view {
+      padding: 40px;
+    }
+    
+    .library-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .library-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #495057;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #c82333;
+    }
+    
+    input[type="file"] {
+      display: none;
+    }
+    
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    
+    .book-card {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    
+    .book-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    
+    .book-cover {
+      width: 100%;
+      height: 250px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      margin-bottom: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .book-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .book-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .book-progress-bar {
+      height: 100%;
+      background: #28a745;
+      transition: width 0.3s;
+    }
+    
+    .book-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .book-author {
+      font-size: 14px;
+      color: #6c757d;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .book-actions {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    
+    .book-actions button {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    
+    .empty-library {
+      text-align: center;
+      padding: 80px 20px;
+      color: #6c757d;
+    }
+    
+    .empty-library-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    /* 阅读器视图 */
+    .reader-view {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+    }
+    
+    .reader-view.active {
+      display: flex;
+    }
+    
+    .reader-header {
+      background: #f8f9fa;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e9ecef;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .reader-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #495057;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .reader-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .reader-content {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .reader-sidebar {
+      width: 300px;
+      background: #f8f9fa;
+      border-right: 1px solid #e9ecef;
+      overflow-y: auto;
+      display: none;
+    }
+    
+    .reader-sidebar.active {
+      display: block;
+    }
+    
+    .toc-header {
+      padding: 20px;
+      background: white;
+      border-bottom: 1px solid #e9ecef;
+      font-size: 16px;
+      font-weight: 600;
+      color: #495057;
+    }
+    
+    .toc-list {
+      list-style: none;
+    }
+    
+    .toc-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border-bottom: 1px solid #e9ecef;
+      color: #495057;
+    }
+    
+    .toc-item:hover {
+      background: #e9ecef;
+    }
+    
+    .toc-item.active {
+      background: #667eea;
+      color: white;
+    }
+    
+    .reader-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .reader-iframe-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #fefefe;
+    }
+    
+    #readerFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: white;
+    }
+    
+    .reader-nav {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+    }
+    
+    .reader-nav button {
+      padding: 10px 30px;
+    }
+    
+    .reader-progress {
+      padding: 10px 20px;
+      background: white;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .progress-bar {
+      flex: 1;
+      height: 6px;
+      background: #e9ecef;
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    
+    .progress-text {
+      font-size: 14px;
+      color: #6c757d;
+      white-space: nowrap;
+    }
+    
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      z-index: 1000;
+      opacity: 0;
+      transform: translateX(400px);
+      transition: all 0.3s;
+      font-size: 14px;
+      max-width: 300px;
+    }
+    
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    
+    .toast.success {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .toast.error {
+      background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+    }
+    
+    /* 加载动画 */
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    
+    .loading.active {
+      display: flex;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e9ecef;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      .header h1 {
+        font-size: 24px;
+      }
+      .library-view {
+        padding: 20px;
+      }
+      .books-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+      }
+      .book-cover {
+        height: 200px;
+      }
+      .reader-sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      }
+      .reader-header {
+        padding: 10px 15px;
+      }
+      .reader-title {
+        font-size: 16px;
+      }
+      .reader-controls {
+        gap: 5px;
+      }
+      .btn {
+        padding: 8px 15px;
+        font-size: 13px;
+      }
+      .reader-nav button {
+        padding: 8px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+  </div>
+  
+  <!-- 书架视图 -->
+  <div class="container" id="libraryContainer">
+    <div class="header">
+      <h1>📚 EPUB电子书阅读器</h1>
+      <p>上传电子书，随时随地阅读</p>
+    </div>
+    
+    <div class="main-content">
+      <div class="library-view">
+        <div class="library-header">
+          <div class="library-title">我的书架</div>
+          <button class="btn btn-primary" onclick="document.getElementById('bookInput').click()">
+            ➕ 添加书籍
+          </button>
+          <input type="file" id="bookInput" accept=".epub">
+        </div>
+        
+        <div class="books-grid" id="booksGrid">
+          <!-- 书籍卡片将动态生成 -->
+        </div>
+        
+        <div class="empty-library" id="emptyLibrary">
+          <div class="empty-library-icon">📖</div>
+          <h3>书架空空如也</h3>
+          <p>点击"添加书籍"上传你的第一本EPUB电子书</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 阅读器视图 -->
+  <div class="reader-view" id="readerView">
+    <div class="reader-header">
+      <button class="btn btn-secondary" onclick="closeReader()">← 返回书架</button>
+      <div class="reader-title" id="readerTitle"></div>
+      <div class="reader-controls">
+        <button class="btn btn-secondary" id="tocToggle" onclick="toggleToc()">📑 目录</button>
+      </div>
+    </div>
+    
+    <div class="reader-content">
+      <div class="reader-sidebar" id="readerSidebar">
+        <div class="toc-header">目录</div>
+        <ul class="toc-list" id="tocList"></ul>
+      </div>
+      
+      <div class="reader-main">
+        <div class="reader-iframe-container">
+          <iframe id="readerFrame" sandbox="allow-same-origin allow-scripts"></iframe>
+        </div>
+        
+        <div class="reader-progress">
+          <div class="progress-bar" id="progressBar" onclick="seekProgress(event)">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-text" id="progressText">0%</div>
+        </div>
+        
+        <div class="reader-nav">
+          <button class="btn btn-secondary" id="prevBtn" onclick="prevPage()">← 上一页</button>
+          <button class="btn btn-secondary" id="nextBtn" onclick="nextPage()">下一页 →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast 提示 -->
+  <div class="toast" id="toast"></div>
+  
+  <!-- JSZip 库 -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  
+  <script>
+    // IndexedDB 配置
+    const DB_NAME = 'EpubReaderDB';
+    const DB_VERSION = 1;
+    const BOOKS_STORE = 'books';
+    const PROGRESS_STORE = 'progress';
+    
+    let db = null;
+    let currentBook = null;
+    let currentChapter = 0;
+    let bookData = null;
+    
+    // 初始化数据库
+    async function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          
+          // 创建书籍存储
+          if (!db.objectStoreNames.contains(BOOKS_STORE)) {
+            const bookStore = db.createObjectStore(BOOKS_STORE, { keyPath: 'id' });
+            bookStore.createIndex('title', 'title', { unique: false });
+            bookStore.createIndex('addedDate', 'addedDate', { unique: false });
+          }
+          
+          // 创建进度存储
+          if (!db.objectStoreNames.contains(PROGRESS_STORE)) {
+            db.createObjectStore(PROGRESS_STORE, { keyPath: 'bookId' });
+          }
+        };
+      });
+    }
+    
+    // 保存书籍
+    async function saveBook(book) {
+      const transaction = db.transaction([BOOKS_STORE], 'readwrite');
+      const store = transaction.objectStore(BOOKS_STORE);
+      
+      return new Promise((resolve, reject) => {
+        const request = store.put(book);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // 获取所有书籍
+    async function getAllBooks() {
+      const transaction = db.transaction([BOOKS_STORE], 'readonly');
+      const store = transaction.objectStore(BOOKS_STORE);
+      
+      return new Promise((resolve, reject) => {
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // 删除书籍
+    async function deleteBook(bookId) {
+      const transaction = db.transaction([BOOKS_STORE, PROGRESS_STORE], 'readwrite');
+      const bookStore = transaction.objectStore(BOOKS_STORE);
+      const progressStore = transaction.objectStore(PROGRESS_STORE);
+      
+      await bookStore.delete(bookId);
+      await progressStore.delete(bookId);
+    }
+    
+    // 保存阅读进度
+    async function saveProgress(bookId, chapter, position) {
+      const transaction = db.transaction([PROGRESS_STORE], 'readwrite');
+      const store = transaction.objectStore(PROGRESS_STORE);
+      
+      const progress = {
+        bookId,
+        chapter,
+        position,
+        lastRead: new Date().toISOString()
+      };
+      
+      return new Promise((resolve, reject) => {
+        const request = store.put(progress);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // 获取阅读进度
+    async function getProgress(bookId) {
+      const transaction = db.transaction([PROGRESS_STORE], 'readonly');
+      const store = transaction.objectStore(PROGRESS_STORE);
+      
+      return new Promise((resolve, reject) => {
+        const request = store.get(bookId);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // 文件上传
+    document.getElementById('bookInput').addEventListener('change', handleBookUpload);
+    
+    async function handleBookUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      if (!file.name.endsWith('.epub')) {
+        showToast('请上传EPUB格式的电子书', 'error');
+        return;
+      }
+      
+      showLoading(true);
+      
+      try {
+        // 读取EPUB文件
+        const arrayBuffer = await file.arrayBuffer();
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        
+        // 解析元数据
+        const metadata = await parseEpubMetadata(zip);
+        
+        // 保存到数据库
+        const book = {
+          id: Date.now().toString(),
+          title: metadata.title || file.name.replace('.epub', ''),
+          author: metadata.author || '未知作者',
+          cover: metadata.cover,
+          addedDate: new Date().toISOString(),
+          data: arrayBuffer
+        };
+        
+        await saveBook(book);
+        
+        // 刷新书架
+        await loadLibrary();
+        
+        showToast('书籍添加成功', 'success');
+      } catch (error) {
+        console.error('Error loading book:', error);
+        showToast('书籍加载失败: ' + error.message, 'error');
+      } finally {
+        showLoading(false);
+        e.target.value = '';
+      }
+    }
+    
+    // 解析EPUB元数据
+    async function parseEpubMetadata(zip) {
+      const metadata = {
+        title: '',
+        author: '',
+        cover: null
+      };
+      
+      try {
+        // 读取container.xml找到OPF文件
+        const containerXml = await zip.file('META-INF/container.xml').async('string');
+        const parser = new DOMParser();
+        const containerDoc = parser.parseFromString(containerXml, 'text/xml');
+        const opfPath = containerDoc.querySelector('rootfile').getAttribute('full-path');
+        
+        // 读取OPF文件
+        const opfXml = await zip.file(opfPath).async('string');
+        const opfDoc = parser.parseFromString(opfXml, 'text/xml');
+        
+        // 提取标题
+        const titleEl = opfDoc.querySelector('title');
+        if (titleEl) metadata.title = titleEl.textContent;
+        
+        // 提取作者
+        const authorEl = opfDoc.querySelector('creator');
+        if (authorEl) metadata.author = authorEl.textContent;
+        
+        // 提取封面 - 保存为 base64 而不是 Blob URL
+        const coverMeta = opfDoc.querySelector('meta[name="cover"]');
+        if (coverMeta) {
+          const coverId = coverMeta.getAttribute('content');
+          const coverItem = opfDoc.querySelector(`item[id="${coverId}"]`);
+          if (coverItem) {
+            const coverPath = coverItem.getAttribute('href');
+            const opfDir = opfPath.substring(0, opfPath.lastIndexOf('/') + 1);
+            const fullCoverPath = opfDir + coverPath;
+            
+            const coverFile = zip.file(fullCoverPath);
+            if (coverFile) {
+              // 转换为 base64 存储
+              const coverBase64 = await coverFile.async('base64');
+              const mimeType = getMimeType(coverPath);
+              metadata.cover = `data:${mimeType};base64,${coverBase64}`;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing metadata:', error);
+      }
+      
+      return metadata;
+    }
+    
+    // 根据文件扩展名获取 MIME 类型
+    function getMimeType(filename) {
+      const ext = filename.split('.').pop().toLowerCase();
+      const mimeTypes = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+        'svg': 'image/svg+xml'
+      };
+      return mimeTypes[ext] || 'image/jpeg';
+    }
+    
+    // 加载书架
+    async function loadLibrary() {
+      const books = await getAllBooks();
+      const booksGrid = document.getElementById('booksGrid');
+      const emptyLibrary = document.getElementById('emptyLibrary');
+      
+      if (books.length === 0) {
+        booksGrid.style.display = 'none';
+        emptyLibrary.style.display = 'block';
+        return;
+      }
+      
+      booksGrid.style.display = 'grid';
+      emptyLibrary.style.display = 'none';
+      booksGrid.innerHTML = '';
+      
+      for (const book of books) {
+        const progress = await getProgress(book.id);
+        const progressPercent = progress ? Math.round((progress.chapter / 10) * 100) : 0;
+        
+        const card = document.createElement('div');
+        card.className = 'book-card';
+        card.innerHTML = `
+          <div class="book-cover" onclick="openBook('${book.id}')">
+            ${book.cover ? `<img src="${book.cover}" alt="${book.title}">` : '📖'}
+            <div class="book-progress">
+              <div class="book-progress-bar" style="width: ${progressPercent}%"></div>
+            </div>
+          </div>
+          <div class="book-title">${book.title}</div>
+          <div class="book-author">${book.author}</div>
+          <div class="book-actions">
+            <button class="btn btn-primary" onclick="openBook('${book.id}')">阅读</button>
+            <button class="btn btn-danger" onclick="removeBook('${book.id}', event)">删除</button>
+          </div>
+        `;
+        booksGrid.appendChild(card);
+      }
+    }
+    
+    // 打开书籍
+    async function openBook(bookId) {
+      showLoading(true);
+      
+      try {
+        const transaction = db.transaction([BOOKS_STORE], 'readonly');
+        const store = transaction.objectStore(BOOKS_STORE);
+        
+        const book = await new Promise((resolve, reject) => {
+          const request = store.get(bookId);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        
+        currentBook = book;
+        
+        // 加载EPUB内容
+        const zip = await JSZip.loadAsync(book.data);
+        bookData = await parseEpubContent(zip);
+        
+        // 获取阅读进度
+        const progress = await getProgress(bookId);
+        currentChapter = progress ? progress.chapter : 0;
+        
+        // 切换到阅读器视图
+        document.getElementById('libraryContainer').style.display = 'none';
+        document.getElementById('readerView').classList.add('active');
+        document.getElementById('readerTitle').textContent = book.title;
+        
+        // 加载目录
+        loadToc();
+        
+        // 显示章节
+        showChapter(currentChapter);
+        
+      } catch (error) {
+        console.error('Error opening book:', error);
+        showToast('打开书籍失败', 'error');
+      } finally {
+        showLoading(false);
+      }
+    }
+    
+    // 解析EPUB内容
+    async function parseEpubContent(zip) {
+      const content = {
+        chapters: [],
+        toc: []
+      };
+      
+      try {
+        // 读取container.xml
+        const containerXml = await zip.file('META-INF/container.xml').async('string');
+        const parser = new DOMParser();
+        const containerDoc = parser.parseFromString(containerXml, 'text/xml');
+        const opfPath = containerDoc.querySelector('rootfile').getAttribute('full-path');
+        const opfDir = opfPath.substring(0, opfPath.lastIndexOf('/') + 1);
+        
+        // 读取OPF文件
+        const opfXml = await zip.file(opfPath).async('string');
+        const opfDoc = parser.parseFromString(opfXml, 'text/xml');
+        
+        // 获取spine顺序
+        const spineItems = opfDoc.querySelectorAll('spine > itemref');
+        
+        for (const item of spineItems) {
+          const idref = item.getAttribute('idref');
+          const manifestItem = opfDoc.querySelector(`manifest > item[id="${idref}"]`);
+          
+          if (manifestItem) {
+            const href = manifestItem.getAttribute('href');
+            const fullPath = opfDir + href;
+            
+            const file = zip.file(fullPath);
+            if (file) {
+              const htmlContent = await file.async('string');
+              content.chapters.push({
+                path: fullPath,
+                content: htmlContent
+              });
+            }
+          }
+        }
+        
+        // 简单的目录生成
+        content.toc = content.chapters.map((ch, idx) => ({
+          title: `第 ${idx + 1} 章`,
+          index: idx
+        }));
+        
+      } catch (error) {
+        console.error('Error parsing content:', error);
+      }
+      
+      return content;
+    }
+    
+    // 加载目录
+    function loadToc() {
+      const tocList = document.getElementById('tocList');
+      tocList.innerHTML = '';
+      
+      bookData.toc.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.className = 'toc-item';
+        li.textContent = item.title;
+        li.onclick = () => {
+          showChapter(index);
+          if (window.innerWidth <= 768) {
+            toggleToc();
+          }
+        };
+        tocList.appendChild(li);
+      });
+    }
+    
+    // 显示章节
+    function showChapter(index) {
+      if (index < 0 || index >= bookData.chapters.length) return;
+      
+      currentChapter = index;
+      
+      const iframe = document.getElementById('readerFrame');
+      const chapter = bookData.chapters[index];
+      
+      iframe.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+              line-height: 1.8;
+              padding: 40px;
+              max-width: 800px;
+              margin: 0 auto;
+              font-size: 18px;
+              color: #333;
+            }
+            h1, h2, h3 { margin-top: 1.5em; }
+            p { margin: 1em 0; }
+            img { max-width: 100%; height: auto; }
+            @media (max-width: 768px) {
+              body { padding: 20px; font-size: 16px; }
+            }
+          </style>
+        </head>
+        <body>
+          ${chapter.content}
+        </body>
+        </html>
+      `;
+      
+      // 更新目录激活状态
+      document.querySelectorAll('.toc-item').forEach((item, idx) => {
+        item.classList.toggle('active', idx === index);
+      });
+      
+      // 更新进度
+      updateProgress();
+      
+      // 保存进度
+      saveProgress(currentBook.id, currentChapter, 0);
+      
+      // 更新按钮状态
+      document.getElementById('prevBtn').disabled = currentChapter === 0;
+      document.getElementById('nextBtn').disabled = currentChapter === bookData.chapters.length - 1;
+    }
+    
+    // 上一页
+    function prevPage() {
+      if (currentChapter > 0) {
+        showChapter(currentChapter - 1);
+      }
+    }
+    
+    // 下一页
+    function nextPage() {
+      if (currentChapter < bookData.chapters.length - 1) {
+        showChapter(currentChapter + 1);
+      }
+    }
+    
+    // 更新进度
+    function updateProgress() {
+      const percent = Math.round((currentChapter / (bookData.chapters.length - 1)) * 100);
+      document.getElementById('progressFill').style.width = percent + '%';
+      document.getElementById('progressText').textContent = percent + '%';
+    }
+    
+    // 跳转进度
+    function seekProgress(event) {
+      const bar = event.currentTarget;
+      const rect = bar.getBoundingClientRect();
+      const percent = (event.clientX - rect.left) / rect.width;
+      const chapter = Math.round(percent * (bookData.chapters.length - 1));
+      showChapter(chapter);
+    }
+    
+    // 切换目录
+    function toggleToc() {
+      const sidebar = document.getElementById('readerSidebar');
+      sidebar.classList.toggle('active');
+    }
+    
+    // 关闭阅读器
+    function closeReader() {
+      document.getElementById('libraryContainer').style.display = 'block';
+      document.getElementById('readerView').classList.remove('active');
+      currentBook = null;
+      bookData = null;
+    }
+    
+    // 删除书籍
+    async function removeBook(bookId, event) {
+      event.stopPropagation();
+      
+      if (!confirm('确定要删除这本书吗？')) return;
+      
+      try {
+        await deleteBook(bookId);
+        await loadLibrary();
+        showToast('书籍已删除', 'success');
+      } catch (error) {
+        console.error('Error deleting book:', error);
+        showToast('删除失败', 'error');
+      }
+    }
+    
+    // 显示加载动画
+    function showLoading(show) {
+      const loading = document.getElementById('loading');
+      if (show) {
+        loading.classList.add('active');
+      } else {
+        loading.classList.remove('active');
+      }
+    }
+    
+    // 显示提示
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+    
+    // 键盘导航
+    document.addEventListener('keydown', (e) => {
+      if (!currentBook) return;
+      
+      if (e.key === 'ArrowLeft') {
+        prevPage();
+      } else if (e.key === 'ArrowRight') {
+        nextPage();
+      }
+    });
+    
+    // 初始化
+    (async function init() {
+      try {
+        await initDB();
+        await loadLibrary();
+      } catch (error) {
+        console.error('Initialization error:', error);
+        showToast('初始化失败', 'error');
+      }
+    })();
+  </script>
+</body>
+</html>

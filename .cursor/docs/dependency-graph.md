@@ -1,609 +1,546 @@
 # 依赖关系图和变更影响分析
 
-**分析日期**: 2024-12-24  
-**分析范围**: 新增在线简历制作工具  
-**Git 状态**: 1 个文件修改，2 个文件新增
+**分析日期**: 2025-01-25  
+**分析范围**: 添加favicon、新增EPUB阅读器和Excel转JSON工具  
+**Git 状态**: 9 个文件修改，11 个文件新增
 
 ---
 
 ## 📋 变更文件清单
 
 ### 修改的文件 (Modified)
-- `index.html` - 主页工具列表页面
+1. `index.html` - 主页工具列表页面
+2. `base64-codec.html` - Base64编解码工具
+3. `canvas-drawing-board.html` - Canvas在线画图工具
+4. `canvas-gif-maker.html` - Canvas画图与GIF制作
+5. `json-formatter.html` - JSON格式化工具
+6. `markdown-to-wechat.html` - Markdown转公众号格式
+7. `qrcode-gen.html` - 二维码生成器
+8. `resume-builder.html` - 在线简历制作工具
+9. `url-parser.html` - URL解析工具
 
 ### 新增的文件 (Added)
-- `resume-builder.html` - 在线简历制作工具
-- `resume-builder.md` - 工具技术文档
+1. `epub-reader.html` - EPUB电子书阅读器
+2. `excel-to-json.html` - Excel转JSON工具
+3. `excel-to-json.md` - Excel转JSON工具文档
+4. `image-mosaic.html` - 图片马赛克处理工具
+5. `image-mosaic.md` - 图片马赛克工具文档
+6. `favicon.ico` - 网站图标
+7. `favicon-16x16.png` - 16x16 PNG图标
+8. `favicon-32x32.png` - 32x32 PNG图标
+9. `apple-touch-icon.png` - Apple设备图标
+10. `android-chrome-192x192.png` - Android Chrome图标(192)
+11. `android-chrome-512x512.png` - Android Chrome图标(512)
 
 ---
 
 ## 🔍 详细变更分析
 
+### 本次变更主题
+
+#### 主题 1: 全站添加 Favicon 支持
+**影响文件**: 所有工具HTML文件 (9个修改 + 3个新增)
+**变更内容**: 在每个HTML文件的 `<head>` 标签中添加 favicon 引用
+```html
+<link rel="icon" type="image/x-icon" href="./favicon.ico">
+```
+
+**新增图标资源**:
+- `favicon.ico` - 主图标文件
+- `favicon-16x16.png` - 小尺寸PNG
+- `favicon-32x32.png` - 标准尺寸PNG
+- `apple-touch-icon.png` - Apple设备专用
+- `android-chrome-192x192.png` - Android小图标
+- `android-chrome-512x512.png` - Android大图标
+
+#### 主题 2: 新增工具 - EPUB电子书阅读器
+**新增文件**: `epub-reader.html` (1,077行)
+**外部依赖**: JSZip 3.10.1
+**核心功能**:
+- 上传和管理EPUB电子书
+- IndexedDB本地存储书籍和阅读进度
+- 章节导航和翻页阅读
+- 书架管理（封面展示）
+- 阅读进度保存和恢复
+- 移动端适配
+
+**技术亮点**:
+- EPUB文件结构解析（ZIP格式）
+- OPF元数据提取
+- Base64编码封面图片存储
+- IndexedDB双表设计（books + progress）
+- iframe内容渲染
+
+#### 主题 3: 新增工具 - Excel转JSON工具
+**新增文件**: `excel-to-json.html` (718行), `excel-to-json.md`
+**外部依赖**: SheetJS (xlsx) 0.18.5
+**核心功能**:
+- 解析.xlsx和.xls文件
+- 支持多工作表
+- JSON实时预览和导出
+- 转换选项配置（首行作为表头、包含空值）
+- 单表/多表导出选择
+
+**技术亮点**:
+- SheetJS完整集成
+- 多工作表标签切换
+- JSON美化显示
+- 大文件处理优化
+
+#### 主题 4: 新增工具 - 图片马赛克处理
+**新增文件**: `image-mosaic.html`, `image-mosaic.md`
+**核心功能**:
+- 矩形和圆形选区
+- 4种马赛克类型（像素化、模糊、毛玻璃、网格）
+- 反向选中支持
+- 马赛克大小调节
+- 图片下载
+
+**技术亮点**:
+- Canvas坐标转换处理
+- 像素级图像处理
+- 选区状态管理
+- 图像数据备份和恢复
+
 ### 1. index.html 变更内容
 
-**变更类型**: 数据配置更新
+**变更类型**: 配置更新和新工具集成
 
 **具体变更**:
-1. 工具数量统计更新：`7` → `8`
-2. 工具数组新增一项配置：
-   ```javascript
-   {
-     id: 'resume-builder',
-     title: '在线简历制作工具',
-     description: '专业的简历制作工具，支持4种主题风格，可导出Markdown/JSON/PNG/PDF格式，支持IndexedDB本地保存',
-     icon: '📄',
-     url: './resume-builder.html',
-     tags: ['简历', '求职', '导出', 'PDF', 'IndexedDB']
-   }
-   ```
+1. 添加 favicon 引用（第7行）
+2. 工具数量统计更新：`9` → `11`
+3. 工具数组新增三项配置：
+   - 图片马赛克工具
+   - Excel转JSON工具
+   - EPUB电子书阅读器
 
 **变更位置**:
-- 第 213 行：工具计数器更新 (`7` → `8`)
-- 第 317-324 行：新增工具配置对象
+- 第 7 行：`<link rel="icon" type="image/x-icon" href="./favicon.ico">`
+- 第 213 行：工具计数器更新
+- 第 314-350 行：新增工具配置对象
 
-### 2. resume-builder.html 新增文件
+### 2. 所有工具页面的通用变更
 
-**文件类型**: 独立单文件 HTML 工具
+**变更类型**: 资源引用更新
 
-**核心特性**:
-- 1595 行代码
-- 2 个外部 CDN 依赖（html2canvas、jsPDF）
-- 自包含的 HTML/CSS/JavaScript
-- 不引用其他项目文件
-- 不被其他文件引用（除 index.html 的链接）
+**具体变更**:
+在9个现有工具HTML文件的 `<head>` 标签中统一添加 favicon 引用
 
-**技术栈**:
-- JavaScript (ES6+)
-- CSS3 (Flexbox, Grid, 响应式设计)
-- HTML5
-- IndexedDB API
-- File API (FileReader)
-- Canvas API (通过 html2canvas)
+**影响文件**:
+- base64-codec.html
+- canvas-drawing-board.html
+- canvas-gif-maker.html
+- json-formatter.html
+- markdown-to-wechat.html
+- qrcode-gen.html
+- resume-builder.html
+- url-parser.html
 
-**外部依赖**:
-- `html2canvas@1.4.1` - HTML 转 Canvas，用于 PNG/PDF 导出
-- `jsPDF@2.5.1` - Canvas 转 PDF 文档
-
-### 3. resume-builder.md 新增文件
-
-**文件类型**: 技术文档文件
-
-**内容规模**: ~800 行
-
-**用途**: 
-- 工具功能说明
-- 技术实现详解
-- 使用指南
-- API 文档
-- 代码示例
+**新增工具（已包含favicon）**:
+- image-mosaic.html
+- excel-to-json.html
+- epub-reader.html
 
 ---
 
 ## 📊 依赖关系图
 
-### 项目架构
-
 ```
-single-html-file-tools-store/
+项目根目录
+├── favicon 资源文件
+│   ├── favicon.ico (所有HTML文件引用)
+│   ├── favicon-16x16.png
+│   ├── favicon-32x32.png
+│   ├── apple-touch-icon.png
+│   ├── android-chrome-192x192.png
+│   └── android-chrome-512x512.png
 │
-├── index.html (主页 - 工具导航中心)
-│   ├──> json-formatter.html (链接)
-│   ├──> qrcode-gen.html (链接)
-│   ├──> url-parser.html (链接)
-│   ├──> base64-codec.html (链接)
-│   ├──> canvas-gif-maker.html (链接)
-│   ├──> canvas-drawing-board.html (链接)
-│   ├──> markdown-to-wechat.html (链接)
-│   └──> resume-builder.html (链接) ⭐ 新增
+├── index.html (主页/工具导航)
+│   ├── 引用 favicon.ico
+│   └── 引用所有工具页面 (通过 tools 数组配置)
 │
-├── resume-builder.html (独立工具)
-│   ├──> html2canvas@1.4.1 (CDN)
-│   ├──> jsPDF@2.5.1 (CDN)
-│   └──> IndexedDB (浏览器 API)
+├── 独立工具文件 (无相互依赖，都引用 favicon.ico)
+│   ├── json-formatter.html
+│   ├── qrcode-gen.html
+│   ├── url-parser.html
+│   ├── base64-codec.html
+│   ├── canvas-gif-maker.html
+│   ├── canvas-drawing-board.html
+│   ├── markdown-to-wechat.html
+│   ├── resume-builder.html
+│   ├── image-mosaic.html (新增)
+│   ├── excel-to-json.html (新增)
+│   └── epub-reader.html (新增)
 │
-└── [其他工具文件 - 均为独立单文件]
-    └── [各自的依赖]
+├── 工具文档文件
+│   ├── resume-builder.md
+│   ├── image-mosaic.md (新增)
+│   └── excel-to-json.md (新增)
+│
+└── 外部依赖 (CDN)
+    ├── QRious.js (qrcode-gen.html)
+    ├── marked.js (markdown-to-wechat.html)
+    ├── gifshot.js (canvas-gif-maker.html)
+    ├── html2canvas.js (resume-builder.html)
+    ├── jsPDF.js (resume-builder.html)
+    ├── JSZip.js (epub-reader.html)
+    └── SheetJS (xlsx.js) (excel-to-json.html)
 ```
 
 ### 依赖关系说明
 
 **内部依赖**: 单向导航链接
-
-- **index.html** → **resume-builder.html**
-  - 关系类型: 超链接引用 (`<a href="./resume-builder.html">`)
-  - 耦合程度: 松耦合（仅 URL 字符串）
+- **index.html** → **所有工具HTML文件**
+  - 关系类型: 超链接引用
+  - 耦合程度: 松耦合（仅URL字符串）
   - 数据流向: 用户点击 → 页面跳转
 
 **外部依赖**: CDN 库引用
-
-- **resume-builder.html** → **html2canvas**
-  - 用途: 将 HTML 元素渲染为 Canvas
-  - 版本: 1.4.1
+- **epub-reader.html** → **JSZip 3.10.1**
+  - 用途: EPUB文件解压缩
   - 来源: cdnjs.cloudflare.com
-  - 必需性: PNG/PDF 导出功能必需
-
-- **resume-builder.html** → **jsPDF**
-  - 用途: 生成 PDF 文档
-  - 版本: 2.5.1
-  - 来源: cdnjs.cloudflare.com
-  - 必需性: PDF 导出功能必需
+  
+- **excel-to-json.html** → **SheetJS 0.18.5**
+  - 用途: Excel文件解析
+  - 来源: cdn.jsdelivr.net
 
 **浏览器 API 依赖**:
-- IndexedDB - 本地数据持久化
-- FileReader - 读取上传文件（头像、JSON）
-- Blob & URL.createObjectURL - 文件下载
+- IndexedDB - 本地数据持久化 (epub-reader, resume-builder)
+- FileReader - 文件读取 (所有文件处理工具)
+- Canvas API - 图像处理 (image-mosaic, canvas-*)
+- Blob & URL API - 文件下载
 
 **关键特性**:
-1. ✅ 工具文件相对独立
-2. ⚠️ 依赖 2 个外部 CDN 库
+1. ✅ 工具文件完全独立
+2. ✅ 统一的favicon引用
 3. ✅ 无共享 JavaScript 模块
 4. ✅ 无共享 CSS 文件
 5. ✅ 无 API 调用关系
-6. ✅ 使用 IndexedDB 本地存储（无服务器依赖）
+6. ✅ 数据隔离（独立IndexedDB）
 
 ---
 
-## 🎯 影响分析
+## 🎯 影响范围分析
 
 ### 直接影响 (Direct Impact)
 
-#### 1. index.html
-**影响范围**:
-- 工具列表渲染逻辑
-- 工具计数显示（7 → 8）
-- 搜索功能（新增可搜索项：简历、求职、导出、PDF、IndexedDB）
+#### 1. 全站视觉影响
+**所有HTML文件 (12个)**
+- 影响范围：浏览器标签页图标显示
+- 影响方式：统一添加 favicon 引用
+- 用户可见：✅ 是（浏览器标签页显示统一图标）
+- 破坏性：❌ 无（纯新增功能）
 
-**影响程度**: 🟢 低
-- 仅增加数据项，未修改核心逻辑
-- 现有功能不受影响
-- 向后兼容
+#### 2. 主页工具列表
+**index.html**
+- 影响范围：主页工具列表展示
+- 影响方式：
+  - 工具数量从9个增加到11个
+  - 新增图片马赛克、Excel转JSON和EPUB阅读器卡片
+- 用户可见：✅ 是
+- 破坏性：❌ 无（向后兼容）
 
-**潜在风险**:
-- ✅ 无风险：新增工具卡片使用相同的渲染逻辑
-- ✅ 无风险：工具数量自动计算（`tools.length`）
+#### 3. 新增独立工具页面
+**epub-reader.html**
+- 影响范围：新增独立页面
+- 功能：EPUB电子书上传、阅读、进度管理
+- 数据存储：IndexedDB（books + progress表）
+- 用户可见：✅ 是
 
-#### 2. resume-builder.html
-**影响范围**: 无（新增文件）
+**excel-to-json.html**
+- 影响范围：新增独立页面
+- 功能：Excel文件解析、多工作表支持、JSON导出
+- 数据存储：无持久化存储
+- 用户可见：✅ 是
 
-**影响程度**: 🟢 无影响
-- 独立的单文件工具
-- 不依赖其他项目模块
-- 不被其他模块依赖（除主页链接）
+**image-mosaic.html**
+- 影响范围：新增独立页面
+- 功能：图片区域马赛克处理
+- 数据存储：无持久化存储
+- 用户可见：✅ 是
 
-**外部依赖风险**:
-- 🟡 CDN 可用性：依赖 cdnjs.cloudflare.com
-- 🟡 版本锁定：固定版本 html2canvas@1.4.1, jsPDF@2.5.1
-- ✅ 降级方案：导出功能失败时有错误提示
+### 间接影响 (Transitive Impact)
 
----
+**SEO和品牌影响**
+- Favicon统一：提升网站专业度和品牌识别度
+- 用户体验：浏览器标签更易识别
+- 书签管理：收藏时显示统一图标
 
-### 传递影响 (Transitive Impact)
-
-#### 用户界面层
-- **主页工具网格**: 新增一个工具卡片
-- **搜索功能**: 可搜索关键词增加（简历、求职、导出、PDF、IndexedDB）
-- **统计数据**: 工具总数显示为 8
-
-#### 导航层
-- **新增路由**: `./resume-builder.html`
-- **用户流程**: 主页 → 点击卡片 → 打开简历制作工具
-
-#### 数据层
-- **工具数组**: 增加一个配置对象
-- **IndexedDB**: 新工具使用独立的数据库 `ResumeBuilderDB`
-  - Object Store: `resumes`
-  - Key: `current`
-  - 数据隔离：不影响其他工具
-
----
+**搜索和分类影响**
+- 主页搜索功能：新增工具可被搜索（tags: Excel, JSON, EPUB, 电子书, 图片, 马赛克等）
+- 工具分类：数据处理类工具增加
 
 ### 运行时影响 (Runtime Impact)
 
+#### 浏览器兼容性
+**EPUB阅读器**
+- 依赖：JSZip 3.10.1, IndexedDB API
+- 兼容性：Chrome 51+, Firefox 54+, Safari 10+, Edge 79+
+- 限制：IE不支持
+
+**Excel转JSON工具**
+- 依赖：SheetJS (xlsx) 0.18.5
+- 兼容性：Chrome 51+, Firefox 54+, Safari 10+, Edge 79+
+- 限制：IE不支持
+
+**图片马赛克工具**
+- 依赖：Canvas API, File API
+- 兼容性：所有现代浏览器
+- 限制：IE部分功能受限
+
 #### 性能影响
-- **index.html 加载时间**: 🟢 无显著影响
-  - 新增配置对象约 250 字节
-  - 渲染一个额外的 DOM 卡片（约 0.1ms）
-  
-- **resume-builder.html 加载时间**: 🟡 新增
-  - 文件大小: ~70KB (未压缩)
-  - 首次加载时间: ~150-300ms (取决于网络)
-  - 外部依赖加载:
-    - html2canvas: ~45KB (gzip)
-    - jsPDF: ~180KB (gzip)
-  - 总加载时间: ~300-500ms (首次)
+**主页 (index.html)**
+- 加载时间：+1.5KB（三个工具配置 + favicon引用）
+- 影响：可忽略不计
+
+**新增工具页面**
+- EPUB阅读器：首次加载需下载JSZip库（~100KB）
+- Excel转JSON：首次加载需下载SheetJS库（~800KB）
+- 图片马赛克：无外部依赖，轻量级
 
 #### 存储影响
-- **IndexedDB 使用**: 
-  - 数据库名: `ResumeBuilderDB`
-  - 存储内容: 简历数据（JSON + Base64 头像）
-  - 预估大小: 50KB - 500KB（取决于头像和内容）
-  - 隔离性: ✅ 独立数据库，不影响其他工具
+**IndexedDB使用**
+- EPUB阅读器：
+  - books存储：存储完整EPUB文件（可能数MB）
+  - progress存储：存储阅读进度（几KB）
+  - 用户需要：定期清理不需要的书籍
 
-#### 兼容性影响
-- **浏览器兼容性**: 🟡 现代浏览器
-  - 需要: ES6+, IndexedDB, FileReader, Canvas
-  - 支持: Chrome 90+, Edge 90+, Firefox 88+, Safari 14+
-  - 不支持: IE 11 及以下
-  
-- **移动端兼容性**: ✅ 良好
-  - 响应式设计（Flexbox + Media Queries）
-  - 触摸友好的交互
-  - 移动端自动切换为上下布局
+**无存储工具**
+- Excel转JSON：纯前端转换，不存储
+- 图片马赛克：纯前端处理，不存储
 
-#### 状态影响
-- **IndexedDB 状态**: 🟢 隔离
-  - 独立数据库，不与其他工具共享
-- **全局状态污染**: ✅ 无
-- **跨页面状态**: ✅ 无
+---
+
+## ⚠️ 风险评估
+
+### 风险等级：**低 (Low)**
+
+### 风险分析
+
+#### 1. 技术风险：✅ 低
+- ✅ 单文件架构，无模块间耦合
+- ✅ Favicon添加不影响现有功能
+- ✅ 外部依赖使用稳定的CDN版本
+- ✅ 使用标准Web API（IndexedDB, File API, Canvas API）
+
+#### 2. 兼容性风险：⚠️ 中低
+**现有影响**:
+- ✅ Favicon支持所有现代浏览器和旧版浏览器
+- ⚠️ EPUB阅读器需要IndexedDB和JSZip（IE不支持）
+- ⚠️ Excel转JSON需要现代浏览器（IE不支持）
+- ✅ 图片马赛克基本兼容所有浏览器
+
+**建议**:
+- 在不支持的浏览器中显示友好提示
+- 为EPUB阅读器添加浏览器检测
+
+#### 3. 数据安全风险：✅ 低
+- ✅ Favicon为静态资源，无安全风险
+- ✅ EPUB阅读器数据存储在本地IndexedDB
+- ✅ Excel转JSON纯前端处理，不上传数据
+- ✅ 图片马赛克本地处理，不上传图片
+- ✅ 无服务器通信，数据不会泄露
+- ✅ 用户可随时清除浏览器数据
+
+#### 4. 性能风险：⚠️ 中低
+**主页性能**:
+- ✅ 主页影响极小（+3个工具配置，~1.5KB）
+- ✅ Favicon缓存后不影响性能
+
+**工具页面性能**:
+- ⚠️ EPUB阅读器：大型EPUB文件（>10MB）加载可能较慢
+- ⚠️ Excel转JSON：大型Excel文件（>50MB）解析可能卡顿
+- ⚠️ 图片马赛克：大尺寸图片（>4000x4000）处理可能较慢
+
+**建议**:
+- 添加文件大小限制提示
+- 添加加载动画和进度反馈
+- 考虑使用Web Worker处理大文件
+
+#### 5. 存储风险：⚠️ 中
+**IndexedDB使用**:
+- ⚠️ EPUB阅读器可能存储大量书籍数据
+- ⚠️ 浏览器存储配额限制（通常50MB-250MB）
+- 建议：
+  - 添加存储空间使用提示
+  - 提供一键清理功能
+  - 提示用户定期管理书籍
+
+#### 6. 回归风险：✅ 极低
+- ✅ Favicon添加为纯新增功能
+- ✅ 新工具完全独立，不影响现有工具
+- ✅ index.html只是配置更新，逻辑无变化
+- ✅ 无破坏性变更
 
 ---
 
 ## 🧪 建议测试范围
 
-### 高优先级测试 (Must Test)
+### 必须测试 (Must Test)
 
-#### 1. index.html 功能测试
-- [ ] **工具卡片渲染**
-  - 验证新工具卡片正确显示
-  - 检查图标（📄）、标题、描述、标签
-  - 确认点击可跳转到正确页面
+#### 1. Favicon显示测试
+- [ ] 所有12个HTML页面的浏览器标签显示favicon
+- [ ] favicon在不同浏览器中正常加载
+- [ ] 书签中的favicon正确显示
+- [ ] 移动端主屏图标正常显示
 
-- [ ] **工具计数**
-  - 验证显示为 "8 个工具"
-  - 检查 JavaScript 计数逻辑
+#### 2. 主页功能测试
+- [ ] 工具列表正确显示11个工具
+- [ ] 图片马赛克工具卡片正确展示
+- [ ] Excel转JSON工具卡片正确展示
+- [ ] EPUB阅读器工具卡片正确展示
+- [ ] 所有工具卡片可正确跳转
+- [ ] 搜索功能能找到新工具（"Excel", "JSON", "EPUB", "电子书", "图片", "马赛克"）
+- [ ] 工具数量统计显示"11"
 
-- [ ] **搜索功能**
-  - 搜索 "简历" → 应显示新工具
-  - 搜索 "求职" → 应显示新工具
-  - 搜索 "PDF" → 应显示新工具
-  - 搜索 "IndexedDB" → 应显示新工具
+#### 3. EPUB电子书阅读器测试
+- [ ] 上传EPUB文件功能
+- [ ] 书架展示（封面、标题、作者）
+- [ ] 打开书籍进入阅读视图
+- [ ] 章节翻页（上一页/下一页）
+- [ ] 键盘快捷键（左右箭头）
+- [ ] 目录导航和跳转
+- [ ] 阅读进度显示和跳转
+- [ ] 阅读进度持久化（刷新后恢复）
+- [ ] 删除书籍功能
+- [ ] 移动端响应式布局
 
-- [ ] **响应式布局**
-  - 桌面端: 工具卡片网格正常
-  - 移动端: 单列布局正常
+#### 4. Excel转JSON工具测试
+- [ ] 点击上传Excel文件（.xlsx）
+- [ ] 拖拽上传Excel文件
+- [ ] 上传.xls格式文件
+- [ ] 多工作表识别和展示
+- [ ] 工作表标签切换
+- [ ] "首行作为表头"选项开关
+- [ ] "包含空值"选项开关
+- [ ] JSON预览正确显示
+- [ ] 单工作表JSON下载
+- [ ] 多工作表JSON下载
+- [ ] 文件清除功能
 
-#### 2. resume-builder.html 核心功能测试
+#### 5. 图片马赛克工具测试
+- [ ] 上传图片功能
+- [ ] 拖拽上传图片
+- [ ] 矩形选区功能
+- [ ] 圆形选区功能
+- [ ] 反向选中功能
+- [ ] 4种马赛克类型（像素化、模糊、毛玻璃、网格）
+- [ ] 马赛克大小调节
+- [ ] 应用马赛克到选区
+- [ ] 重置图片功能
+- [ ] 下载处理后的图片
 
-##### 基本信息模块
-- [ ] **表单输入**
-  - 所有字段正常输入
-  - 实时预览更新
-  - 头像上传和显示
+### 建议测试 (Should Test)
 
-##### 动态列表管理
-- [ ] **工作经历**
-  - 添加工作经历
-  - 删除工作经历
-  - 多项经历正确显示
+#### 1. 兼容性测试
+- [ ] Chrome 浏览器测试
+- [ ] Firefox 浏览器测试
+- [ ] Safari 浏览器测试
+- [ ] Edge 浏览器测试
+- [ ] 移动端 iOS Safari测试
+- [ ] 移动端 Android Chrome测试
 
-- [ ] **核心技能**
-  - 添加技能
-  - 删除技能
-  - 星级评分（1-5星）
-  - 星级点击交互
+#### 2. 性能测试
+- [ ] 大型EPUB文件（>10MB）加载性能
+- [ ] 大型Excel文件（>5MB）解析性能
+- [ ] 高分辨率图片（>4000px）马赛克处理
+- [ ] IndexedDB大量数据读写性能
+- [ ] 主页加载时间（11个工具）
 
-##### 主题切换
-- [ ] **4种主题**
-  - 经典蓝主题
-  - 现代绿主题
-  - 优雅紫主题
-  - 极简黑主题
-  - 主题切换实时生效
+#### 3. 边界测试
+**EPUB阅读器**:
+- [ ] 损坏的EPUB文件处理
+- [ ] 无封面的EPUB文件
+- [ ] 超大EPUB文件（>50MB）
+- [ ] 存储空间不足时的处理
 
-##### 导出功能
-- [ ] **Markdown 导出**
-  - 文件正确下载
-  - 内容格式正确
-  - 文件名为 resume.md
+**Excel转JSON**:
+- [ ] 空Excel文件
+- [ ] 包含公式的Excel
+- [ ] 包含图片的Excel
+- [ ] 合并单元格的Excel
+- [ ] 超大Excel文件（>100MB）
 
-- [ ] **JSON 导出**
-  - 文件正确下载
-  - JSON 格式有效
-  - 包含所有数据字段
-  - 文件名为 resume.json
+**图片马赛克**:
+- [ ] 非常小的图片（<100px）
+- [ ] 超大图片（>8000px）
+- [ ] 非标准格式图片
+- [ ] 极小选区处理
 
-- [ ] **JSON 导入**
-  - 选择 JSON 文件
-  - 数据正确恢复
-  - 表单和预览同步更新
-  - 错误格式有提示
+#### 4. 存储测试
+- [ ] EPUB阅读器添加多本书籍
+- [ ] 阅读多本书并保存进度
+- [ ] 浏览器关闭后数据持久化
+- [ ] 存储空间接近限制时的处理
+- [ ] 清除浏览器数据后的恢复
 
-- [ ] **PNG 导出**
-  - 图片正确生成
-  - 分辨率清晰（scale: 2）
-  - 文件名为 resume.png
+### 可选测试 (Optional Test)
 
-- [ ] **PDF 导出**
-  - PDF 正确生成
-  - 单页内容完整
-  - 多页内容正确分页
-  - 文件名为 resume.pdf
+#### 1. 用户体验测试
+- [ ] Favicon对用户识别的影响
+- [ ] 工具切换流畅度
+- [ ] 错误提示的友好度
+- [ ] 移动端操作便利性
+- [ ] 加载动画和反馈
 
-##### 数据持久化
-- [ ] **自动保存**
-  - 编辑后自动保存到 IndexedDB
-  - 刷新页面数据保留
-  - 首次打开显示示例数据
-
-- [ ] **清空功能**
-  - 清空确认对话框
-  - 清空后数据全部删除
-  - IndexedDB 数据同步清空
-
-##### 响应式布局
-- [ ] **桌面端**
-  - 左右分栏布局
-  - 编辑器和预览各占 50%
-  - 滚动独立
-
-- [ ] **移动端**
-  - 上下布局
-  - 编辑器和预览各占 50vh
-  - 表单字段堆叠显示
-  - 预览区自动缩放（scale: 0.85）
-
-#### 3. 集成测试
-- [ ] **页面跳转**
-  - 从 index.html 点击卡片 → 正确打开 resume-builder.html
-  - 浏览器后退 → 返回 index.html
-  - 前进 → 再次打开 resume-builder.html
-
-- [ ] **URL 访问**
-  - 直接访问 `/resume-builder.html` → 正常加载
-  - 刷新页面 → 数据保留
-
-### 中优先级测试 (Should Test)
-
-#### 跨浏览器测试
-- [ ] **Chrome (最新版)**
-  - 所有功能正常
-  - IndexedDB 正常
-  - 导出功能正常
-
-- [ ] **Firefox (最新版)**
-  - 所有功能正常
-  - IndexedDB 正常
-  - 导出功能正常
-
-- [ ] **Safari (最新版)**
-  - 所有功能正常
-  - IndexedDB 正常
-  - 导出功能正常
-
-- [ ] **Edge (最新版)**
-  - 所有功能正常
-  - IndexedDB 正常
-  - 导出功能正常
-
-#### 性能测试
-- [ ] **加载性能**
-  - index.html 加载时间 < 1s
-  - resume-builder.html 首次加载 < 1s
-  - CDN 依赖加载时间
-
-- [ ] **运行时性能**
-  - 实时预览响应速度 < 100ms
-  - 大量内容时的渲染性能
-  - PNG/PDF 导出时间（< 3s）
-
-- [ ] **存储性能**
-  - IndexedDB 写入速度
-  - 大头像（2MB）的存储和加载
-
-#### 用户体验测试
-- [ ] **交互反馈**
-  - Toast 提示的显示时机
-  - 主题切换的流畅度
-  - 按钮点击反馈
-
-- [ ] **错误处理**
-  - CDN 加载失败时的提示
-  - 导出失败时的提示
-  - JSON 导入格式错误的提示
-  - IndexedDB 不支持时的降级
-
-### 低优先级测试 (Nice to Have)
-
-#### 边界情况
-- [ ] **空数据**
-  - 空 Markdown 导出
-  - 空 JSON 导出
-  - 无内容时的预览显示
-
-- [ ] **极限数据**
-  - 超长姓名（100+ 字符）
-  - 大量工作经历（20+ 项）
-  - 大量技能（50+ 项）
-  - 超长工作内容（10000+ 字符）
-  - 大头像文件（5MB+）
-
-- [ ] **特殊字符**
-  - HTML 特殊字符转义
-  - Markdown 特殊字符
-  - JSON 特殊字符
-
-#### 可访问性
-- [ ] **键盘导航**
-  - Tab 键导航
-  - Enter 键提交
-  - Esc 键取消
-
-- [ ] **屏幕阅读器**
-  - 表单标签正确
-  - ARIA 属性
+#### 2. 回归测试
+- [ ] 现有9个工具功能未受影响
+- [ ] 主页搜索功能正常
+- [ ] 主页统计数据准确
 
 ---
 
-## 📈 风险评估
+## 📝 总结
 
-### 总体风险等级: 🟡 **中低风险 (Medium-Low)**
+本次变更为**低风险的功能增强和新增**：
 
-#### 风险分析
+### ✅ 优势
+- **变更范围清晰**：Favicon统一 + 3个新工具
+- **架构无变化**：保持单文件独立架构
+- **无破坏性**：完全向后兼容，不影响现有工具
+- **技术成熟**：使用成熟稳定的开源库（JSZip, SheetJS）
+- **易于回滚**：如有问题可快速移除新工具
 
-| 风险项 | 风险等级 | 影响范围 | 缓解措施 |
-|--------|---------|---------|---------|
-| index.html 渲染错误 | 🟢 低 | 仅新工具卡片 | 使用现有渲染逻辑，已验证 |
-| 工具计数错误 | 🟢 低 | 统计显示 | 使用 `tools.length`，自动计算 |
-| 搜索功能异常 | 🟢 低 | 搜索结果 | 复用现有搜索逻辑 |
-| 新工具页面加载失败 | 🟡 中 | 新工具不可用 | 独立文件，不影响其他工具 |
-| CDN 依赖加载失败 | 🟡 中 | PNG/PDF 导出失败 | 有错误提示，其他功能正常 |
-| IndexedDB 不支持 | 🟡 中 | 数据不持久化 | 有降级提示，仍可使用 |
-| 浏览器兼容性 | 🟡 中 | 旧浏览器不可用 | 文档说明最低版本要求 |
-| PDF 分页不理想 | 🟢 低 | 导出效果 | 已实现自动分页逻辑 |
-| JSON 导入数据损坏 | 🟢 低 | 导入失败 | 有完整的数据验证逻辑 |
+### 📊 变更统计
+- **修改文件**: 9个（添加favicon）
+- **新增文件**: 11个（3个工具 + 2个文档 + 6个图标资源）
+- **新增代码**: ~3,000行
+- **新增依赖**: 2个CDN库（JSZip, SheetJS）
+- **工具总数**: 9 → 11
 
-#### 风险详情
+### 🎯 核心价值
+1. **品牌提升**: 统一的favicon提升专业度
+2. **功能丰富**: 新增数据处理和阅读类工具
+3. **用户价值**: 满足更多使用场景（电子书阅读、数据转换、图片处理）
 
-**🟡 中等风险项**:
+### ⚠️ 注意事项
+1. **存储管理**: EPUB阅读器可能占用较多IndexedDB空间
+2. **性能考虑**: 大文件处理可能需要优化
+3. **浏览器支持**: 部分功能不支持IE浏览器
 
-1. **CDN 依赖加载失败**
-   - 场景: cdnjs.cloudflare.com 不可访问
-   - 影响: PNG/PDF 导出功能不可用
-   - 概率: 低（CDN 稳定性高）
-   - 缓解: 
-     - 使用稳定的 CDN 服务
-     - 导出失败时有明确错误提示
-     - 其他功能（编辑、预览、Markdown/JSON 导出）不受影响
+### 📋 建议行动
+1. ✅ **立即行动**:
+   - 测试所有页面的favicon显示
+   - 验证新工具核心功能
+   - 确认主页工具列表更新
 
-2. **IndexedDB 不支持**
-   - 场景: 旧浏览器或隐私模式
-   - 影响: 数据不持久化，刷新丢失
-   - 概率: 低（现代浏览器都支持）
-   - 缓解:
-     - 有错误处理和提示
-     - 示例数据仍可正常显示
-     - 可通过导出 JSON 手动备份
+2. ⚠️ **优先测试**:
+   - EPUB阅读器的IndexedDB存储
+   - Excel转JSON的多工作表处理
+   - 图片马赛克的各种选区模式
 
-3. **浏览器兼容性**
-   - 场景: IE 11 或更旧浏览器
-   - 影响: 工具完全不可用
-   - 概率: 低（目标用户群使用现代浏览器）
-   - 缓解:
-     - 文档明确说明最低版本要求
-     - 使用渐进增强策略
+3. 📱 **移动端测试**:
+   - EPUB阅读器的触摸操作
+   - Excel转JSON的响应式布局
+   - 图片马赛克的移动端交互
 
-#### 风险缓解策略
-
-1. **隔离性设计**: 单文件架构确保故障隔离，新工具问题不影响其他工具
-2. **向后兼容**: 不修改现有工具的任何代码
-3. **渐进增强**: 新工具作为独立增量，不影响现有功能
-4. **完善的错误处理**: 
-   - CDN 加载失败有提示
-   - IndexedDB 失败有降级
-   - JSON 导入有数据验证
-   - 导出失败有错误提示
-5. **数据验证**: JSON 导入时完整验证数据结构
-6. **用户提示**: 所有关键操作都有 Toast 反馈
+4. 🔄 **后续优化**:
+   - 考虑添加文件大小限制
+   - 添加浏览器兼容性检测
+   - 优化大文件处理性能
 
 ---
 
-## 🔄 回滚计划
-
-### 快速回滚 (如需要)
-
-```bash
-# 方案 1: Git 回滚
-git checkout HEAD -- index.html
-git clean -f resume-builder.html resume-builder.md
-
-# 方案 2: 手动移除
-# 1. 从 index.html 删除 resume-builder 配置对象
-# 2. 将工具计数改回 7
-# 3. 删除 resume-builder.html 和 resume-builder.md
-```
-
-**回滚影响**: 🟢 无影响
-- 其他工具继续正常工作
-- 用户数据无损失（IndexedDB 数据保留，不会自动清除）
-- 可选：手动清除 IndexedDB 数据库 `ResumeBuilderDB`
-
-**回滚后清理 IndexedDB** (可选):
-```javascript
-// 在浏览器控制台执行
-indexedDB.deleteDatabase('ResumeBuilderDB');
-```
-
----
-
-## 📝 部署检查清单
-
-### 部署前检查
-- [x] 所有新增文件已创建
-- [x] index.html 配置正确
-- [x] 完整文档已生成（resume-builder.md）
-- [ ] 核心功能测试通过
-- [ ] 导入导出功能测试通过
-- [ ] IndexedDB 持久化测试通过
-- [ ] 跨浏览器测试通过
-- [ ] 移动端测试通过
-
-### 部署后验证
-- [ ] 主页正常加载
-- [ ] 新工具卡片可见且正确
-- [ ] 点击跳转正常
-- [ ] 搜索功能正常（搜索"简历"、"PDF"等）
-- [ ] 新工具页面正常加载
-- [ ] CDN 依赖正常加载（html2canvas, jsPDF）
-- [ ] 示例数据正常显示
-- [ ] 编辑功能正常
-- [ ] 导出功能正常
-- [ ] IndexedDB 保存正常
-
-### 监控指标
-- [ ] 页面加载时间
-- [ ] CDN 依赖加载成功率
-- [ ] IndexedDB 操作成功率
-- [ ] 导出功能使用率
-- [ ] 用户反馈和错误报告
-
----
-
-## 📚 相关文档
-
-- [resume-builder.md](../../resume-builder.md) - 工具详细技术文档
-- [auto-generate-tool-doc.md](../.catpaw/rules/auto-generate-tool-doc.md) - 文档生成规范
-- [single-html-file-tool.md](../.catpaw/rules/single-html-file-tool.md) - 单文件工具规范
-
----
-
-## 🎯 结论
-
-### 变更总结
-- ✅ 新增 1 个功能完善的简历制作工具
-- ✅ 更新主页配置（工具数 7→8）
-- ✅ 生成完整技术文档（~800行）
-- ✅ 遵循项目规范和架构
-- ✅ 实现 JSON 导入导出功能
-- ✅ 实现 IndexedDB 数据持久化
-- ✅ 实现多格式导出（Markdown/JSON/PNG/PDF）
-
-### 影响评估
-- **直接影响**: index.html（配置更新）
-- **传递影响**: 用户界面（新增卡片）、搜索功能（新增关键词）
-- **外部依赖**: 2 个 CDN 库（html2canvas, jsPDF）
-- **数据存储**: IndexedDB（独立数据库，隔离良好）
-- **风险等级**: 🟡 中低风险
-- **回滚难度**: 🟢 简单
-
-### 建议行动
-1. ✅ **可以部署** - 变更隔离良好，风险可控
-2. 🔍 **执行完整测试** - 重点测试导入导出、IndexedDB、PDF 分页功能
-3. 📊 **监控 CDN 依赖** - 确保 html2canvas 和 jsPDF 正常加载
-4. 🧪 **跨浏览器验证** - 测试 Chrome、Firefox、Safari、Edge
-5. 📱 **移动端测试** - 验证响应式布局和触摸交互
-6. 📈 **收集用户反馈** - 监控新工具的使用情况和问题反馈
-
-### 技术亮点
-- ✨ 完整的 IndexedDB CRUD 操作
-- ✨ JSON 数据结构验证
-- ✨ PDF 多页自动分页算法
-- ✨ Base64 图片处理和存储
-- ✨ 批量操作性能优化（skipUpdate 参数）
-- ✨ 动态表单管理
-- ✨ 4 种主题系统
-
----
-
-*分析生成时间: 2024-12-24*  
-*分析工具: CatPaw AI Code Assistant*  
-*分析方法: 静态代码分析 + 依赖关系追踪 + Git Diff 分析*
+*最后更新：2025-01-25*  
+*分析者：CatPaw AI*  
+*分析方法：静态代码分析 + 依赖关系追踪 + Git Diff 分析*
