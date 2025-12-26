@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel 在线管理工具</title>
+    
+    <!-- SheetJS 依赖 (免费开源) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- Handsontable 依赖 (免费版) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@12.3.1/dist/handsontable.full.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/handsontable@12.3.1/dist/handsontable.full.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+        
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+            min-height: 500px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 上传区域 */
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 60px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+        
+        .upload-area.dragover {
+            background: #e0e7ff;
+            border-color: #4c51bf;
+        }
+        
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 18px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .upload-hint {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        /* 文件列表 */
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .file-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .file-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .file-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            word-break: break-all;
+        }
+        
+        .file-info {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            min-height: 44px;
+            white-space: nowrap;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        /* SpreadJS 容器 */
+        #spreadContainer {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .editor-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        /* 编辑器工具栏 */
+        .editor-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .search-box-editor {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .search-input-editor {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .search-input-editor:focus {
+            border-color: #667eea;
+        }
+        
+        .toolbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-tool {
+            padding: 6px 12px;
+            border: 1px solid #ced4da;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .btn-tool:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+        
+        .btn-tool:active {
+            transform: scale(0.95);
+        }
+        
+        .toolbar-divider {
+            color: #ced4da;
+            margin: 0 4px;
+        }
+        
+        /* 加载提示 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(102, 126, 234, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .loading-hint {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .nav-tab {
+                padding: 12px 10px;
+                font-size: 14px;
+            }
+            
+            .tab-content {
+                padding: 15px;
+            }
+            
+            .file-list {
+                grid-template-columns: 1fr;
+            }
+            
+            #spreadContainer {
+                height: 400px;
+            }
+            
+            .editor-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            
+            .editor-actions {
+                flex-direction: column;
+            }
+            
+            .editor-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box-editor {
+                min-width: 100%;
+            }
+            
+            .toolbar-actions {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .btn-tool {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载提示 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">正在加载 Excel 处理库...</div>
+        <div class="loading-hint">首次加载可能需要几秒钟</div>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>📊 Excel 在线管理工具</h1>
+            <p>支持 Excel 文件上传、在线编辑、本地缓存管理</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="upload">上传文件</button>
+            <button class="nav-tab" data-tab="list">文件列表</button>
+            <button class="nav-tab" data-tab="editor">在线编辑</button>
+        </div>
+        
+        <!-- 上传页面 -->
+        <div class="tab-content active" id="upload">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击或拖拽上传 Excel 文件</div>
+                <div class="upload-hint">支持 .xlsx, .xls 格式</div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
+            </div>
+        </div>
+        
+        <!-- 文件列表页面 -->
+        <div class="tab-content" id="list">
+            <div class="file-list" id="fileList"></div>
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">📂</div>
+                <p>暂无文件，请先上传 Excel 文件</p>
+            </div>
+        </div>
+        
+        <!-- 编辑器页面 -->
+        <div class="tab-content" id="editor">
+            <div class="editor-header" id="editorHeader" style="display: none;">
+                <div class="editor-title" id="editorTitle">未打开文件</div>
+                <div class="editor-actions">
+                    <button class="btn btn-success" id="saveBtn">💾 保存</button>
+                    <button class="btn btn-primary" id="downloadBtn">⬇️ 下载</button>
+                    <button class="btn btn-danger" id="closeBtn">✕ 关闭</button>
+                </div>
+            </div>
+            
+            <!-- 搜索和工具栏 -->
+            <div class="editor-toolbar" id="editorToolbar" style="display: none;">
+                <div class="search-box-editor">
+                    <input type="text" id="searchInput" class="search-input-editor" placeholder="搜索单元格内容... (Ctrl+F)">
+                    <button class="btn-tool" id="searchBtn" title="搜索">🔍</button>
+                    <button class="btn-tool" id="clearSearchBtn" title="清除搜索">✕</button>
+                </div>
+                <div class="toolbar-actions">
+                    <button class="btn-tool" id="undoBtn" title="撤销 (Ctrl+Z)">↶</button>
+                    <button class="btn-tool" id="redoBtn" title="重做 (Ctrl+Y)">↷</button>
+                    <span class="toolbar-divider">|</span>
+                    <button class="btn-tool" id="addRowBtn" title="添加行">➕ 行</button>
+                    <button class="btn-tool" id="addColBtn" title="添加列">➕ 列</button>
+                    <span class="toolbar-divider">|</span>
+                    <button class="btn-tool" id="filterBtn" title="启用过滤器">🔽 过滤</button>
+                </div>
+            </div>
+            
+            <div id="spreadContainer"></div>
+            <div class="empty-state" id="editorEmpty">
+                <div class="empty-icon">📝</div>
+                <p>请从文件列表中选择要编辑的文件</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IndexedDB 管理类
+        class ExcelDB {
+            constructor() {
+                this.dbName = 'ExcelManagerDB';
+                this.storeName = 'files';
+                this.db = null;
+            }
+            
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, 1);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve(this.db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            const objectStore = db.createObjectStore(this.storeName, { keyPath: 'id', autoIncrement: true });
+                            objectStore.createIndex('name', 'name', { unique: false });
+                            objectStore.createIndex('uploadDate', 'uploadDate', { unique: false });
+                        }
+                    };
+                });
+            }
+            
+            async saveFile(name, data, size) {
+                const transaction = this.db.transaction([this.storeName], 'readwrite');
+                const objectStore = transaction.objectStore(this.storeName);
+                
+                const file = {
+                    name: name,
+                    data: data,
+                    size: size,
+                    uploadDate: new Date().toISOString()
+                };
+                
+                return new Promise((resolve, reject) => {
+                    const request = objectStore.add(file);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            async getAllFiles() {
+                const transaction = this.db.transaction([this.storeName], 'readonly');
+                const objectStore = transaction.objectStore(this.storeName);
+                
+                return new Promise((resolve, reject) => {
+                    const request = objectStore.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            async getFile(id) {
+                const transaction = this.db.transaction([this.storeName], 'readonly');
+                const objectStore = transaction.objectStore(this.storeName);
+                
+                return new Promise((resolve, reject) => {
+                    const request = objectStore.get(id);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            async updateFile(id, data) {
+                const transaction = this.db.transaction([this.storeName], 'readwrite');
+                const objectStore = transaction.objectStore(this.storeName);
+                
+                return new Promise((resolve, reject) => {
+                    const getRequest = objectStore.get(id);
+                    getRequest.onsuccess = () => {
+                        const file = getRequest.result;
+                        file.data = data;
+                        file.uploadDate = new Date().toISOString();
+                        
+                        const updateRequest = objectStore.put(file);
+                        updateRequest.onsuccess = () => resolve();
+                        updateRequest.onerror = () => reject(updateRequest.error);
+                    };
+                    getRequest.onerror = () => reject(getRequest.error);
+                });
+            }
+            
+            async deleteFile(id) {
+                const transaction = this.db.transaction([this.storeName], 'readwrite');
+                const objectStore = transaction.objectStore(this.storeName);
+                
+                return new Promise((resolve, reject) => {
+                    const request = objectStore.delete(id);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+        }
+        
+        // 应用管理类
+        class ExcelManager {
+            constructor() {
+                this.db = new ExcelDB();
+                this.hot = null;
+                this.workbook = null;
+                this.currentFileId = null;
+                this.currentFileName = '';
+                this.init();
+            }
+            
+            async init() {
+                await this.db.init();
+                this.initHandsontable();
+                this.bindEvents();
+                await this.loadFileList();
+            }
+            
+            initHandsontable() {
+                // 检查 Handsontable 是否加载完成
+                if (typeof Handsontable === 'undefined') {
+                    console.error('Handsontable 库未加载完成');
+                    alert('Excel 处理库加载失败，请刷新页面重试');
+                    return;
+                }
+                
+                const container = document.getElementById('spreadContainer');
+                this.hot = new Handsontable(container, {
+                    data: [[]],
+                    rowHeaders: true,
+                    colHeaders: true,
+                    height: 600,
+                    width: '100%',
+                    licenseKey: 'non-commercial-and-evaluation',
+                    
+                    // 编辑功能
+                    allowInsertRow: true,
+                    allowInsertColumn: true,
+                    allowRemoveRow: true,
+                    allowRemoveColumn: true,
+                    
+                    // 上下文菜单 - 启用完整功能
+                    contextMenu: {
+                        items: {
+                            'row_above': { name: '在上方插入行' },
+                            'row_below': { name: '在下方插入行' },
+                            'col_left': { name: '在左侧插入列' },
+                            'col_right': { name: '在右侧插入列' },
+                            'remove_row': { name: '删除行' },
+                            'remove_col': { name: '删除列' },
+                            'sp1': '---------',
+                            'undo': { name: '撤销' },
+                            'redo': { name: '重做' },
+                            'sp2': '---------',
+                            'make_read_only': { name: '只读' },
+                            'alignment': { name: '对齐方式' },
+                            'sp3': '---------',
+                            'cut': { name: '剪切' },
+                            'copy': { name: '复制' },
+                            'paste': { name: '粘贴' }
+                        }
+                    },
+                    
+                    // 启用过滤器
+                    filters: true,
+                    dropdownMenu: true,
+                    
+                    // 启用搜索
+                    search: true,
+                    
+                    // 列调整
+                    manualColumnResize: true,
+                    manualRowResize: true,
+                    manualColumnMove: true,
+                    manualRowMove: true,
+                    
+                    // 自动填充（拖拽复制）
+                    fillHandle: true,
+                    
+                    // 撤销/重做
+                    undo: true,
+                    
+                    // 自动行列
+                    minSpareRows: 1,
+                    minSpareCols: 1,
+                    
+                    // 多选
+                    selectionMode: 'multiple',
+                    
+                    // 启用剪贴板
+                    copyPaste: true
+                });
+            }
+            
+            bindEvents() {
+                // 标签切换
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabName = tab.dataset.tab;
+                        this.switchTab(tabName);
+                    });
+                });
+                
+                // 文件上传
+                const uploadArea = document.getElementById('uploadArea');
+                const fileInput = document.getElementById('fileInput');
+                
+                uploadArea.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', (e) => this.handleFileUpload(e.target.files));
+                
+                // 拖拽上传
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+                
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+                
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    this.handleFileUpload(e.dataTransfer.files);
+                });
+                
+                // 编辑器按钮
+                document.getElementById('saveBtn').addEventListener('click', () => this.saveCurrentFile());
+                document.getElementById('downloadBtn').addEventListener('click', () => this.downloadCurrentFile());
+                document.getElementById('closeBtn').addEventListener('click', () => this.closeEditor());
+                
+                // 工具栏按钮
+                document.getElementById('searchBtn').addEventListener('click', () => this.searchInTable());
+                document.getElementById('clearSearchBtn').addEventListener('click', () => this.clearSearch());
+                document.getElementById('undoBtn').addEventListener('click', () => this.undo());
+                document.getElementById('redoBtn').addEventListener('click', () => this.redo());
+                document.getElementById('addRowBtn').addEventListener('click', () => this.addRow());
+                document.getElementById('addColBtn').addEventListener('click', () => this.addColumn());
+                document.getElementById('filterBtn').addEventListener('click', () => this.toggleFilters());
+                
+                // 搜索输入框回车搜索
+                document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.searchInTable();
+                    }
+                });
+                
+                // 快捷键支持
+                document.addEventListener('keydown', (e) => {
+                    // Ctrl+F 搜索
+                    if (e.ctrlKey && e.key === 'f') {
+                        e.preventDefault();
+                        const searchInput = document.getElementById('searchInput');
+                        if (searchInput.offsetParent !== null) { // 如果搜索框可见
+                            searchInput.focus();
+                        }
+                    }
+                    // Ctrl+Z 撤销
+                    if (e.ctrlKey && e.key === 'z' && !e.shiftKey && this.hot) {
+                        e.preventDefault();
+                        this.undo();
+                    }
+                    // Ctrl+Y 或 Ctrl+Shift+Z 重做
+                    if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
+                        if (this.hot) {
+                            e.preventDefault();
+                            this.redo();
+                        }
+                    }
+                });
+            }
+            
+            switchTab(tabName) {
+                document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                document.getElementById(tabName).classList.add('active');
+                
+                if (tabName === 'list') {
+                    this.loadFileList();
+                }
+            }
+            
+            async handleFileUpload(files) {
+                for (const file of files) {
+                    if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                        alert('请上传 Excel 文件 (.xlsx 或 .xls)');
+                        continue;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            const arrayBuffer = e.target.result;
+                            await this.db.saveFile(file.name, arrayBuffer, file.size);
+                            alert(`文件 "${file.name}" 上传成功！`);
+                            await this.loadFileList();
+                        } catch (error) {
+                            alert('文件保存失败：' + error.message);
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+                
+                document.getElementById('fileInput').value = '';
+            }
+            
+            async loadFileList() {
+                const files = await this.db.getAllFiles();
+                const fileList = document.getElementById('fileList');
+                const emptyState = document.getElementById('emptyState');
+                
+                if (files.length === 0) {
+                    fileList.innerHTML = '';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                emptyState.style.display = 'none';
+                fileList.innerHTML = files.map(file => `
+                    <div class="file-item">
+                        <div class="file-icon">📄</div>
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-info">
+                            大小: ${this.formatFileSize(file.size)}<br>
+                            上传: ${new Date(file.uploadDate).toLocaleString('zh-CN')}
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn btn-primary" onclick="app.openFile(${file.id})">打开</button>
+                            <button class="btn btn-success" onclick="app.exportFile(${file.id})">导出</button>
+                            <button class="btn btn-danger" onclick="app.deleteFile(${file.id})">删除</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            async openFile(id) {
+                try {
+                    const file = await this.db.getFile(id);
+                    if (!file) {
+                        alert('文件不存在');
+                        return;
+                    }
+                    
+                    this.currentFileId = id;
+                    this.currentFileName = file.name;
+                    
+                    // 使用 SheetJS 解析 Excel 文件
+                    const data = new Uint8Array(file.data);
+                    this.workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // 读取第一个工作表
+                    const sheetName = this.workbook.SheetNames[0];
+                    const worksheet = this.workbook.Sheets[sheetName];
+                    
+                    // 转换为二维数组
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                        header: 1,
+                        defval: '',
+                        raw: false 
+                    });
+                    
+                    // 加载到 Handsontable
+                    this.hot.loadData(jsonData.length > 0 ? jsonData : [[]]);
+                    
+                    document.getElementById('editorTitle').textContent = file.name;
+                    document.getElementById('editorHeader').style.display = 'flex';
+                    document.getElementById('editorToolbar').style.display = 'flex';
+                    document.getElementById('editorEmpty').style.display = 'none';
+                    document.getElementById('spreadContainer').style.display = 'block';
+                    
+                    this.switchTab('editor');
+                } catch (error) {
+                    alert('打开文件失败：' + error.message);
+                    console.error(error);
+                }
+            }
+            
+            async saveCurrentFile() {
+                if (!this.currentFileId) {
+                    alert('没有打开的文件');
+                    return;
+                }
+                
+                try {
+                    // 从 Handsontable 获取数据
+                    const data = this.hot.getData();
+                    
+                    // 创建新的工作簿
+                    const ws = XLSX.utils.aoa_to_sheet(data);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+                    
+                    // 生成 Excel 文件
+                    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                    
+                    // 更新到 IndexedDB
+                    await this.db.updateFile(this.currentFileId, wbout);
+                    
+                    alert('保存成功！');
+                    await this.loadFileList();
+                } catch (error) {
+                    alert('保存失败：' + error.message);
+                    console.error(error);
+                }
+            }
+            
+            async downloadCurrentFile() {
+                if (!this.currentFileId) {
+                    alert('没有打开的文件');
+                    return;
+                }
+                
+                try {
+                    // 从 Handsontable 获取数据
+                    const data = this.hot.getData();
+                    
+                    // 创建新的工作簿
+                    const ws = XLSX.utils.aoa_to_sheet(data);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+                    
+                    // 生成并下载 Excel 文件
+                    XLSX.writeFile(wb, this.currentFileName || 'export.xlsx');
+                } catch (error) {
+                    alert('下载失败：' + error.message);
+                    console.error(error);
+                }
+            }
+            
+            async exportFile(id) {
+                try {
+                    const file = await this.db.getFile(id);
+                    const blob = new Blob([file.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = file.name;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    alert('导出失败：' + error.message);
+                }
+            }
+            
+            async deleteFile(id) {
+                if (!confirm('确定要删除这个文件吗？')) {
+                    return;
+                }
+                
+                try {
+                    await this.db.deleteFile(id);
+                    alert('删除成功');
+                    
+                    if (this.currentFileId === id) {
+                        this.closeEditor();
+                    }
+                    
+                    await this.loadFileList();
+                } catch (error) {
+                    alert('删除失败：' + error.message);
+                }
+            }
+            
+            closeEditor() {
+                this.currentFileId = null;
+                this.currentFileName = '';
+                this.workbook = null;
+                
+                // 清空 Handsontable 数据
+                this.hot.loadData([[]]);
+                
+                document.getElementById('editorHeader').style.display = 'none';
+                document.getElementById('editorToolbar').style.display = 'none';
+                document.getElementById('editorEmpty').style.display = 'block';
+                document.getElementById('spreadContainer').style.display = 'none';
+            }
+            
+            // 搜索功能
+            searchInTable() {
+                const searchInput = document.getElementById('searchInput');
+                const query = searchInput.value.trim();
+                
+                if (!query) {
+                    alert('请输入搜索内容');
+                    return;
+                }
+                
+                const search = this.hot.getPlugin('search');
+                const searchResult = search.query(query);
+                
+                if (searchResult.length > 0) {
+                    // 跳转到第一个匹配项
+                    const firstResult = searchResult[0];
+                    this.hot.selectCell(firstResult.row, firstResult.col);
+                    
+                    // 高亮显示搜索结果
+                    this.hot.render();
+                    
+                    alert(`找到 ${searchResult.length} 个匹配项`);
+                } else {
+                    alert('未找到匹配内容');
+                }
+            }
+            
+            // 清除搜索
+            clearSearch() {
+                const search = this.hot.getPlugin('search');
+                search.query('');
+                document.getElementById('searchInput').value = '';
+                this.hot.render();
+            }
+            
+            // 撤销
+            undo() {
+                if (this.hot && this.hot.isUndoAvailable()) {
+                    this.hot.undo();
+                } else {
+                    alert('无法撤销');
+                }
+            }
+            
+            // 重做
+            redo() {
+                if (this.hot && this.hot.isRedoAvailable()) {
+                    this.hot.redo();
+                } else {
+                    alert('无法重做');
+                }
+            }
+            
+            // 添加行
+            addRow() {
+                const selected = this.hot.getSelected();
+                if (selected && selected.length > 0) {
+                    const row = selected[0][0];
+                    this.hot.alter('insert_row', row + 1, 1);
+                } else {
+                    // 在末尾添加
+                    const rowCount = this.hot.countRows();
+                    this.hot.alter('insert_row', rowCount, 1);
+                }
+            }
+            
+            // 添加列
+            addColumn() {
+                const selected = this.hot.getSelected();
+                if (selected && selected.length > 0) {
+                    const col = selected[0][1];
+                    this.hot.alter('insert_col', col + 1, 1);
+                } else {
+                    // 在末尾添加
+                    const colCount = this.hot.countCols();
+                    this.hot.alter('insert_col', colCount, 1);
+                }
+            }
+            
+            // 切换过滤器
+            toggleFilters() {
+                const filtersPlugin = this.hot.getPlugin('filters');
+                
+                if (filtersPlugin.enabled) {
+                    filtersPlugin.clearConditions();
+                    filtersPlugin.filter();
+                    alert('已清除所有过滤器');
+                } else {
+                    filtersPlugin.enablePlugin();
+                    alert('过滤器已启用，点击列头的下拉箭头进行过滤');
+                }
+                
+                this.hot.render();
+            }
+            
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+            }
+        }
+        
+        // 初始化应用
+        let app;
+        // 使用 window.load 确保所有外部脚本加载完成
+        window.addEventListener('load', () => {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            // 检查依赖库是否加载
+            if (typeof XLSX === 'undefined' || typeof Handsontable === 'undefined') {
+                console.error('Excel 处理库加载失败');
+                loadingOverlay.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
+                        <div style="font-size: 20px; margin-bottom: 10px;">依赖库加载失败</div>
+                        <div style="font-size: 14px; opacity: 0.8; margin-bottom: 20px;">请检查网络连接</div>
+                        <button onclick="location.reload()" style="padding: 12px 24px; font-size: 16px; border: 2px solid white; background: transparent; color: white; border-radius: 6px; cursor: pointer;">
+                            刷新页面
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 初始化应用
+            app = new ExcelManager();
+            
+            // 隐藏加载提示
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 500);
+        });
+    </script>
+</body>
+</html>
+
+<!--
+工具元信息：
+- 创建日期：2025-12-26
+- 最后更新：2025-12-26
+- 核心功能：Excel 文件在线管理、编辑、本地缓存
+- 依赖库：
+  * SheetJS (xlsx) 0.18.5 - 免费开源 Excel 文件解析库
+  * Handsontable 12.3.1 - 免费版电子表格编辑器
+- 存储方式：IndexedDB 本地存储
+- 功能限制：仅支持单个工作表编辑，不支持图表、形状等高级功能
+- 生成提示：Build an Excel online management tool with SheetJS, Handsontable, IndexedDB cache, free and open source, No React
+- 遵循规范：Simon Willison 单文件 HTML 工具开发规范
+-->
