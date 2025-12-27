@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web 3D 动画视图生成器 - 在线制作高性能3D动画</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    
+    <!-- Three.js & Loaders -->
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
+            }
+        }
+    </script>
+    <!-- WebM Writer for video export -->
+    <script src="https://cdn.jsdelivr.net/npm/webm-writer@0.3.0/webm-writer.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #1e1e1e;
+            --bg-panel: #252526;
+            --bg-header: #333333;
+            --accent: #007fd4;
+            --accent-hover: #0060a0;
+            --text-main: #cccccc;
+            --text-header: #ffffff;
+            --border: #3e3e42;
+            --timeline-bg: #1e1e1e;
+            --timeline-head: #2d2d30;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Layout */
+        header {
+            height: 48px;
+            background-color: var(--bg-header);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border);
+            justify-content: space-between;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            height: calc(100vh - 48px - 200px); /* Subtract Header and Timeline */
+        }
+
+        .side-panel {
+            width: 280px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .viewport {
+            flex: 1;
+            background-color: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .properties-panel {
+            width: 300px;
+            background-color: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .timeline-panel {
+            height: 200px;
+            background-color: var(--timeline-bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Components */
+        h1 { font-size: 16px; color: var(--text-header); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .logo-icon { font-size: 20px; }
+
+        .toolbar { display: flex; gap: 10px; }
+        
+        button {
+            background-color: #3c3c3c;
+            color: white;
+            border: 1px solid transparent;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 2px;
+        }
+        button:hover { background-color: #4c4c4c; }
+        button.primary { background-color: var(--accent); }
+        button.primary:hover { background-color: var(--accent-hover); }
+
+        .panel-header {
+            padding: 8px 12px;
+            background-color: var(--timeline-head);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .outliner-list {
+            list-style: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .outliner-item {
+            padding: 4px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .outliner-item:hover { background-color: #2a2d2e; }
+        .outliner-item.active { background-color: #37373d; color: white; }
+
+        /* Form Controls */
+        .prop-group { margin-bottom: 12px; }
+        .prop-label { font-size: 11px; margin-bottom: 4px; display: block; color: #999; }
+        .prop-row { display: flex; gap: 4px; }
+        input[type="number"], input[type="text"] {
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            color: white;
+            padding: 4px;
+            width: 100%;
+            font-size: 12px;
+        }
+        input:focus { border-color: var(--accent); outline: none; }
+
+        /* Timeline Controls */
+        .timeline-controls {
+            height: 32px;
+            background-color: var(--timeline-head);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .timeline-track {
+            flex: 1;
+            position: relative;
+            overflow-x: auto;
+            overflow-y: hidden;
+            background: #1e1e1e;
+        }
+        .time-cursor {
+            position: absolute;
+            top: 0; left: 0;
+            width: 1px;
+            height: 100%;
+            background: red;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Overlay */
+        #loading-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .spinner {
+            width: 30px; height: 30px;
+            border: 3px solid #333;
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1><span class="logo-icon">🎬</span> Web 3D Animation</h1>
+        <div class="toolbar">
+            <button onclick="document.getElementById('file-input').click()">📂 导入模型</button>
+            <button onclick="projectManager.saveProject()">💾 保存项目</button>
+            <button class="primary" onclick="exportManager.exportVideo()">🎥 导出视频</button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="main-content">
+        <!-- Outliner (Left) -->
+        <div class="side-panel">
+            <div class="panel-header">场景大纲</div>
+            <ul class="outliner-list" id="outliner">
+                <!-- Items will be injected here -->
+            </ul>
+        </div>
+
+        <!-- 3D Viewport (Center) -->
+        <div class="viewport" id="viewport">
+            <div id="loading-overlay" class="hidden">
+                <div class="spinner"></div>
+                <div id="loading-text">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Properties (Right) -->
+        <div class="properties-panel" id="properties">
+            <div class="panel-header">属性面板</div>
+            <div id="prop-content" style="padding-top: 10px;">
+                <p style="text-align: center; color: #666; margin-top: 20px;">未选择对象</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline (Bottom) -->
+    <div class="timeline-panel">
+        <div class="timeline-controls">
+            <button id="btn-play">▶ 播放</button>
+            <button id="btn-stop">⏹ 停止</button>
+            <span style="flex: 1"></span>
+            <span id="time-display">00:00:00</span>
+            <button onclick="animator.addKeyframe()">➕ 添加关键帧</button>
+        </div>
+        <div class="timeline-track" id="timeline-track">
+            <div class="time-cursor" id="time-cursor"></div>
+            <!-- Tracks/Ticks go here -->
+            <canvas id="timeline-canvas" height="160"></canvas>
+        </div>
+    </div>
+
+    <!-- Hidden Input -->
+    <input type="file" id="file-input" accept=".glb,.gltf,.obj" style="display: none;" onchange="sceneLoader.handleFileUpload(this)">
+
+    <!-- Core Logic -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { TransformControls } from 'three/addons/controls/TransformControls.js';
+
+        // --- Global State ---
+        window.app = {
+            scene: null,
+            camera: null,
+            renderer: null,
+            controls: null,
+            transformControl: null,
+            selectedObject: null,
+            animations: [], // { uuid: params }
+            currentTime: 0,
+            isPlaying: false,
+            duration: 10, // seconds
+        };
+
+        const container = document.getElementById('viewport');
+
+        // --- Initialization ---
+        function init() {
+            // Scene
+            app.scene = new THREE.Scene();
+            app.scene.background = new THREE.Color(0x333333);
+            
+            // Grid
+            const gridHelper = new THREE.GridHelper(20, 20);
+            app.scene.add(gridHelper);
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            app.scene.add(ambientLight);
+            
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(5, 10, 7);
+            app.scene.add(dirLight);
+
+            // Camera
+            app.camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+            app.camera.position.set(5, 5, 5);
+            app.camera.lookAt(0, 0, 0);
+
+            // Renderer
+            app.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); // preserveDrawingBuffer for export
+            app.renderer.setSize(container.clientWidth, container.clientHeight);
+            app.renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(app.renderer.domElement);
+
+            // Controls
+            app.controls = new OrbitControls(app.camera, app.renderer.domElement);
+            app.controls.enableDamping = true;
+
+            app.transformControl = new TransformControls(app.camera, app.renderer.domElement);
+            app.transformControl.addEventListener('dragging-changed', function (event) {
+                app.controls.enabled = !event.value;
+            });
+            app.scene.add(app.transformControl);
+
+            // Resize Handle
+            window.addEventListener('resize', onWindowResize);
+            onWindowResize();
+
+            // Default cube
+            const geometry = new THREE.BoxGeometry();
+            const material = new THREE.MeshStandardMaterial({ color: 0x007fd4 });
+            const cube = new THREE.Mesh(geometry, material);
+            cube.name = "Cube";
+            app.scene.add(cube);
+            
+            updateOutliner();
+            
+            // Render Loop
+            animate();
+        }
+
+        function onWindowResize() {
+            if (!app.camera || !app.renderer) return;
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            app.camera.aspect = w / h;
+            app.camera.updateProjectionMatrix();
+            app.renderer.setSize(w, h);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            app.controls.update();
+            
+            // TODO: Animation system update
+            
+            app.renderer.render(app.scene, app.camera);
+        }
+
+        // --- Helper: Update Outliner ---
+        window.updateOutliner = function() {
+            const list = document.getElementById('outliner');
+            list.innerHTML = '';
+            
+            app.scene.traverse((obj) => {
+                if (obj.isMesh || obj.isGroup || obj.isLight) {
+                    if (obj === app.transformControl || obj.type === 'GridHelper') return;
+                    
+                    const li = document.createElement('li');
+                    li.className = 'outliner-item';
+                    li.textContent = `${getIcon(obj.type)} ${obj.name || obj.type}`;
+                    li.onclick = () => selectObject(obj);
+                    
+                    if (app.selectedObject === obj) li.classList.add('active');
+                    
+                    list.appendChild(li);
+                }
+            });
+        }
+
+        function getIcon(type) {
+            if (type.includes('Light')) return '💡';
+            if (type.includes('Camera')) return '📷';
+            if (type === 'Group') return '📁';
+            return '📦';
+        }
+
+        function selectObject(obj) {
+            app.selectedObject = obj;
+            app.transformControl.attach(obj);
+            updateOutliner();
+            updatePropertiesPanel(obj);
+        }
+        
+        // --- TODO: Property Panel logic would use plain JS to populate inputs ---
+        function updatePropertiesPanel(obj) {
+            const panel = document.getElementById('prop-content');
+            if (!obj) {
+                panel.innerHTML = '<p style="text-align: center; color: #666; margin-top: 20px;">未选择对象</p>';
+                return;
+            }
+            
+            panel.innerHTML = `
+                <div class="prop-group">
+                    <label class="prop-label">名称</label>
+                    <input type="text" value="${obj.name}" onchange="app.selectedObject.name = this.value; updateOutliner();">
+                </div>
+                
+                <div class="prop-group">
+                    <label class="prop-label">位置 (Position)</label>
+                    <div class="prop-row">
+                        <input type="number" step="0.1" value="${obj.position.x}" onchange="app.selectedObject.position.x = parseFloat(this.value)">
+                        <input type="number" step="0.1" value="${obj.position.y}" onchange="app.selectedObject.position.y = parseFloat(this.value)">
+                        <input type="number" step="0.1" value="${obj.position.z}" onchange="app.selectedObject.position.z = parseFloat(this.value)">
+                    </div>
+                </div>
+                <!-- TODO: Rotation, Scale, Material items -->
+            `;
+        }
+        
+        // --- Expose for HTML event handlers ---
+        window.sceneLoader = {
+            handleFileUpload: (input) => {
+                const file = input.files[0];
+                if (!file) return;
+
+                const url = URL.createObjectURL(file);
+                const ext = file.name.split('.').pop().toLowerCase();
+                const loadingOverlay = document.getElementById('loading-overlay');
+                loadingOverlay.classList.remove('hidden');
+
+                const onLoad = (object) => {
+                    let mesh = object;
+                    // Handle GLTF structure
+                    if (object.scene) mesh = object.scene;
+                    
+                    mesh.name = file.name;
+                    app.scene.add(mesh);
+                    
+                    // Center and scale model if too large/small
+                    const box = new THREE.Box3().setFromObject(mesh);
+                    const size = box.getSize(new THREE.Vector3()).length();
+                    const center = box.getCenter(new THREE.Vector3());
+                    
+                    mesh.position.x += (mesh.position.x - center.x);
+                    mesh.position.y += (mesh.position.y - center.y);
+                    mesh.position.z += (mesh.position.z - center.z);
+                    
+                    if (size > 10) {
+                        const scale = 5 / size;
+                        mesh.scale.setScalar(scale);
+                    } else if (size < 0.5) {
+                        const scale = 2 / size;
+                        mesh.scale.setScalar(scale);
+                    }
+
+                    updateOutliner();
+                    loadingOverlay.classList.add('hidden');
+                    URL.revokeObjectURL(url);
+                };
+
+                const onError = (e) => {
+                    console.error(e);
+                    alert('Error loading model');
+                    loadingOverlay.classList.add('hidden');
+                };
+
+                if (ext === 'gltf' || ext === 'glb') {
+                    const loader = new GLTFLoader();
+                    loader.load(url, onLoad, undefined, onError);
+                } else if (ext === 'obj') {
+                    import('https://unpkg.com/three@0.150.1/examples/jsm/loaders/OBJLoader.js')
+                        .then(({ OBJLoader }) => {
+                            const loader = new OBJLoader();
+                            loader.load(url, onLoad, undefined, onError);
+                        });
+                } else {
+                    alert('Unsupported file format');
+                    loadingOverlay.classList.add('hidden');
+                }
+                
+                // Reset input
+                input.value = '';
+            }
+        };
+
+        window.projectManager = {
+            saveProject: () => {
+                const project = {
+                    duration: app.duration,
+                    animations: app.animations
+                    // Note: Saving full models in single file JSON is too heavy for this demo
+                    // In a real app we'd save references or blob URLs
+                };
+                const blob = new Blob([JSON.stringify(project)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'project.json';
+                a.click();
+            }
+        };
+        
+        window.exportManager = {
+            exportVideo: async () => {
+                if (!window.WebMWriter) {
+                    alert('Video writer library not loaded.');
+                    return;
+                }
+                
+                const fps = 30;
+                const duration = app.duration;
+                const totalFrames = fps * duration;
+                
+                const videoWriter = new WebMWriter({
+                    quality: 0.85,
+                    frameRate: fps
+                });
+                
+                const overlay = document.getElementById('loading-overlay');
+                const loadingText = document.getElementById('loading-text');
+                overlay.classList.remove('hidden');
+                
+                // Pause interaction
+                app.isPlaying = false;
+                app.controls.enabled = false;
+                
+                // Backup time
+                const originalTime = app.currentTime;
+                
+                loadingText.textContent = 'Rendering: 0%';
+                
+                // Render loop
+                for (let i = 0; i < totalFrames; i++) {
+                    const time = i / fps;
+                    app.currentTime = time;
+                    
+                    // Force update
+                    animator.update(0); // 0 delta because we manually set time
+                    app.renderer.render(app.scene, app.camera);
+                    
+                    videoWriter.addFrame(app.renderer.domElement);
+                    
+                    loadingText.textContent = `Rendering: ${Math.round((i / totalFrames) * 100)}%`;
+                    
+                    // Allow UI update
+                    await new Promise(r => setTimeout(r, 0));
+                }
+                
+                loadingText.textContent = 'Finalizing video...';
+                
+                const blob = await videoWriter.complete();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'animation.webm';
+                a.click();
+                
+                // Restore
+                app.currentTime = originalTime;
+                app.controls.enabled = true;
+                overlay.classList.add('hidden');
+            }
+        };
+
+        // --- Animation System ---
+        window.animator = {
+            addKeyframe: () => {
+                if (!app.selectedObject) {
+                    alert('请先选择一个物体');
+                    return;
+                }
+                const uuid = app.selectedObject.uuid;
+                const time = app.currentTime;
+                
+                // Find or create track
+                let track = app.animations.find(t => t.uuid === uuid);
+                if (!track) {
+                    track = { uuid: uuid, keys: [] };
+                    app.animations.push(track);
+                }
+                
+                // Remove existing key at this exact time
+                track.keys = track.keys.filter(k => Math.abs(k.time - time) > 0.01);
+                
+                // Add new key
+                track.keys.push({
+                    time: time,
+                    position: app.selectedObject.position.clone(),
+                    rotation: app.selectedObject.rotation.clone(), // Euler
+                    scale: app.selectedObject.scale.clone()
+                });
+                
+                // Sort keys by time
+                track.keys.sort((a, b) => a.time - b.time);
+                
+                drawTimeline();
+            },
+            
+            update: (deltaTime) => {
+                if (app.isPlaying) {
+                    app.currentTime += deltaTime;
+                    if (app.currentTime > app.duration) {
+                        app.currentTime = 0; // Loop
+                    }
+                    updateTimelineUI();
+                }
+                
+                // Apply Animation
+                app.animations.forEach(track => {
+                    const obj = app.scene.getObjectByProperty('uuid', track.uuid);
+                    if (!obj || track.keys.length === 0) return;
+                    
+                    const time = app.currentTime;
+                    const keys = track.keys;
+                    
+                    // Find keyframes surrounding current time
+                    let prevKey = keys[0];
+                    let nextKey = keys[keys.length - 1];
+                    
+                    for (let i = 0; i < keys.length - 1; i++) {
+                        if (time >= keys[i].time && time < keys[i+1].time) {
+                            prevKey = keys[i];
+                            nextKey = keys[i+1];
+                            break;
+                        }
+                    }
+                    
+                    // Interpolate
+                    if (time <= prevKey.time) {
+                        obj.position.copy(prevKey.position);
+                        obj.rotation.copy(prevKey.rotation);
+                        obj.scale.copy(prevKey.scale);
+                    } else if (time >= nextKey.time) {
+                        obj.position.copy(nextKey.position);
+                        obj.rotation.copy(nextKey.rotation);
+                        obj.scale.copy(nextKey.scale);
+                    } else {
+                        const duration = nextKey.time - prevKey.time;
+                        const alpha = (time - prevKey.time) / duration;
+                        
+                        obj.position.lerpVectors(prevKey.position, nextKey.position, alpha);
+                        
+                        // Euler interpolation is tricky, simplified here:
+                        // Convert to Quaternion for slerp would be better, but simple Lerp on Euler for MVP
+                        obj.rotation.x = THREE.MathUtils.lerp(prevKey.rotation.x, nextKey.rotation.x, alpha);
+                        obj.rotation.y = THREE.MathUtils.lerp(prevKey.rotation.y, nextKey.rotation.y, alpha);
+                        obj.rotation.z = THREE.MathUtils.lerp(prevKey.rotation.z, nextKey.rotation.z, alpha);
+                        
+                        obj.scale.lerpVectors(prevKey.scale, nextKey.scale, alpha);
+                    }
+                    
+                    // Update Inputs if selected
+                    if (app.selectedObject === obj && !app.isPlaying) {
+                        // Only update UI inputs when not playing to avoid input fighting, 
+                        // or implementing bi-directional binding is complex.
+                        // For MVP: we just update scene.
+                    }
+                });
+            }
+        };
+
+        // --- Timeline UI ---
+        const canvas = document.getElementById('timeline-canvas');
+        const ctx = canvas.getContext('2d');
+        const trackDiv = document.getElementById('timeline-track');
+        
+        // Fit canvas to parent width
+        function resizeTimeline() {
+            canvas.width = trackDiv.clientWidth;
+            drawTimeline();
+        }
+        window.addEventListener('resize', resizeTimeline);
+        
+        function drawTimeline() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const pxPerSec = canvas.width / app.duration;
+            
+            // Draw Ticks
+            ctx.fillStyle = '#666';
+            ctx.font = '10px sans-serif';
+            for (let s = 0; s <= app.duration; s++) {
+                const x = s * pxPerSec;
+                ctx.fillRect(x, 0, 1, 10);
+                ctx.fillText(s + 's', x + 2, 20);
+            }
+            
+            // Draw Keyframes
+            ctx.fillStyle = '#007fd4';
+            app.animations.forEach((track, index) => {
+                const y = 30 + (index * 20);
+                
+                // Track Label
+                const obj = app.scene.getObjectByProperty('uuid', track.uuid);
+                const name = obj ? (obj.name || 'Object') : 'Unknown';
+                ctx.fillStyle = '#999';
+                ctx.fillText(name, 5, y + 10);
+                
+                // Keys
+                ctx.fillStyle = '#fab005';
+                track.keys.forEach(k => {
+                    const x = k.time * pxPerSec;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x - 4, y + 4);
+                    ctx.lineTo(x, y + 8);
+                    ctx.lineTo(x + 4, y + 4);
+                    ctx.fill();
+                });
+            });
+        }
+        
+        function updateTimelineUI() {
+            const timeDisplay = document.getElementById('time-display');
+            timeDisplay.textContent = app.currentTime.toFixed(2) + 's';
+            
+            const pxPerSec = canvas.width / app.duration;
+            const cursor = document.getElementById('time-cursor');
+            cursor.style.left = (app.currentTime * pxPerSec) + 'px';
+        }
+        
+        // Mouse Scrubbing
+        let isScrubbing = false;
+        trackDiv.addEventListener('mousedown', (e) => {
+            isScrubbing = true;
+            scrub(e);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (isScrubbing) scrub(e);
+        });
+        window.addEventListener('mouseup', () => isScrubbing = false);
+        
+        function scrub(e) {
+            const rect = trackDiv.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            x = Math.max(0, Math.min(x, rect.width));
+            
+            const pct = x / rect.width;
+            app.currentTime = pct * app.duration;
+            updateTimelineUI();
+            
+            // Force one update to see result while scrubbing
+            animator.update(0);
+        }
+
+        // Play/Stop Controls
+        document.getElementById('btn-play').onclick = () => {
+            app.isPlaying = !app.isPlaying;
+            document.getElementById('btn-play').textContent = app.isPlaying ? '⏸ 暂停' : '▶ 播放';
+        };
+        
+        document.getElementById('btn-stop').onclick = () => {
+            app.isPlaying = false;
+            app.currentTime = 0;
+            updateTimelineUI();
+            animator.update(0);
+            document.getElementById('btn-play').textContent = '▶ 播放';
+        };
+
+        // Hook into Main Loop
+        const clock = new THREE.Clock();
+        const _origAnimate = animate; // reference previous
+        // We redefine animate to include logic
+        window.animate = function() { // override global animate 
+            requestAnimationFrame(window.animate);
+            
+             // Resize logic check
+             const w = container.clientWidth;
+             const h = container.clientHeight;
+             if (app.renderer.domElement.width !== w || app.renderer.domElement.height !== h) {
+                 app.renderer.setSize(w, h, false);
+                 app.camera.aspect = w / h;
+                 app.camera.updateProjectionMatrix();
+                 resizeTimeline();
+             }
+
+            const dt = clock.getDelta();
+            
+            animator.update(dt);
+            app.controls.update();
+            app.renderer.render(app.scene, app.camera);
+        }
+        
+        // Call resize once to init canvas
+        setTimeout(resizeTimeline, 100);
+
+    </script>
+    
+    <!-- Tool Metadata -->
+    <!-- 
+        Tool: Web 3D Animation View Generator
+        Description: Three.js based 3D animation tool with timeline and video export
+        Created: 2025-12-27
+        Dependencies: Three.js r150, WebM Writer
+    -->
+</body>
+</html>
