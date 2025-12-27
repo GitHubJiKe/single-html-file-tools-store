@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL 文本压缩工具 - 将文本压缩为可分享链接</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #818cf8;
+                --primary-hover: #6366f1;
+                --bg: #0f172a;
+                --surface: #1e293b;
+                --text: #f8fafc;
+                --text-secondary: #94a3b8;
+                --border: #334155;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .result-area {
+            display: none;
+            background: var(--bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .result-area.active {
+            display: block;
+        }
+
+        .url-display {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.875rem;
+        }
+
+        .stats {
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .stat-item strong {
+            color: var(--text);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--surface);
+            color: var(--text);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            border: 1px solid var(--border);
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast svg {
+            color: var(--success);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>URL 文本压缩工具</h1>
+            <p class="subtitle">将文本压缩并嵌入 URL 中，生成可分享的链接。完全在浏览器端运行。</p>
+        </header>
+
+        <main>
+            <div class="input-group">
+                <label for="TextInput">内容</label>
+                <textarea id="TextInput" placeholder="在此粘贴文本以生成压缩链接..."></textarea>
+            </div>
+
+            <div class="actions">
+                <button class="btn-outline" onclick="clearText()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    清空
+                </button>
+                <button class="btn-primary" onclick="generateLink()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    压缩并生成链接
+                </button>
+            </div>
+
+            <div id="ResultArea" class="result-area">
+                <label>分享链接</label>
+                <div class="url-display">
+                    <input type="text" id="UrlResult" class="url-input" readonly>
+                    <button class="btn-primary" onclick="copyResult()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        复制
+                    </button>
+                </div>
+                <div class="stats">
+                    <span class="stat-item">原始大小: <strong id="OriginalSize">0 B</strong></span>
+                    <span class="stat-item">URL 大小: <strong id="CompressedSize">0 B</strong></span>
+                    <span class="stat-item">压缩率: <strong id="Savings">0%</strong></span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="Toast" class="toast">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span id="ToastMsg">已复制到剪贴板！</span>
+    </div>
+
+    <!-- Tool Metadata for tracking -->
+    <!-- 
+        Tool: URL Text Compressor
+        Description: Compresses text into URL query parameters using lz-string
+        Created: 2025-12-27
+        Dependency: lz-string@1.5.0 (CDN)
+    -->
+
+    <script>
+        // DOM Elements
+        const textInput = document.getElementById('TextInput');
+        const resultArea = document.getElementById('ResultArea');
+        const urlResult = document.getElementById('UrlResult');
+        const originalSizeFn = document.getElementById('OriginalSize');
+        const compressedSizeFn = document.getElementById('CompressedSize');
+        const savingsFn = document.getElementById('Savings');
+        const toast = document.getElementById('Toast');
+        const toastMsg = document.getElementById('ToastMsg');
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const data = params.get('data');
+            
+            if (data) {
+                try {
+                    const decompressed = LZString.decompressFromEncodedURIComponent(data);
+                    if (decompressed) {
+                        textInput.value = decompressed;
+                        showToast('文本已从 URL 恢复', 2000);
+                        // Trigger size calculation if needed, though mostly visual for generation
+                        updateStats(decompressed.length, 0); 
+                    } else {
+                        showToast('解压数据失败', 3000);
+                    }
+                } catch (e) {
+                    console.error('Decompression failed', e);
+                    showToast('无效的压缩数据', 3000);
+                }
+            }
+        });
+
+        function generateLink() {
+            const text = textInput.value;
+            if (!text) {
+                showToast('请先输入文本');
+                return;
+            }
+
+            // Compress
+            const compressed = LZString.compressToEncodedURIComponent(text);
+            
+            // Construct URL
+            const url = new URL(window.location.href);
+            url.searchParams.set('data', compressed);
+            const finalUrl = url.toString();
+
+            // Display
+            urlResult.value = finalUrl;
+            resultArea.classList.add('active');
+
+            // Stats
+            const originalLen = text.length; // Approximate bytes for simple text
+            const compressedLen = finalUrl.length; // URL length is the "cost" here
+            
+            originalSizeFn.textContent = formatBytes(originalLen);
+            compressedSizeFn.textContent = formatBytes(compressedLen);
+            
+            // Savings might be negative if URL overhead > compression, which is fine to show
+            const saving = Math.round((1 - (compressedLen / originalLen)) * 100);
+            savingsFn.textContent = saving + '%';
+        }
+
+        function clearText() {
+            textInput.value = '';
+            resultArea.classList.remove('active');
+            
+            // Clear URL param if exists without reloading
+            const url = new URL(window.location.href);
+            if (url.searchParams.has('data')) {
+                url.searchParams.delete('data');
+                window.history.pushState({}, '', url);
+            }
+        }
+
+        async function copyResult() {
+            try {
+                await navigator.clipboard.writeText(urlResult.value);
+                showToast('链接已复制到剪贴板！');
+            } catch (err) {
+                showToast('复制失败');
+            }
+        }
+
+        function showToast(msg, duration = 2000) {
+            toastMsg.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function updateStats(originalLen, compressedLen) {
+            // If compressedLen is 0 (from decompression), we might show N/A or just hidden
+            // But for consistency let's fill what we can
+            
+            resultArea.classList.add('active');
+            originalSizeFn.textContent = formatBytes(originalLen);
+            
+            if (compressedLen > 0) {
+                compressedSizeFn.textContent = formatBytes(compressedLen);
+                const saving = Math.round((1 - (compressedLen / originalLen)) * 100);
+                savingsFn.textContent = saving + '%';
+            } else {
+                compressedSizeFn.textContent = '???';
+                savingsFn.textContent = '???';
+            }
+        }
+    </script>
+</body>
+</html>
