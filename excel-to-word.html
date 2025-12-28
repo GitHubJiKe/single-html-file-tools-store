@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel 转 Word 文档生成器</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    
+    <!-- Dependencies -->
+    <!-- SheetJS for Excel Parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Docx.js for Word Generation -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.min.js"></script>
+    <!-- JSZip for Batch Download -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <!-- FileSaver for saving files -->
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #1e1e1e;
+            --bg-panel: #252526;
+            --bg-header: #333333;
+            --accent: #007fd4;
+            --accent-hover: #0060a0;
+            --text-main: #cccccc;
+            --text-header: #ffffff;
+            --border: #3e3e42;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            height: 50px;
+            background-color: var(--bg-header);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border);
+            justify-content: space-between;
+        }
+        
+        h1 { font-size: 18px; color: var(--text-header); display: flex; align-items: center; gap: 10px; }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 50px);
+        }
+        
+        /* Steps Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            color: #888;
+        }
+        .step-item.active {
+            background-color: #37373d;
+            color: white;
+            font-weight: 500;
+        }
+        .step-num {
+            width: 24px; height: 24px;
+            background: #444;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px;
+        }
+        .step-item.active .step-num {
+            background: var(--accent);
+        }
+
+        /* Workspace */
+        .workspace {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        /* Sections */
+        .section { display: none; }
+        .section.active { display: block; }
+        
+        h2 { color: white; margin-bottom: 20px; font-size: 20px; }
+        
+        /* Components */
+        .file-drop-zone {
+            border: 2px dashed #444;
+            padding: 50px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-drop-zone:hover { border-color: var(--accent); background: #2a2d2e; }
+        
+        .data-table-container {
+            max-height: 400px;
+            overflow: auto;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th { 
+            background: #2d2d30; 
+            position: sticky; top: 0; 
+            text-align: left; padding: 8px; 
+            color: white; 
+        }
+        td { 
+            border-bottom: 1px solid #333; 
+            padding: 8px; 
+            color: #ccc;
+        }
+        tr:hover { background: #2a2d2e; }
+        
+        .template-editor {
+            width: 100%;
+            height: 300px;
+            background: #1e1e1e;
+            border: 1px solid var(--border);
+            color: #d4d4d4;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+        }
+        .template-editor:focus { outline: 1px solid var(--accent); }
+        
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn-secondary { background-color: #3e3e42; }
+        .btn-secondary:hover { background-color: #4e4e52; }
+        
+        .tag-pill {
+            display: inline-block;
+            background: #264f78;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        
+        /* Loading Overlay */
+        #loading-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #333;
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><span style="font-size: 22px">📄</span> Excel 转 Word 文档生成器</h1>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="step-item active" id="step-1">
+                <span class="step-num">1</span> 数据导入
+            </div>
+            <div class="step-item" id="step-2">
+                <span class="step-num">2</span> 模板编辑
+            </div>
+            <div class="step-item" id="step-3">
+                <span class="step-num">3</span> 导出生成
+            </div>
+        </div>
+        
+        <!-- Workspace -->
+        <div class="workspace">
+            
+            <!-- STEP 1: UPLOAD -->
+            <div id="view-upload" class="section active">
+                <h2>1. 上传 Excel 数据文件</h2>
+                <div class="file-drop-zone" onclick="document.getElementById('file-input').click()">
+                    <span style="font-size: 40px">📂</span>
+                    <p style="margin-top: 10px">点击选择或拖人 .xlsx / .xls 文件</p>
+                    <p style="font-size: 12px; color: #666; margin-top: 5px">仅支持 Excel 格式</p>
+                </div>
+                <input type="file" id="file-input" accept=".xlsx,.xls" style="display: none" onchange="app.handleFile(this)">
+                
+                <div id="preview-area" style="display: none; margin-top: 30px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <h3>数据预览 (前 5 条)</h3>
+                        <button class="btn" onclick="app.goToStep(2)">下一步：编辑模板</button>
+                    </div>
+                    <div class="data-table-container">
+                        <table id="preview-table"></table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- STEP 2: TEMPLATE -->
+            <div id="view-template" class="section">
+                <h2>2. 编辑文档模板</h2>
+                <p style="margin-bottom: 10px; color: #999;">使用 <span style="color: #fab005">{{列名}}</span> 作为占位符。点击下方标签快速插入。</p>
+                
+                <div id="column-tags" style="margin-bottom: 15px;">
+                    <!-- Tags injected here -->
+                </div>
+                
+                <textarea id="template-text" class="template-editor" placeholder="在此输入文档内容...&#10;示例：&#10;尊敬的 {{姓名}}：&#10;    您好！您的成绩是 {{分数}} 分。"></textarea>
+                
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="app.goToStep(1)">上一步</button>
+                    <button class="btn btn-secondary" onclick="app.previewDoc()">预览单份文档</button>
+                    <button class="btn" onclick="app.goToStep(3)">下一步：导出</button>
+                </div>
+            </div>
+            
+            <!-- STEP 3: EXPORT -->
+            <div id="view-export" class="section">
+                <h2>3. 批量生成与导出</h2>
+                
+                <div style="background: #252526; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 15px">导出设置</h3>
+                    <div style="margin-bottom: 15px">
+                        <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #999">文件名规则 (使用 {{占位符}})</label>
+                        <input type="text" id="filename-rule" value="{{姓名}}_文档" style="width: 100%; padding: 8px; background: #1e1e1e; border: 1px solid #3e3e42; color: white;">
+                    </div>
+                    
+                    <div style="margin-bottom: 15px">
+                        <p style="font-size: 14px">总记录数: <strong id="total-count" style="color: white">0</strong> 条</p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="app.goToStep(2)">上一步</button>
+                    <button class="btn" onclick="app.batchExport()">开始批量生成 (ZIP)</button>
+                </div>
+                
+                <div id="progress-area" style="margin-top: 20px; display: none;">
+                    <p id="progress-text" style="margin-bottom: 5px; font-size: 13px;">正在处理...</p>
+                    <div style="width: 100%; height: 6px; background: #333; border-radius: 3px;">
+                        <div id="progress-bar" style="width: 0%; height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.2s"></div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <div id="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; color: white;">Loading...</p>
+    </div>
+
+    <script>
+        // --- Core Application Logic ---
+        const app = {
+            data: [], // Full Excel data
+            headers: [], // Column names
+            currentStep: 1,
+            
+            init: function() {
+                // Initial setup
+            },
+            
+            handleFile: function(input) {
+                const file = input.files[0];
+                if (!file) return;
+                
+                this.showLoading(true);
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        // Pick first sheet
+                        const sheetName = workbook.SheetNames[0];
+                        const sheet = workbook.Sheets[sheetName];
+                        
+                        // Parse JSON
+                        const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+                        
+                        if (json.length === 0) {
+                            alert('Excel 文件为空或格式不正确');
+                            return;
+                        }
+                        
+                        this.data = json;
+                        this.headers = Object.keys(json[0]);
+                        
+                        this.renderPreview();
+                        document.getElementById('preview-area').style.display = 'block';
+                        this.updateColumnTags();
+                        
+                        document.getElementById('total-count').textContent = this.data.length;
+                        
+                        // Default filename rule guess (first column)
+                        if (this.headers.length > 0) {
+                            document.getElementById('filename-rule').value = `{{${this.headers[0]}}}_文档`;
+                        }
+                        
+                    } catch (err) {
+                        console.error(err);
+                        alert('解析 Excel 失败，请确保文件格式正确');
+                    } finally {
+                        this.showLoading(false);
+                        input.value = ''; // Reset
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            },
+            
+            renderPreview: function() {
+                const table = document.getElementById('preview-table');
+                table.innerHTML = '';
+                
+                // Header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                this.headers.forEach(h => {
+                    const th = document.createElement('th');
+                    th.textContent = h;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                // Body (Max 5 rows)
+                const tbody = document.createElement('tbody');
+                this.data.slice(0, 5).forEach(row => {
+                    const tr = document.createElement('tr');
+                    this.headers.forEach(h => {
+                        const td = document.createElement('td');
+                        td.textContent = row[h];
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+            },
+            
+            updateColumnTags: function() {
+                const container = document.getElementById('column-tags');
+                container.innerHTML = '';
+                this.headers.forEach(h => {
+                    const span = document.createElement('span');
+                    span.className = 'tag-pill';
+                    span.textContent = h;
+                    span.onclick = () => this.insertTag(h);
+                    container.appendChild(span);
+                });
+            },
+            
+            insertTag: function(tag) {
+                const textarea = document.getElementById('template-text');
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = textarea.value;
+                const insert = `{{${tag}}}`;
+                
+                textarea.value = text.substring(0, start) + insert + text.substring(end);
+                textarea.focus();
+                textarea.selectionStart = textarea.selectionEnd = start + insert.length;
+            },
+            
+            goToStep: function(n) {
+                // Validation
+                if (n === 2 && this.data.length === 0) {
+                    alert('请先上传数据');
+                    return;
+                }
+                
+                // UI Toggle
+                document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.step-item').forEach(el => el.classList.remove('active'));
+                
+                const stepNames = ['', 'view-upload', 'view-template', 'view-export'];
+                document.getElementById(stepNames[n]).classList.add('active');
+                document.getElementById(`step-${n}`).classList.add('active');
+                
+                this.currentStep = n;
+            },
+            
+            previewDoc: async function() {
+                if (this.data.length === 0) return;
+                const template = document.getElementById('template-text').value;
+                const row = this.data[0];
+                
+                try {
+                    const blob = await this.generateDocx(template, row);
+                    saveAs(blob, "preview.docx");
+                } catch (e) {
+                    console.error(e);
+                    alert('生成预览失败: ' + e.message);
+                }
+            },
+            
+            batchExport: async function() {
+                if (this.data.length === 0) return;
+                const template = document.getElementById('template-text').value;
+                const nameRule = document.getElementById('filename-rule').value;
+                
+                const zip = new JSZip();
+                const progressArea = document.getElementById('progress-area');
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+                
+                progressArea.style.display = 'block';
+                progressBar.style.width = '0%';
+                
+                const total = this.data.length;
+                let processed = 0;
+                
+                // Chunk processing to avoid UI freeze
+                const batchSize = 10;
+                
+                const processBatch = async (startIndex) => {
+                    const endIndex = Math.min(startIndex + batchSize, total);
+                    
+                    for (let i = startIndex; i < endIndex; i++) {
+                        const row = this.data[i];
+                        try {
+                            const blob = await this.generateDocx(template, row);
+                            
+                            // Generate Filename
+                            let filename = this.replacePlaceholders(nameRule, row);
+                            // Sanitize filename
+                            filename = filename.replace(/[\\/:*?"<>|]/g, "_") || `doc_${i}`;
+                            if (!filename.toLowerCase().endsWith('.docx')) filename += '.docx';
+                            
+                            zip.file(filename, blob);
+                        } catch (e) {
+                            console.error(`Row ${i} failed`, e);
+                            zip.file(`error_row_${i}.txt`, `Failed to generate: ${e.message}`);
+                        }
+                        
+                        processed++;
+                    }
+                    
+                    const percent = Math.round((processed / total) * 100);
+                    progressBar.style.width = percent + '%';
+                    progressText.textContent = `Processing: ${processed} / ${total}`;
+                    
+                    if (processed < total) {
+                        // Next batch via timeout to let UI breathe
+                        setTimeout(() => processBatch(endIndex), 0);
+                    } else {
+                        // Finalize
+                        progressText.textContent = 'Compressing...';
+                        const content = await zip.generateAsync({ type: "blob" });
+                        saveAs(content, "export_docs.zip");
+                        progressText.textContent = 'Done!';
+                    }
+                };
+                
+                // Start
+                processBatch(0);
+            },
+            
+            generateDocx: async function(templateText, row) {
+                const { Document, Packer, Paragraph, TextRun } = docx;
+                
+                const processedText = this.replacePlaceholders(templateText, row);
+                
+                // Split by newlines to create paragraphs
+                const lines = processedText.split('\n');
+                const children = lines.map(line => new Paragraph({
+                    children: [ new TextRun(line) ]
+                }));
+                
+                const doc = new Document({
+                    sections: [{
+                        properties: {},
+                        children: children
+                    }]
+                });
+                
+                return await Packer.toBlob(doc);
+            },
+            
+            replacePlaceholders: function(text, row) {
+                return text.replace(/\{\{(.+?)\}\}/g, (match, key) => {
+                    const val = row[key.trim()];
+                    return val !== undefined ? val : match;
+                });
+            },
+            
+            showLoading: function(show) {
+                document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+            }
+        };
+        
+        // --- Init ---
+        // (Any startup logic)
+
+    </script>
+    
+    <!-- Tool Metadata -->
+    <!-- 
+        Tool: Excel to Word Converter
+        Description: Batch generate Word documents from Excel rows using templates.
+        Created: 2025-12-28
+        Dependencies: SheetJS, Docx.js, JSZip, FileSaver
+    -->
+</body>
+</html>
