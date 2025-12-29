@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表单构建器 - 灵活配置化表单管理系统</title>
+    
+    <!-- ECharts 图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <!-- SheetJS 用于导出Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #667eea;
+            --primary-dark: #764ba2;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #2196f3;
+            --light: #f5f5f5;
+            --border: #e0e0e0;
+            --text: #333;
+            --text-light: #666;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text);
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid var(--border);
+            padding: 0 20px;
+        }
+        
+        .nav-tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-light);
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .nav-tab:hover {
+            color: var(--primary);
+        }
+        
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+        }
+        
+        .tab-content {
+            display: none;
+            width: 100%;
+            padding: 30px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .designer-container {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 20px;
+            height: 100%;
+        }
+        
+        .panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            overflow-y: auto;
+        }
+        
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text);
+        }
+        
+        .control-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            cursor: move;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .control-item-name {
+            font-size: 13px;
+            flex: 1;
+        }
+        
+        .canvas {
+            background: white;
+            border-radius: 8px;
+            border: 2px dashed var(--border);
+            padding: 20px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .canvas-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        
+        .form-field {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .form-field:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+        
+        .form-field.selected {
+            border-color: var(--primary);
+            background: #f0f4ff;
+        }
+        
+        .form-field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .form-field-label {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-field-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 8px;
+            color: var(--text-light);
+            transition: all 0.3s;
+        }
+        
+        .btn-icon:hover {
+            color: var(--danger);
+        }
+        
+        .property-group {
+            background: white;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .property-group-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+        
+        .property-item {
+            margin-bottom: 10px;
+        }
+        
+        .property-label {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: block;
+            color: var(--text);
+        }
+        
+        .property-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+        
+        .property-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: #e9ecef;
+            color: var(--text);
+        }
+        
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #e53935;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .checkbox-group,
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .checkbox-item,
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item input,
+        .radio-item input {
+            width: auto;
+            margin: 0;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .modal-header h2 {
+            font-size: 20px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .option-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .option-item input {
+            flex: 1;
+        }
+        
+        .option-item button {
+            padding: 6px 12px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .list-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .list-card {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .list-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .list-card-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text);
+        }
+        
+        .list-card-meta {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        
+        .list-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+        
+        .list-card-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .table-view {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .table-view th,
+        .table-view td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        
+        .table-view th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .table-view tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .chart {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+            text-align: center;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+        
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+        
+        @media (max-width: 1200px) {
+            .designer-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 表单构建器</h1>
+            <div style="display: flex; gap: 15px;">
+                <button class="btn btn-secondary" onclick="app.exportAllData()">📥 导出数据</button>
+                <button class="btn btn-secondary" onclick="app.showAbout()">ℹ️ 关于</button>
+            </div>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="app.switchTab('designer')">📐 表单设计</button>
+            <button class="nav-tab" onclick="app.switchTab('forms')">📑 表单列表</button>
+            <button class="nav-tab" onclick="app.switchTab('responses')">💾 数据收集</button>
+            <button class="nav-tab" onclick="app.switchTab('analytics')">📊 数据分析</button>
+        </div>
+        
+        <div class="content">
+            <!-- 表单设计器标签页 -->
+            <div class="tab-content active" id="designer-tab">
+                <div class="designer-container">
+                    <!-- 左侧：控件库 -->
+                    <div class="panel">
+                        <div class="panel-title">控件库</div>
+                        <div id="controls-library">
+                            <div class="control-item" draggable="true" data-type="text" ondragstart="event.dataTransfer.setData('type', 'text')">
+                                <span>📝</span>
+                                <span class="control-item-name">单行文本</span>
+                            </div>
+                            <div class="control-item" draggable="true" data-type="textarea" ondragstart="event.dataTransfer.setData('type', 'textarea')">
+                                <span>📄</span>
+                                <span class="control-item-name">多行文本</span>
+                            </div>
+                            <div class="control-item" draggable="true" data-type="number" ondragstart="event.dataTransfer.setData('type', 'number')">
+                                <span>🔢</span>
+                                <span class="control-item-name">数字</span>
+                            </div>
+                            <div class="control-item" draggable="true" data-type="email" ondragstart="event.dataTransfer.setData('type', 'email')">
+                                <span>✉️</span>
+                                <span class="control-item-name">邮箱</span>
+                            </div>
+                            <div class="control-item" draggable="true" data-type="checkbox" ondragstart="event.dataTransfer.setData('type', 'checkbox')">
+                                <span>☑️</span>
+                                <span class="control-item-name">复选框</span>
+                            </div>
+                            <div class="control-item" draggable="true" data-type="radio" ondragstart="event.dataTransfer.setData('type', 'radio')">
+                                <span>🔘</span>
+                                <span class="control-item-name">单选按钮</span>
+                            </div>
+                            <div class="control-item" draggable="true" data-type="select" ondragstart="event.dataTransfer.setData('type', 'select')">
+                                <span>📋</span>
+                                <span class="control-item-name">下拉选择</span>
+                            </div>
+                            <div class="control-item" draggable="true" data-type="date" ondragstart="event.dataTransfer.setData('type', 'date')">
+                                <span>📅</span>
+                                <span class="control-item-name">日期</span>
+                            </div>
+                            <div class="control-item" draggable="true" data-type="time" ondragstart="event.dataTransfer.setData('type', 'time')">
+                                <span>🕐</span>
+                                <span class="control-item-name">时间</span>
+                            </div>
+                            <div class="control-item" draggable="true" data-type="rating" ondragstart="event.dataTransfer.setData('type', 'rating')">
+                                <span>⭐</span>
+                                <span class="control-item-name">评分</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 中间：画布 -->
+                    <div>
+                        <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                            <input type="text" id="form-name" class="property-input" placeholder="输入表单名称" style="flex: 1;">
+                            <button class="btn btn-primary" onclick="app.saveForm()">💾 保存表单</button>
+                            <button class="btn btn-secondary" onclick="app.previewForm()">👁️ 预览</button>
+                        </div>
+                        <div class="canvas" id="canvas" ondrop="app.handleDrop(event)" ondragover="app.handleDragOver(event)" ondragleave="app.handleDragLeave(event)">
+                            <div class="canvas-empty">拖拽控件到这里开始设计表单</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 右侧：属性编辑 -->
+                    <div class="panel" id="properties-panel">
+                        <div class="panel-title">属性编辑</div>
+                        <div id="properties-content" style="color: var(--text-light); font-size: 14px;">
+                            选择一个控件开始编辑
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 表单列表标签页 -->
+            <div class="tab-content" id="forms-tab">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>我的表单</h2>
+                    <button class="btn btn-primary" onclick="app.switchTab('designer')">➕ 新建表单</button>
+                </div>
+                <div id="forms-list" class="list-view"></div>
+            </div>
+            
+            <!-- 数据收集标签页 -->
+            <div class="tab-content" id="responses-tab">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>表单数据</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="form-filter" class="property-input" style="width: 200px;" onchange="app.filterResponses()">
+                            <option value="">所有表单</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="app.exportResponses()">📥 导出Excel</button>
+                        <label class="btn btn-secondary" style="cursor: pointer; margin: 0;">
+                            📤 导入数据
+                            <input type="file" accept=".json" style="display: none;" onchange="app.importData(this.files[0])">
+                        </label>
+                    </div>
+                </div>
+                <div id="responses-list"></div>
+            </div>
+            
+            <!-- 数据分析标签页 -->
+            <div class="tab-content" id="analytics-tab">
+                <h2 style="margin-bottom: 20px;">数据分析</h2>
+                <div id="analytics-content"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 表单预览/填写模态框 -->
+    <div class="modal" id="form-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">表单预览</h2>
+                <button class="modal-close" onclick="app.closeModal()">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal()">关闭</button>
+                <button class="btn btn-primary" id="modal-submit" style="display: none;" onclick="app.submitFormResponse()">提交</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 选项编辑模态框 -->
+    <div class="modal" id="options-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>编辑选项</h2>
+                <button class="modal-close" onclick="app.closeModal()">&times;</button>
+            </div>
+            <div id="options-content"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="app.saveOptions()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="form-builder.js"></script>
+</body>
+</html>
