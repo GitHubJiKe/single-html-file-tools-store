@@ -7,6 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markdown 转公众号格式</title>
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <!-- 外部依赖 -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.321.0/dist/umd/lucide.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -18,6 +22,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
       background: #f5f5f5;
       overflow-x: hidden;
+      color: #333;
     }
 
     .container {
@@ -800,6 +805,58 @@
       font-size: 14px;
     }
 
+    /* 深夜模式 */
+    .theme-deepnight {
+      background: #121212 !important;
+      color: #e0e0e0 !important;
+      padding: 24px;
+    }
+
+    .theme-deepnight h1,
+    .theme-deepnight h2,
+    .theme-deepnight h3 {
+      color: #bb86fc;
+    }
+
+    .theme-deepnight blockquote {
+      background: #1e1e1e;
+      border-left-color: #bb86fc;
+      color: #b0b0b0;
+    }
+
+    .theme-deepnight code {
+      background: #333;
+      color: #03dac6;
+    }
+
+    /* 北歐模式 */
+    .theme-nordic h1,
+    .theme-nordic h2,
+    .theme-nordic h3 {
+      color: #5e81ac;
+      border-bottom: 1px dashed #d8dee9;
+    }
+
+    .theme-nordic blockquote {
+      background: #eceff4;
+      border-left: 4px solid #81a1c1;
+      color: #4c566a;
+    }
+
+    /* Mermaid 样式 */
+    .mermaid {
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 1em 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .theme-deepnight .mermaid {
+      filter: invert(0.9) hue-rotate(180deg);
+    }
+
     .theme-minimal ul,
     .theme-minimal ol {
       margin: 1em 0;
@@ -913,20 +970,33 @@
   <div class="container">
     <!-- 头部工具栏 -->
     <div class="header">
-      <h1>📝 Markdown 转公众号格式</h1>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="file-text" style="color: #07c160;"></i>
+        <h1>Markdown 转公众号格式</h1>
+      </div>
       <div class="toolbar">
         <div class="theme-selector">
-          <label>主题：</label>
+          <label><i data-lucide="palette"
+              style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> 主题：</label>
           <select id="themeSelect">
-            <option value="default">微信绿</option>
-            <option value="orange">橙心</option>
-            <option value="blue">蓝调</option>
-            <option value="purple">紫罗兰</option>
-            <option value="minimal">极简黑</option>
+            <option value="default">微信绿 (默认)</option>
+            <option value="orange">橙心 (温暖)</option>
+            <option value="blue">蓝调 (专业)</option>
+            <option value="purple">紫罗兰 (优雅)</option>
+            <option value="minimal">极简黑 (商务)</option>
+            <option value="deepnight">深夜模式 (沉浸)</option>
+            <option value="nordic">北欧 (清爽)</option>
           </select>
         </div>
+        <button class="btn btn-secondary" onclick="localizeImages()">
+          <i data-lucide="download-cloud"
+            style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> 图片本地化
+        </button>
         <button class="btn btn-secondary" onclick="clearContent()">清空</button>
-        <button class="btn btn-primary" onclick="copyToClipboard()">📋 复制到公众号</button>
+        <button class="btn btn-primary" onclick="copyToClipboard()">
+          <i data-lucide="copy" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i>
+          复制到公众号
+        </button>
       </div>
     </div>
 
@@ -996,306 +1066,114 @@ function hello() {
   <div class="toast" id="toast"></div>
 
   <script>
-    // Markdown 解析器（简化版）
-    class SimpleMarkdownParser {
-      constructor() {
-        this.rules = [
-          // 标题
-          { pattern: /^### (.*$)/gm, replacement: '<h3>$1</h3>' },
-          { pattern: /^## (.*$)/gm, replacement: '<h2>$1</h2>' },
-          { pattern: /^# (.*$)/gm, replacement: '<h1>$1</h1>' },
-          { pattern: /^#### (.*$)/gm, replacement: '<h4>$1</h4>' },
-          { pattern: /^##### (.*$)/gm, replacement: '<h5>$1</h5>' },
-          { pattern: /^###### (.*$)/gm, replacement: '<h6>$1</h6>' },
+    // 初始化 Lucide 图标
+    lucide.createIcons();
 
-          // 水平线
-          { pattern: /^\-{3,}$/gm, replacement: '<hr>' },
-          { pattern: /^\*{3,}$/gm, replacement: '<hr>' },
+    // 初始化 Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      securityLevel: 'loose'
+    });
 
-          // 粗体和斜体
-          // 粗体和斜体 (支持多行，将换行替换为空格，避免破坏后续的段落解析)
-          { pattern: /\*\*\*([\s\S]*?)\*\*\*/g, replacement: (m, p1) => `<strong><em>${p1.replace(/\n/g, ' ')}</em></strong>` },
-          { pattern: /\*\*([\s\S]*?)\*\*/g, replacement: (m, p1) => `<strong>${p1.replace(/\n/g, ' ')}</strong>` },
-          { pattern: /\*([\s\S]*?)\*/g, replacement: (m, p1) => `<em>${p1.replace(/\n/g, ' ')}</em>` },
-          { pattern: /___([\s\S]*?)___/g, replacement: (m, p1) => `<strong><em>${p1.replace(/\n/g, ' ')}</em></strong>` },
-          { pattern: /__([\s\S]*?)__/g, replacement: (m, p1) => `<strong>${p1.replace(/\n/g, ' ')}</strong>` },
-          { pattern: /_([\s\S]*?)_/g, replacement: (m, p1) => `<em>${p1.replace(/\n/g, ' ')}</em>` },
-
-          // 行内代码（在代码块之前处理）
-          { pattern: /`([^`\n]+)`/g, replacement: '<code>$1</code>' },
-
-          // 链接
-          { pattern: /\[([^\]]+)\]\(([^\)]+)\)/g, replacement: '<a href="$2" target="_blank">$1</a>' },
-
-          // 图片
-          { pattern: /!\[([^\]]*)\]\(([^\)]+)\)/g, replacement: '<img src="$2" alt="$1">' },
-        ];
-      }
-
-      parse(markdown) {
-        let html = markdown;
-
-        // 处理代码块
-        html = this.parseCodeBlocks(html);
-
-        // 处理引用
-        html = this.parseBlockquotes(html);
-
-        // 处理表格
-        html = this.parseTables(html);
-
-        // 处理列表
-        html = this.parseLists(html);
-
-        // 应用其他规则
-        this.rules.forEach(rule => {
-          html = html.replace(rule.pattern, rule.replacement);
-        });
-
-        // 处理段落
-        html = this.parseParagraphs(html);
-
-        return html;
-      }
-
-      parseCodeBlocks(text) {
-        // 匹配代码块 ```language\ncode\n```
-        return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-          const escapedCode = this.escapeHtml(code.trim());
-          return `<pre><code>${escapedCode}</code></pre>`;
-        });
-      }
-
-      parseBlockquotes(text) {
-        const lines = text.split('\n');
-        let result = [];
-        let inQuote = false;
-        let quoteContent = [];
-
-        lines.forEach(line => {
-          if (line.startsWith('>')) {
-            inQuote = true;
-            quoteContent.push(line.substring(1).trim());
-          } else {
-            if (inQuote) {
-              result.push(`<blockquote>${quoteContent.join('\n')}</blockquote>`);
-              quoteContent = [];
-              inQuote = false;
-            }
-            result.push(line);
+    // 配置 Marked.js，支持 Mermaid
+    marked.use({
+      renderer: {
+        code({ text, lang }) {
+          if (lang === 'mermaid') {
+            return `<div class="mermaid">${text}</div>`;
           }
-        });
-
-        if (inQuote) {
-          result.push(`<blockquote>${quoteContent.join('\n')}</blockquote>`);
+          // 返回 false 表示使用默认渲染逻辑
+          return false;
         }
-
-        return result.join('\n');
       }
+    });
 
-      parseTables(text) {
-        const lines = text.split('\n');
-        let result = [];
-        let inTable = false;
-        let tableRows = [];
+    marked.setOptions({
+      breaks: true,
+      gfm: true
+    });
 
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim();
-
-          if (line.includes('|')) {
-            // 检查是否是分隔行
-            if (line.match(/^\|?[\s\-:|]+\|?$/)) {
-              inTable = true;
-              continue;
-            }
-
-            if (inTable || (i + 1 < lines.length && lines[i + 1].match(/^\|?[\s\-:|]+\|?$/))) {
-              inTable = true;
-              const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
-              tableRows.push(cells);
-            } else {
-              result.push(line);
-            }
-          } else {
-            if (inTable && tableRows.length > 0) {
-              result.push(this.buildTable(tableRows));
-              tableRows = [];
-              inTable = false;
-            }
-            result.push(line);
-          }
-        }
-
-        if (inTable && tableRows.length > 0) {
-          result.push(this.buildTable(tableRows));
-        }
-
-        return result.join('\n');
-      }
-
-      buildTable(rows) {
-        if (rows.length === 0) return '';
-
-        let html = '<table>';
-
-        // 第一行作为表头
-        html += '<thead><tr>';
-        rows[0].forEach(cell => {
-          html += `<th>${cell}</th>`;
-        });
-        html += '</tr></thead>';
-
-        // 其余行作为表体
-        if (rows.length > 1) {
-          html += '<tbody>';
-          for (let i = 1; i < rows.length; i++) {
-            html += '<tr>';
-            rows[i].forEach(cell => {
-              html += `<td>${cell}</td>`;
-            });
-            html += '</tr>';
-          }
-          html += '</tbody>';
-        }
-
-        html += '</table>';
-        return html;
-      }
-
-      parseLists(text) {
-        const lines = text.split('\n');
-        let result = [];
-        let inUl = false;
-        let inOl = false;
-
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i]; // 保留原始行，不trim，因为缩进有意义，但简单解析器先trim
-          const trimmed = line.trim();
-
-          const ulMatch = trimmed.match(/^[\-\*\+]\s+(.+)$/);
-          const olMatch = trimmed.match(/^\d+\.\s+(.+)$/);
-
-          if (ulMatch) {
-            if (inOl) {
-              result.push('</ol>');
-              inOl = false;
-            }
-            if (!inUl) {
-              result.push('<ul>');
-              inUl = true;
-            }
-            result.push(`<li>${ulMatch[1]}</li>`);
-          } else if (olMatch) {
-            if (inUl) {
-              result.push('</ul>');
-              inUl = false;
-            }
-            if (!inOl) {
-              result.push('<ol>');
-              inOl = true;
-            }
-            result.push(`<li>${olMatch[1]}</li>`);
-          } else {
-            // 处理空行：如果是列表中的空行，暂时忽略（视为松散列表的一部分），
-            // 但如果下一行也不是列表项，则关闭列表。
-            // 简单处理：遇到非列表项且非空行，关闭列表。
-            // 如果是空行，只要后续还有列表项，就保持开启？
-            // 简化逻辑：非列表项行导致列表关闭。除非该行显然是列表内容的延续（缩进），简单解析器暂不支持复杂缩进。
-            if (trimmed === '') {
-              // 空行，检查下一行是否是列表
-              let nextIsList = false;
-              for (let j = i + 1; j < lines.length; j++) {
-                const nextTrimmed = lines[j].trim();
-                if (nextTrimmed === '') continue;
-                if (nextTrimmed.match(/^[\-\*\+]\s+/) || nextTrimmed.match(/^\d+\.\s+/)) {
-                  nextIsList = true;
-                }
-                break;
-              }
-
-              if (!nextIsList) {
-                if (inUl) { result.push('</ul>'); inUl = false; }
-                if (inOl) { result.push('</ol>'); inOl = false; }
-                result.push(line);
-              } else {
-                // 是松散列表的空行，忽略或保留？
-                // HTML列表中间不能直接放空行文本，除非在li内。这里简单忽略，不关闭ul/ol
-              }
-            } else {
-              if (inUl) { result.push('</ul>'); inUl = false; }
-              if (inOl) { result.push('</ol>'); inOl = false; }
-              result.push(line);
-            }
-          }
-        }
-
-        if (inUl) result.push('</ul>');
-        if (inOl) result.push('</ol>');
-
-        return result.join('\n');
-      }
-
-      parseParagraphs(text) {
-        // 将连续的非标签行包装成段落
-        const lines = text.split('\n');
-        let result = [];
-        let paragraph = [];
-
-        lines.forEach(line => {
-          const trimmed = line.trim();
-
-          // 如果是空行或HTML标签，结束当前段落
-          if (!trimmed || trimmed.startsWith('<')) {
-            if (paragraph.length > 0) {
-              result.push(`<p>${paragraph.join(' ')}</p>`);
-              paragraph = [];
-            }
-            if (trimmed) {
-              result.push(trimmed);
-            }
-          } else {
-            paragraph.push(trimmed);
-          }
-        });
-
-        if (paragraph.length > 0) {
-          result.push(`<p>${paragraph.join(' ')}</p>`);
-        }
-
-        return result.join('\n');
-      }
-
-      escapeHtml(text) {
-        const map = {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#039;'
-        };
-        return text.replace(/[&<>"']/g, m => map[m]);
-      }
-    }
-
-    // 初始化
+    // 元素获取
     const editor = document.getElementById('editor');
     const preview = document.getElementById('content');
     const themeSelect = document.getElementById('themeSelect');
-    const parser = new SimpleMarkdownParser();
+    const toast = document.getElementById('toast');
 
-    // 实时预览
-    editor.addEventListener('input', updatePreview);
+    // 实时预览逻辑
+    let renderTimer = null;
+    editor.addEventListener('input', () => {
+      clearTimeout(renderTimer);
+      renderTimer = setTimeout(updatePreview, 300);
+    });
+
     themeSelect.addEventListener('change', updateTheme);
 
-    function updatePreview() {
+    async function updatePreview() {
       const markdown = editor.value;
-      const html = parser.parse(markdown);
+      const html = marked.parse(markdown);
       preview.innerHTML = html;
+
+      // 渲染 Mermaid 图表
+      try {
+        await mermaid.run({
+          nodes: document.querySelectorAll('.mermaid'),
+        });
+      } catch (err) {
+        console.error('Mermaid 渲染失败:', err);
+      }
+
+      // 重新加载图标（如果预览中有图标需求）
+      lucide.createIcons();
     }
 
     function updateTheme() {
       const theme = themeSelect.value;
-      preview.className = `wechat-content theme-${theme}`;
+      const previewContainer = document.getElementById('preview').firstElementChild;
+      previewContainer.className = `wechat-content theme-${theme}`;
+      updatePreview();
+    }
+
+    // 图片本地化
+    async function localizeImages() {
+      const images = Array.from(preview.querySelectorAll('img'));
+      if (images.length === 0) {
+        showToast('未找到需要处理的图片', 'info');
+        return;
+      }
+
+      showToast('正在转换图片，请稍候...', 'info');
+      let count = 0;
+      let mdValue = editor.value;
+
+      for (const img of images) {
+        const src = img.src;
+        if (src.startsWith('data:')) continue;
+
+        try {
+          const response = await fetch(src);
+          const blob = await response.blob();
+          const base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+
+          // 在内容中替换（简单字符串替换可能会有风险，但单文件工具中通常有效）
+          mdValue = mdValue.replace(src, base64);
+          count++;
+        } catch (err) {
+          console.warn(`图片 ${src} 转换失败:`, err);
+        }
+      }
+
+      if (count > 0) {
+        editor.value = mdValue;
+        updatePreview();
+        showToast(`✅ 已成功本地化 ${count} 张图片`);
+      } else {
+        showToast('⚠️ 转换失败，可能是存在跨域限制', 'error');
+      }
     }
 
     function clearContent() {
@@ -1306,23 +1184,24 @@ function hello() {
     }
 
     function copyToClipboard() {
-      const content = preview;
-      const themeClass = preview.className; // 获取当前主题类名
-
-      // 创建一个临时的可编辑div
+      const themeClass = preview.className;
       const tempDiv = document.createElement('div');
       tempDiv.contentEditable = true;
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
-      tempDiv.style.background = '#ffffff'; // 强制背景色为白色，避免透明
-      tempDiv.style.color = '#333333';      // 强制字体颜色，避免复制到深色模式编辑器时不可见
-      tempDiv.className = themeClass;       // 应用当前主题样式
+      tempDiv.style.background = '#ffffff';
+      tempDiv.className = themeClass;
 
-      // 复制样式化的内容
-      tempDiv.innerHTML = content.innerHTML;
+      // 为 Mermaid SVG 添加特定处理，确保复制后样式不丢失
+      const clonedContent = preview.cloneNode(true);
+      clonedContent.querySelectorAll('svg').forEach(svg => {
+        svg.style.maxWidth = '100%';
+        svg.setAttribute('width', svg.getBoundingClientRect().width);
+      });
+
+      tempDiv.innerHTML = clonedContent.innerHTML;
       document.body.appendChild(tempDiv);
 
-      // 选择内容
       const range = document.createRange();
       range.selectNodeContents(tempDiv);
       const selection = window.getSelection();
@@ -1330,37 +1209,27 @@ function hello() {
       selection.addRange(range);
 
       try {
-        // 复制到剪贴板
         document.execCommand('copy');
-        showToast('✅ 复制成功！现在可以粘贴到公众号编辑器了');
+        showToast('✅ 复制成功！现在可以粘贴到公众号了');
       } catch (err) {
         showToast('❌ 复制失败，请手动选择复制', 'error');
       }
 
-      // 清理
       document.body.removeChild(tempDiv);
       selection.removeAllRanges();
     }
 
     function showToast(message, type = 'success') {
-      const toast = document.getElementById('toast');
       toast.textContent = message;
-      if (type === 'error') {
-        toast.style.background = '#e74c3c';
-      } else {
-        toast.style.background = '#07c160';
-      }
+      toast.style.background = (type === 'error') ? '#e74c3c' : (type === 'info' ? '#3498db' : '#07c160');
       toast.classList.add('show');
-
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
+      setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     // 初始化预览
     updatePreview();
 
-    // 支持 Ctrl+S 保存（防止浏览器默认行为）
+    // 快捷键支持
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();

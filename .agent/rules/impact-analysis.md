@@ -1,5 +1,5 @@
 ---
-trigger: always_on
+trigger: manual
 ---
 
 You must reason about this codebase using a dependency graph mindset.
