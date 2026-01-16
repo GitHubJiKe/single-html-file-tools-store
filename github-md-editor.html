@@ -349,6 +349,11 @@
             files: []
         };
 
+        // --- Helpers ---
+        // UTF-8 friendly Base64 encoding/decoding
+        const utoa = (str) => btoa(unescape(encodeURIComponent(str)));
+        const atou = (str) => decodeURIComponent(escape(atob(str)));
+
         // --- Editor Initialization ---
         const editor = document.getElementById('editor');
 
@@ -503,12 +508,13 @@
                 });
                 const data = await response.json();
                 state.currentFile = data;
-                const content = atob(data.content.replace(/\n/g, ''));
+
+                // Use UTF-8 safe decoding
+                const content = atou(data.content.replace(/\n/g, ''));
                 initEditor(content);
 
                 // Update UI active state
-                document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
-                // Find and mark active (simplified)
+                renderFileList();
             } catch (err) {
                 alert('Error loading file: ' + err.message);
             }
@@ -533,7 +539,7 @@
                     },
                     body: JSON.stringify({
                         message,
-                        content: btoa(unescape(encodeURIComponent(newContent))),
+                        content: utoa(newContent),
                         sha: state.currentFile.sha
                     })
                 });
