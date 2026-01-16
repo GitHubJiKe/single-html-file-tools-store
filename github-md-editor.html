@@ -343,6 +343,7 @@
         let state = {
             token: localStorage.getItem('gh_token') || '',
             repo: localStorage.getItem('gh_repo') || '',
+            currentPath: '',
             currentFile: null,
             fileContent: '',
             files: []
@@ -412,9 +413,10 @@
         });
 
         // --- GitHub API Integration ---
-        async function fetchFiles(path = '') {
+        async function fetchFiles(path = state.currentPath) {
             if (!state.token || !state.repo) return;
 
+            state.currentPath = path;
             const fileList = document.getElementById('file-list');
             fileList.innerHTML = '<div style="padding: 20px; text-align: center;">Loading...</div>';
 
@@ -438,16 +440,59 @@
             const fileList = document.getElementById('file-list');
             fileList.innerHTML = '';
 
+            // Add "Go Back" item if not in root
+            if (state.currentPath) {
+                const backItem = document.createElement('div');
+                backItem.className = 'file-item';
+                backItem.innerHTML = `<i data-lucide="chevron-left" style="width: 16px;"></i> ..`;
+                backItem.onclick = () => {
+                    const parts = state.currentPath.split('/');
+                    parts.pop();
+                    fetchFiles(parts.join('/'));
+                };
+                fileList.appendChild(backItem);
+            }
+
+            if (state.files.length === 0) {
+                const empty = document.createElement('div');
+                empty.style = 'padding: 20px; text-align: center; color: #8b949e; font-size: 13px;';
+                empty.textContent = 'This folder is empty';
+                fileList.appendChild(empty);
+                return;
+            }
+
+            const mdExtensions = ['.md', '.markdown', '.mdown', '.mkdn'];
+
             state.files.forEach(file => {
-                if (file.type === 'dir') return; // For simplicity, only files for now
-                if (!file.name.endsWith('.md')) return;
+                const isDir = file.type === 'dir';
+                const isMarkdown = !isDir && mdExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+
+                // Show all directories and only markdown files (case-insensitive)
+                if (!isDir && !isMarkdown) return;
 
                 const item = document.createElement('div');
                 item.className = 'file-item';
-                item.innerHTML = `<i data-lucide="file-text" style="width: 16px;"></i> ${file.name}`;
-                item.onclick = () => loadFile(file);
+                if (isDir) {
+                    item.innerHTML = `<i data-lucide="folder" style="width: 16px; color: #e3b341;"></i> ${file.name}`;
+                    item.onclick = () => fetchFiles(file.path);
+                } else {
+                    item.innerHTML = `<i data-lucide="file-text" style="width: 16px;"></i> ${file.name}`;
+                    item.onclick = () => loadFile(file);
+                    if (state.currentFile && state.currentFile.path === file.path) {
+                        item.classList.add('active');
+                    }
+                }
                 fileList.appendChild(item);
             });
+
+            // If we filtered out all files and didn't render anything (besides maybe "Back")
+            if (fileList.children.length === (state.currentPath ? 1 : 0)) {
+                const noMd = document.createElement('div');
+                noMd.style = 'padding: 20px; text-align: center; color: #8b949e; font-size: 13px;';
+                noMd.textContent = 'No Markdown files found';
+                fileList.appendChild(noMd);
+            }
+
             lucide.createIcons();
         }
 
