@@ -91,6 +91,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-actions {
+            display: flex;
+            gap: 8px;
         }
 
         .file-tree {
@@ -299,8 +305,12 @@
         <aside id="sidebar">
             <div class="sidebar-header">
                 <span style="font-weight: 600;">Files</span>
-                <button class="btn" id="refresh-files" title="Refresh"><i data-lucide="refresh-cw"
-                        style="width: 14px;"></i></button>
+                <div class="sidebar-actions">
+                    <button class="btn" id="new-file-btn" title="New Markdown File"><i data-lucide="plus"
+                            style="width: 14px;"></i></button>
+                    <button class="btn" id="refresh-files" title="Refresh"><i data-lucide="refresh-cw"
+                            style="width: 14px;"></i></button>
+                </div>
             </div>
             <div class="file-tree" id="file-list">
                 <div style="padding: 20px; text-align: center; color: #8b949e; font-size: 14px;">
@@ -334,6 +344,21 @@
             <div class="modal-footer">
                 <button class="btn" onclick="closeModal('settings-modal')">Cancel</button>
                 <button class="btn btn-primary" id="save-settings">Connect & Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New File Modal -->
+    <div class="modal-overlay" id="new-file-modal">
+        <div class="modal">
+            <h2>Create New File</h2>
+            <div class="input-group">
+                <label for="new-filename">Filename (e.g., notes.md)</label>
+                <input type="text" id="new-filename" placeholder="my-new-file.md">
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('new-file-modal')">Cancel</button>
+                <button class="btn btn-primary" id="confirm-new-file">Create</button>
             </div>
         </div>
     </div>
@@ -415,6 +440,38 @@
 
         document.getElementById('menu-toggle').addEventListener('click', () => {
             document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // --- New File Logic ---
+        document.getElementById('new-file-btn').addEventListener('click', () => {
+            if (!state.token || !state.repo) {
+                alert('Please configure GitHub settings first.');
+                return;
+            }
+            document.getElementById('new-filename').value = '';
+            document.getElementById('new-file-modal').style.display = 'flex';
+        });
+
+        document.getElementById('confirm-new-file').addEventListener('click', () => {
+            let filename = document.getElementById('new-filename').value.trim();
+            if (!filename) return;
+
+            if (!filename.toLowerCase().endsWith('.md')) {
+                filename += '.md';
+            }
+
+            const fullPath = state.currentPath ? `${state.currentPath}/${filename}` : filename;
+
+            state.currentFile = {
+                name: filename,
+                path: fullPath,
+                sha: null, // Indicates a new file
+                url: `https://api.github.com/repos/${state.repo}/contents/${fullPath}`
+            };
+
+            initEditor('');
+            closeModal('new-file-modal');
+            renderFileList();
         });
 
         // --- GitHub API Integration ---
@@ -522,26 +579,31 @@
 
         document.getElementById('save-btn').addEventListener('click', async () => {
             if (!state.currentFile) {
-                alert('No file selected.');
+                alert('No file active to save. Create a new file or select one.');
                 return;
             }
 
             const newContent = editor.value;
-            const message = prompt('Commit message:', 'Update ' + state.currentFile.name);
+            const isNew = !state.currentFile.sha;
+            const message = prompt('Commit message:', (isNew ? 'Create ' : 'Update ') + state.currentFile.name);
             if (message === null) return;
 
             try {
+                const body = {
+                    message,
+                    content: utoa(newContent)
+                };
+                if (state.currentFile.sha) {
+                    body.sha = state.currentFile.sha;
+                }
+
                 const response = await fetch(state.currentFile.url, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `token ${state.token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        message,
-                        content: utoa(newContent),
-                        sha: state.currentFile.sha
-                    })
+                    body: JSON.stringify(body)
                 });
 
                 if (!response.ok) {
@@ -550,8 +612,12 @@
                 }
 
                 const data = await response.json();
-                state.currentFile.sha = data.content.sha; // Update SHA for next save
-                alert('Saved successfully!');
+                state.currentFile.sha = data.content.sha;
+                alert(isNew ? 'File created successfully!' : 'Saved successfully!');
+
+                if (isNew) {
+                    await fetchFiles(); // Refresh list to show the new file
+                }
             } catch (err) {
                 alert('Error saving: ' + err.message);
             }
@@ -568,6 +634,17 @@
         }
 
     </script>
+    <!-- Metadata Context -->
+    <!-- 
+    Version: 1.2.0
+    Optimization History:
+    - 2026-01-16: Implemented file filtering in sidebar to show only directories and Markdown files.
+    - 2026-01-16: Added 'New File' functionality with filename modal and conditional PUT (create/update) logic.
+    - 2026-01-16: Fixed UTF-8 decoding issue for file content (garbled text fix).
+    - 2026-01-16: Improved sidebar file highlighting for active files.
+    - 2026-01-16: Added utoa/atou helpers for robust Base64 handling.
+    - 1.0.0: Initial release with GitHub API integration and Markdown preview.
+    -->
 </body>
 
 </html>
