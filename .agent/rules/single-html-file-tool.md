@@ -1,5 +1,5 @@
 ---
-trigger: manual
+trigger: always_on
 ---
 
 Role: 极简主义前端架构师 / 单文件工具专家

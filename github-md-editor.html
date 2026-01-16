@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Markdown Editor</title>
+    <!-- External Dependencies (Pinned Versions) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.321.0/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.0/github-markdown.min.css">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --sidebar-bg: #161b22;
+            --border-color: #30363d;
+            --text-color: #c9d1d9;
+            --accent-color: #58a6ff;
+            --header-bg: #010409;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        header {
+            height: 60px;
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Main Layout */
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        aside {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .file-item {
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .file-item.active {
+            background-color: rgba(88, 166, 255, 0.15);
+            color: var(--accent-color);
+        }
+
+        /* Editor & Preview Area */
+        .workspace {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        #editor-container {
+            flex: 1;
+            border-right: 1px solid var(--border-color);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            border: none;
+            padding: 24px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 15px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            tab-size: 4;
+        }
+
+        #preview-container {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            background-color: #ffffff;
+            color: #24292f;
+        }
+
+        /* Controls */
+        .btn {
+            background: #21262d;
+            border: 1px solid var(--border-color);
+            color: #c9d1d9;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #30363d;
+            border-color: #8b949e;
+        }
+
+        .btn-primary {
+            background: #238636;
+            border-color: rgba(240, 246, 252, 0.1);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #2ea043;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal {
+            background: var(--sidebar-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 400px;
+            padding: 24px;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        /* Responsive Utility */
+        @media (max-width: 768px) {
+            aside {
+                position: absolute;
+                left: -260px;
+                z-index: 5;
+                height: calc(100% - 60px);
+            }
+
+            aside.open {
+                left: 0;
+            }
+
+            .workspace {
+                flex-direction: column;
+            }
+
+            #editor-container,
+            #preview-container {
+                flex: none;
+                height: 50%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-left">
+            <button class="btn" id="menu-toggle"><i data-lucide="menu"></i></button>
+            <div class="logo">
+                <i data-lucide="github"></i>
+                GitHub MD Editor
+            </div>
+            <span id="current-repo" style="font-size: 14px; color: var(--accent-color); margin-left: 10px;"></span>
+        </div>
+        <div class="header-right">
+            <button class="btn" id="settings-btn" title="Settings">
+                <i data-lucide="settings"></i>
+                Config
+            </button>
+            <button class="btn btn-primary" id="save-btn" title="Commit to GitHub">
+                <i data-lucide="save"></i>
+                Save
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <span style="font-weight: 600;">Files</span>
+                <button class="btn" id="refresh-files" title="Refresh"><i data-lucide="refresh-cw"
+                        style="width: 14px;"></i></button>
+            </div>
+            <div class="file-tree" id="file-list">
+                <div style="padding: 20px; text-align: center; color: #8b949e; font-size: 14px;">
+                    Connect to a GitHub repo to see files.
+                </div>
+            </div>
+        </aside>
+
+        <section class="workspace">
+            <div id="editor-container">
+                <textarea id="editor" placeholder="Start writing Markdown..."></textarea>
+            </div>
+            <div id="preview-container" class="markdown-body">
+                <div style="color: #666; font-style: italic;">Markdown preview will appear here...</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <h2>GitHub Settings</h2>
+            <div class="input-group">
+                <label for="gh-token">GitHub Personal Access Token</label>
+                <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
+            </div>
+            <div class="input-group">
+                <label for="gh-repo">Repository (owner/repo)</label>
+                <input type="text" id="gh-repo" placeholder="simonw/my-notes">
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('settings-modal')">Cancel</button>
+                <button class="btn btn-primary" id="save-settings">Connect & Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- App State ---
+        let state = {
+            token: localStorage.getItem('gh_token') || '',
+            repo: localStorage.getItem('gh_repo') || '',
+            currentFile: null,
+            fileContent: '',
+            files: []
+        };
+
+        // --- Editor Initialization ---
+        const editor = document.getElementById('editor');
+
+        function initEditor(content = '') {
+            editor.value = content;
+            renderPreview(content);
+        }
+
+        editor.addEventListener('input', (e) => {
+            renderPreview(e.target.value);
+        });
+
+        // Handle Tab key in textarea
+        editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                editor.value = editor.value.substring(0, start) + "\t" + editor.value.substring(end);
+                editor.selectionStart = editor.selectionEnd = start + 1;
+                renderPreview(editor.value);
+            }
+        });
+
+        // --- UI Logic ---
+        function renderPreview(text) {
+            const preview = document.getElementById('preview-container');
+            preview.innerHTML = marked.parse(text || '');
+        }
+
+        window.closeModal = (id) => {
+            document.getElementById(id).style.display = 'none';
+        };
+
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            document.getElementById('gh-token').value = state.token;
+            document.getElementById('gh-repo').value = state.repo;
+            document.getElementById('settings-modal').style.display = 'flex';
+        });
+
+        document.getElementById('save-settings').addEventListener('click', async () => {
+            const token = document.getElementById('gh-token').value.trim();
+            const repo = document.getElementById('gh-repo').value.trim();
+
+            if (!token || !repo) {
+                alert('Please fill in both fields.');
+                return;
+            }
+
+            state.token = token;
+            state.repo = repo;
+            localStorage.setItem('gh_token', token);
+            localStorage.setItem('gh_repo', repo);
+
+            document.getElementById('current-repo').textContent = repo;
+            closeModal('settings-modal');
+            await fetchFiles();
+        });
+
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // --- GitHub API Integration ---
+        async function fetchFiles(path = '') {
+            if (!state.token || !state.repo) return;
+
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '<div style="padding: 20px; text-align: center;">Loading...</div>';
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${state.repo}/contents/${path}`, {
+                    headers: { 'Authorization': `token ${state.token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch files');
+
+                const data = await response.json();
+                state.files = Array.isArray(data) ? data : [data];
+
+                renderFileList();
+            } catch (err) {
+                fileList.innerHTML = `<div style="padding: 20px; color: #f85149;">Error: ${err.message}</div>`;
+            }
+        }
+
+        function renderFileList() {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+
+            state.files.forEach(file => {
+                if (file.type === 'dir') return; // For simplicity, only files for now
+                if (!file.name.endsWith('.md')) return;
+
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `<i data-lucide="file-text" style="width: 16px;"></i> ${file.name}`;
+                item.onclick = () => loadFile(file);
+                fileList.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        async function loadFile(file) {
+            try {
+                const response = await fetch(file.url, {
+                    headers: { 'Authorization': `token ${state.token}` }
+                });
+                const data = await response.json();
+                state.currentFile = data;
+                const content = atob(data.content.replace(/\n/g, ''));
+                initEditor(content);
+
+                // Update UI active state
+                document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
+                // Find and mark active (simplified)
+            } catch (err) {
+                alert('Error loading file: ' + err.message);
+            }
+        }
+
+        document.getElementById('save-btn').addEventListener('click', async () => {
+            if (!state.currentFile) {
+                alert('No file selected.');
+                return;
+            }
+
+            const newContent = editor.value;
+            const message = prompt('Commit message:', 'Update ' + state.currentFile.name);
+            if (message === null) return;
+
+            try {
+                const response = await fetch(state.currentFile.url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${state.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message,
+                        content: btoa(unescape(encodeURIComponent(newContent))),
+                        sha: state.currentFile.sha
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to save');
+                }
+
+                const data = await response.json();
+                state.currentFile.sha = data.content.sha; // Update SHA for next save
+                alert('Saved successfully!');
+            } catch (err) {
+                alert('Error saving: ' + err.message);
+            }
+        });
+
+        document.getElementById('refresh-files').addEventListener('click', () => fetchFiles());
+
+        // --- Init ---
+        lucide.createIcons();
+        initEditor('');
+        if (state.token && state.repo) {
+            document.getElementById('current-repo').textContent = state.repo;
+            fetchFiles();
+        }
+
+    </script>
+</body>
+
+</html>
