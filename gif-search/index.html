@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>GIF Quest | 表情包搜索神器</title>
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800&display=swap"
+            rel="stylesheet"
+        />
+        <!-- Icons -->
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <style>
+            :root {
+                --bg: #050505;
+                --surface: #121212;
+                --primary: #7000ff;
+                --primary-glow: rgba(112, 0, 255, 0.4);
+                --accent: #ff007a;
+                --accent-glow: rgba(255, 0, 122, 0.3);
+                --success: #00ffc2;
+                --text-main: #ffffff;
+                --text-muted: #a0a0a0;
+                --border: #222222;
+                --glass: rgba(18, 18, 18, 0.8);
+                --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            body {
+                font-family: "Inter", system-ui, sans-serif;
+                background-color: var(--bg);
+                color: var(--text-main);
+                min-height: 100vh;
+                overflow-x: hidden;
+            }
+
+            /* --- Header & Search --- */
+            header {
+                position: sticky;
+                top: 0;
+                padding: 20px;
+                background: var(--glass);
+                backdrop-filter: blur(20px);
+                z-index: 1000;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .logo {
+                font-family: "Outfit", sans-serif;
+                font-size: 24px;
+                font-weight: 800;
+                letter-spacing: -1px;
+                background: linear-gradient(
+                    to right,
+                    var(--primary),
+                    var(--accent)
+                );
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+                text-shadow: 0 10px 20px var(--primary-glow);
+            }
+
+            .search-container {
+                width: 100%;
+                max-width: 600px;
+                position: relative;
+            }
+
+            .search-input {
+                width: 100%;
+                background: #1a1a1a;
+                border: 1px solid var(--border);
+                padding: 14px 20px 14px 48px;
+                border-radius: 12px;
+                color: white;
+                font-size: 16px;
+                outline: none;
+                transition: var(--transition);
+            }
+
+            .search-input:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 20px var(--primary-glow);
+            }
+
+            .search-icon {
+                position: absolute;
+                left: 16px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-muted);
+            }
+
+            /* --- Grid Layout --- */
+            .main-content {
+                padding: 20px;
+                max-width: 1400px;
+                margin: 0 auto;
+            }
+
+            .gif-grid {
+                column-count: 2;
+                column-gap: 12px;
+            }
+
+            @media (min-width: 768px) {
+                .gif-grid {
+                    column-count: 3;
+                }
+            }
+
+            @media (min-width: 1024px) {
+                .gif-grid {
+                    column-count: 4;
+                }
+            }
+
+            .gif-card {
+                break-inside: avoid;
+                margin-bottom: 12px;
+                background: var(--surface);
+                border-radius: 12px;
+                overflow: hidden;
+                position: relative;
+                cursor: pointer;
+                border: 1px solid var(--border);
+                transition: var(--transition);
+            }
+
+            .gif-card:hover {
+                transform: scale(1.02);
+                border-color: var(--primary);
+                z-index: 10;
+            }
+
+            .gif-card img {
+                width: 100%;
+                display: block;
+                background: #1a1a1a;
+            }
+
+            .gif-actions {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 12px;
+                background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+                display: flex;
+                gap: 8px;
+                opacity: 0;
+                transition: var(--transition);
+            }
+
+            .gif-card:hover .gif-actions {
+                opacity: 1;
+            }
+
+            .action-btn {
+                flex: 1;
+                padding: 8px;
+                background: var(--glass);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                color: white;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                cursor: pointer;
+                backdrop-filter: blur(4px);
+            }
+
+            .action-btn:hover {
+                background: var(--primary);
+                border-color: var(--primary);
+            }
+
+            /* --- Loading & Empty --- */
+            .status-area {
+                text-align: center;
+                padding: 40px;
+                color: var(--text-muted);
+            }
+
+            .loader {
+                width: 30px;
+                height: 30px;
+                border: 3px solid var(--border);
+                border-top-color: var(--primary);
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+                margin: 0 auto 16px;
+            }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .load-more {
+                display: block;
+                margin: 40px auto;
+                padding: 12px 32px;
+                background: transparent;
+                border: 1px solid var(--primary);
+                color: var(--primary);
+                border-radius: 100px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: var(--transition);
+            }
+
+            .load-more:hover {
+                background: var(--primary);
+                color: white;
+                box-shadow: 0 0 20px var(--primary-glow);
+            }
+
+            /* --- Toast Notification --- */
+            #toast {
+                position: fixed;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%) translateY(100px);
+                background: var(--success);
+                color: var(--bg);
+                padding: 12px 24px;
+                border-radius: 100px;
+                font-weight: 700;
+                z-index: 2000;
+                transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            }
+
+            #toast.show {
+                transform: translateX(-50%) translateY(0);
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="logo">GIF QUEST</div>
+            <div class="search-container">
+                <i data-lucide="search" class="search-icon"></i>
+                <input
+                    type="text"
+                    class="search-input"
+                    id="searchInput"
+                    placeholder="搜索表情包，例如：哭、开心、点赞..."
+                    autocomplete="off"
+                />
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="gif-grid" id="gifGrid">
+                <!-- Results injected here -->
+            </div>
+
+            <div id="statusArea" class="status-area">
+                <div id="initialState">请输入关键词搜索</div>
+                <div id="loadingState" style="display: none">
+                    <div class="loader"></div>
+                    正在搜寻表情包...
+                </div>
+                <div id="noResults" style="display: none">
+                    未找到匹配的表情包
+                </div>
+            </div>
+
+            <button id="loadMore" class="load-more" style="display: none">
+                查看更多
+            </button>
+        </div>
+
+        <div id="toast">已成功复制文件链接！</div>
+
+        <script>
+            const API_KEY = "LIVDSRZULELA";
+            const BASE_URL = "https://g.tenor.com/v1/search";
+            const grid = document.getElementById("gifGrid");
+            const input = document.getElementById("searchInput");
+            const loadMoreBtn = document.getElementById("loadMore");
+
+            let currentQuery = "";
+            let nextPos = "";
+            let isLoading = false;
+
+            // --- Init Lucide ---
+            lucide.createIcons();
+
+            // --- Search Logic ---
+            let debounceTimer;
+            input.addEventListener("input", (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    const query = e.target.value.trim();
+                    if (query === currentQuery) return;
+
+                    if (query) {
+                        performSearch(query);
+                    } else {
+                        resetGrid();
+                    }
+                }, 500);
+            });
+
+            async function performSearch(query, isAppend = false) {
+                if (isLoading) return;
+
+                isLoading = true;
+                currentQuery = query;
+
+                if (!isAppend) {
+                    grid.innerHTML = "";
+                    document.getElementById("initialState").style.display =
+                        "none";
+                    document.getElementById("noResults").style.display = "none";
+                }
+
+                document.getElementById("loadingState").style.display = "block";
+                loadMoreBtn.style.display = "none";
+
+                try {
+                    const url = `${BASE_URL}?q=${encodeURIComponent(query)}&key=${API_KEY}&limit=20&pos=${isAppend ? nextPos : ""}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    document.getElementById("loadingState").style.display =
+                        "none";
+
+                    if (data.results && data.results.length > 0) {
+                        renderGIFs(data.results);
+                        nextPos = data.next || "";
+                        loadMoreBtn.style.display = nextPos ? "block" : "none";
+                    } else if (!isAppend) {
+                        document.getElementById("noResults").style.display =
+                            "block";
+                    }
+                } catch (error) {
+                    console.error("Search failed:", error);
+                    document.getElementById("loadingState").style.display =
+                        "none";
+                } finally {
+                    isLoading = false;
+                }
+            }
+
+            function renderGIFs(results) {
+                results.forEach((item) => {
+                    const media = item.media[0].tinygif;
+                    const fullUrl = item.media[0].gif.url;
+
+                    const card = document.createElement("div");
+                    card.className = "gif-card";
+                    card.innerHTML = `
+                    <img src="${media.url}" alt="${item.content_description}" loading="lazy">
+                    <div class="gif-actions">
+                        <div class="action-btn" onclick="copyUrl('${fullUrl}', event)">
+                            <i data-lucide="link-2" style="width:14px"></i> 链接
+                        </div>
+                        <div class="action-btn" onclick="downloadGif('${fullUrl}', event)">
+                            <i data-lucide="download" style="width:14px"></i> 下载
+                        </div>
+                    </div>
+                `;
+                    grid.appendChild(card);
+
+                    // Add click behavior for preview
+                    card.addEventListener("click", () => {
+                        copyUrl(fullUrl);
+                    });
+                });
+                lucide.createIcons();
+            }
+
+            function resetGrid() {
+                grid.innerHTML = "";
+                currentQuery = "";
+                nextPos = "";
+                document.getElementById("initialState").style.display = "block";
+                document.getElementById("loadingState").style.display = "none";
+                document.getElementById("noResults").style.display = "none";
+                loadMoreBtn.style.display = "none";
+            }
+
+            // --- Actions ---
+            window.copyUrl = (url, e) => {
+                if (e) e.stopPropagation();
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast("已成功复制表情包链接！");
+                });
+            };
+
+            window.downloadGif = (url, e) => {
+                if (e) e.stopPropagation();
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `gif-quest-${Date.now()}.gif`;
+                a.target = "_blank";
+                a.click();
+            };
+
+            function showToast(msg) {
+                const toast = document.getElementById("toast");
+                toast.textContent = msg;
+                toast.classList.add("show");
+                setTimeout(() => toast.classList.remove("show"), 2000);
+            }
+
+            loadMoreBtn.addEventListener("click", () => {
+                performSearch(currentQuery, true);
+            });
+        </script>
+
+        <!-- Metadata Context -->
+        <!-- 
+    Version: 1.0.0
+    Author: Antigravity
+    Description: GIF Quest - A minimalist, high-speed GIF search tool using Tenor API.
+    Architecture: NO Framework, NO Build. Vanilla JS + native CSS Column Masonry.
+    Dependencies: Lucide Icons, Google Fonts.
+    --></body>
+</html>
