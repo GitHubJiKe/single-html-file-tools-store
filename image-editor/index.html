@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Image Mark | 图像标记专家</title>
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700&display=swap"
+            rel="stylesheet"
+        />
+        <!-- Icons -->
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <style>
+            :root {
+                --bg-deep: #0f172a;
+                --bg-surface: #1e293b;
+                --primary: #38bdf8;
+                --primary-hover: #7dd3fc;
+                --accent: #f472b6;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --border: #334155;
+                --glass: rgba(30, 41, 59, 0.7);
+                --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            body {
+                font-family:
+                    "Inter",
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
+                background-color: var(--bg-deep);
+                color: var(--text-main);
+                height: 100vh;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* --- Layout --- */
+            header {
+                height: 64px;
+                padding: 0 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: var(--glass);
+                backdrop-filter: blur(12px);
+                border-bottom: 1px solid var(--border);
+                z-index: 100;
+            }
+
+            .logo {
+                font-family: "Outfit", sans-serif;
+                font-size: 24px;
+                font-weight: 700;
+                background: linear-gradient(
+                    135deg,
+                    var(--primary),
+                    var(--accent)
+                );
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+                letter-spacing: -0.5px;
+            }
+
+            main {
+                flex: 1;
+                display: flex;
+                position: relative;
+                overflow: hidden;
+            }
+
+            /* --- Sidebar --- */
+            .sidebar {
+                width: 320px;
+                background: var(--bg-surface);
+                border-left: 1px solid var(--border);
+                padding: 24px;
+                display: flex;
+                flex-direction: column;
+                gap: 24px;
+                overflow-y: auto;
+                z-index: 90;
+            }
+
+            .section-title {
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-muted);
+                margin-bottom: 12px;
+            }
+
+            .control-group {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            /* --- Canvas Area --- */
+            .canvas-container {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-image:
+                    linear-gradient(45deg, #161e2e 25%, transparent 25%),
+                    linear-gradient(-45deg, #161e2e 25%, transparent 25%),
+                    linear-gradient(45deg, transparent 75%, #161e2e 75%),
+                    linear-gradient(-45deg, transparent 75%, #161e2e 75%);
+                background-size: 20px 20px;
+                background-position:
+                    0 0,
+                    0 10px,
+                    10px -10px,
+                    -10px 0px;
+                overflow: hidden;
+                position: relative;
+            }
+
+            canvas {
+                max-width: 100%;
+                max-height: 100%;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+                cursor: crosshair;
+            }
+
+            /* --- Upload Overlay --- */
+            .upload-overlay {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: rgba(15, 23, 42, 0.8);
+                backdrop-filter: blur(4px);
+                z-index: 50;
+                transition: var(--transition);
+            }
+
+            .upload-overlay.hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .drop-zone {
+                width: 400px;
+                height: 240px;
+                border: 2px dashed var(--border);
+                border-radius: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 16px;
+                transition: var(--transition);
+                cursor: pointer;
+            }
+
+            .drop-zone:hover,
+            .drop-zone.active {
+                border-color: var(--primary);
+                background: rgba(56, 189, 248, 0.05);
+                transform: scale(1.02);
+            }
+
+            /* --- UI Elements --- */
+            button {
+                padding: 10px 16px;
+                border-radius: 8px;
+                border: none;
+                font-weight: 500;
+                cursor: pointer;
+                transition: var(--transition);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                font-family: inherit;
+            }
+
+            .btn-primary {
+                background: var(--primary);
+                color: var(--bg-deep);
+            }
+
+            .btn-primary:hover {
+                background: var(--primary-hover);
+                transform: translateY(-1px);
+            }
+
+            .btn-secondary {
+                background: var(--border);
+                color: var(--text-main);
+            }
+
+            .btn-secondary:hover {
+                background: #475569;
+            }
+
+            input[type="text"],
+            input[type="number"],
+            select {
+                background: var(--bg-deep);
+                border: 1px solid var(--border);
+                color: var(--text-main);
+                padding: 8px 12px;
+                border-radius: 6px;
+                outline: none;
+                width: 100%;
+            }
+
+            input[type="color"] {
+                width: 100%;
+                height: 40px;
+                border: none;
+                background: none;
+                cursor: pointer;
+            }
+
+            .emoji-grid {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 8px;
+            }
+
+            .emoji-btn {
+                font-size: 24px;
+                background: none;
+                padding: 4px;
+                border-radius: 4px;
+            }
+
+            .emoji-btn:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            /* --- Tip --- */
+            .tip {
+                font-size: 12px;
+                color: var(--text-muted);
+                margin-top: auto;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="logo">IMAGE MARK</div>
+            <div style="display: flex; gap: 12px">
+                <button class="btn-secondary" onclick="rotateImage()">
+                    <i data-lucide="rotate-cw"></i> 旋转 90°
+                </button>
+                <button
+                    class="btn-secondary"
+                    onclick="document.getElementById('fileInput').click()"
+                >
+                    <i data-lucide="image-plus"></i> 更换图片
+                </button>
+                <button class="btn-primary" onclick="exportImage()">
+                    <i data-lucide="download"></i> 导出图片
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <div class="canvas-container" id="container">
+                <canvas id="canvas"></canvas>
+                <div id="dropZone" class="upload-overlay">
+                    <div
+                        class="drop-zone"
+                        onclick="document.getElementById('fileInput').click()"
+                    >
+                        <i
+                            data-lucide="upload-cloud"
+                            style="
+                                width: 48px;
+                                height: 48px;
+                                color: var(--primary);
+                            "
+                        ></i>
+                        <p style="font-size: 18px; font-weight: 500">
+                            点击或拖拽图片到这里
+                        </p>
+                        <p style="color: var(--text-muted); font-size: 14px">
+                            支持 PNG, JPG, WEBP
+                        </p>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" hidden accept="image/*" />
+            </div>
+
+            <aside class="sidebar" id="sidebar">
+                <div>
+                    <h3 class="section-title">添加元素</h3>
+                    <div class="control-group">
+                        <button class="btn-secondary" onclick="addText()">
+                            <i data-lucide="type"></i> 添加文字
+                        </button>
+                    </div>
+                </div>
+
+                <div id="textControls" style="display: none">
+                    <h3 class="section-title">元素属性</h3>
+                    <div id="textOnlyControls">
+                        <div class="control-group">
+                            <label style="font-size: 14px">内容</label>
+                            <input
+                                type="text"
+                                id="textInput"
+                                placeholder="输入文字..."
+                                oninput="updateSelectedText()"
+                            />
+                        </div>
+                    </div>
+                    <div
+                        style="
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 12px;
+                            margin-top: 12px;
+                        "
+                    >
+                        <div class="control-group">
+                            <label style="font-size: 14px">大小</label>
+                            <input
+                                type="number"
+                                id="fontSizeInput"
+                                value="40"
+                                min="10"
+                                max="200"
+                                oninput="updateSelectedText()"
+                            />
+                        </div>
+                        <div class="control-group" id="colorPickerGroup">
+                            <label style="font-size: 14px">颜色</label>
+                            <input
+                                type="color"
+                                id="colorInput"
+                                value="#38BDF8"
+                                oninput="updateSelectedText()"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="section-title">Emoji 库</h3>
+                    <div class="emoji-grid">
+                        <button class="emoji-btn" onclick="addEmoji('🔥')">
+                            🔥
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('✨')">
+                            ✨
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('💡')">
+                            💡
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('✅')">
+                            ✅
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('❌')">
+                            ❌
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('📌')">
+                            📌
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('📍')">
+                            📍
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('🚩')">
+                            🚩
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('❤️')">
+                            ❤️
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('👍')">
+                            👍
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('🙌')">
+                            🙌
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('👏')">
+                            👏
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('😂')">
+                            😂
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('🤔')">
+                            🤔
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('😎')">
+                            😎
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('🚀')">
+                            🚀
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('💎')">
+                            💎
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('🎨')">
+                            🎨
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('📷')">
+                            📷
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('🌟')">
+                            🌟
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('🌈')">
+                            🌈
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('⚡')">
+                            ⚡
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('🎯')">
+                            🎯
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('🔔')">
+                            🔔
+                        </button>
+                        <button class="emoji-btn" onclick="addEmoji('🎁')">
+                            🎁
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    id="elementActions"
+                    style="display: none; margin-top: 24px"
+                >
+                    <button
+                        class="btn-secondary"
+                        style="width: 100%; color: #ef4444"
+                        onclick="deleteSelected()"
+                    >
+                        <i data-lucide="trash-2"></i> 删除选中项
+                    </button>
+                </div>
+
+                <div class="tip">
+                    <p>💡 提示：</p>
+                    <p>• 拖拽元素调整位置</p>
+                    <p>• 点击元素进行编辑或删除</p>
+                    <p>• 支持 90° 旋转背景图片</p>
+                </div>
+            </aside>
+        </main>
+
+        <script>
+            const canvas = document.getElementById("canvas");
+            const ctx = canvas.getContext("2d");
+            const fileInput = document.getElementById("fileInput");
+            const dropZone = document.getElementById("dropZone");
+            const textControls = document.getElementById("textControls");
+            const elementActions = document.getElementById("elementActions");
+
+            let baseImage = null;
+            let elements = [];
+            let selectedElement = null;
+            let isDragging = false;
+            let dragStartX, dragStartY;
+            let rotation = 0; // 0, 90, 180, 270
+
+            // --- Initialization ---
+            lucide.createIcons();
+
+            // --- File Handling ---
+            fileInput.addEventListener("change", handleFile);
+            dropZone.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                dropZone.classList.add("active");
+            });
+            dropZone.addEventListener("dragleave", () =>
+                dropZone.classList.remove("active"),
+            );
+            dropZone.addEventListener("drop", (e) => {
+                e.preventDefault();
+                dropZone.classList.remove("active");
+                if (e.dataTransfer.files.length) {
+                    handleFile({ target: { files: e.dataTransfer.files } });
+                }
+            });
+
+            function handleFile(e) {
+                const file = e.target.files[0];
+                if (!file || !file.type.startsWith("image/")) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        baseImage = img;
+                        elements = [];
+                        rotation = 0;
+                        initCanvas();
+                        dropZone.classList.add("hidden");
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function initCanvas() {
+                if (!baseImage) return;
+                if (rotation % 180 === 0) {
+                    canvas.width = baseImage.width;
+                    canvas.height = baseImage.height;
+                } else {
+                    canvas.width = baseImage.height;
+                    canvas.height = baseImage.width;
+                }
+                render();
+            }
+
+            function rotateImage() {
+                if (!baseImage) return;
+                rotation = (rotation + 90) % 360;
+
+                // Re-calculate dimensions and re-render
+                const oldW = canvas.width;
+                const oldH = canvas.height;
+
+                initCanvas();
+
+                // Transform existing elements to stay roughly in the same relative spot?
+                // For simplicity in a small tool, we just keep them at current x,y which might move them.
+                // But a better UX is to transform their coordinates.
+                elements.forEach((el) => {
+                    const oldX = el.x;
+                    const oldY = el.y;
+                    // 90 deg clockwise around center
+                    // (x, y) -> (newW - y, x)
+                    el.x = canvas.width - oldY;
+                    el.y = oldX;
+                });
+
+                render();
+            }
+
+            // --- Element Management ---
+            function addText() {
+                const textObj = {
+                    type: "text",
+                    content: "点击编辑文字",
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    fontSize: 60,
+                    color: "#38BDF8",
+                    fontFamily: "Inter",
+                };
+                elements.push(textObj);
+                selectElement(textObj);
+                render();
+            }
+
+            function addEmoji(emoji) {
+                const emojiObj = {
+                    type: "emoji",
+                    content: emoji,
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    fontSize: 80,
+                };
+                elements.push(emojiObj);
+                selectElement(emojiObj);
+                render();
+            }
+
+            function selectElement(el) {
+                selectedElement = el;
+                if (el) {
+                    elementActions.style.display = "block";
+                    textControls.style.display = "block";
+                    if (el.type === "text") {
+                        document.getElementById(
+                            "textOnlyControls",
+                        ).style.display = "block";
+                        document.getElementById(
+                            "colorPickerGroup",
+                        ).style.display = "flex";
+                        document.getElementById("textInput").value = el.content;
+                        document.getElementById("fontSizeInput").value =
+                            el.fontSize;
+                        document.getElementById("colorInput").value = el.color;
+                    } else if (el.type === "emoji") {
+                        document.getElementById(
+                            "textOnlyControls",
+                        ).style.display = "none";
+                        document.getElementById(
+                            "colorPickerGroup",
+                        ).style.display = "none";
+                        document.getElementById("fontSizeInput").value =
+                            el.fontSize;
+                    }
+                } else {
+                    textControls.style.display = "none";
+                    elementActions.style.display = "none";
+                }
+                render();
+            }
+
+            function updateSelectedText() {
+                if (!selectedElement) return;
+                if (selectedElement.type === "text") {
+                    selectedElement.content =
+                        document.getElementById("textInput").value;
+                    selectedElement.fontSize = parseInt(
+                        document.getElementById("fontSizeInput").value,
+                    );
+                    selectedElement.color =
+                        document.getElementById("colorInput").value;
+                } else if (selectedElement.type === "emoji") {
+                    selectedElement.fontSize = parseInt(
+                        document.getElementById("fontSizeInput").value,
+                    );
+                }
+                render();
+            }
+
+            function deleteSelected() {
+                if (!selectedElement) return;
+                elements = elements.filter((el) => el !== selectedElement);
+                selectElement(null);
+            }
+
+            // --- Rendering Engine ---
+            function render() {
+                if (!baseImage) return;
+                ctx.save();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Handle rotation for background
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate((rotation * Math.PI) / 180);
+                ctx.drawImage(
+                    baseImage,
+                    -baseImage.width / 2,
+                    -baseImage.height / 2,
+                );
+                ctx.restore();
+
+                // Elements are stored in canvas coordinates, so they don't need manual rotation logic if we transform them in rotateImage()
+                elements.forEach((el) => {
+                    ctx.save();
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+
+                    if (el.type === "text") {
+                        ctx.font = `bold ${el.fontSize}px Inter`;
+                        ctx.shadowColor = "rgba(0,0,0,0.5)";
+                        ctx.shadowBlur = 10;
+                        ctx.fillStyle = el.color;
+                        ctx.fillText(el.content, el.x, el.y);
+                    } else if (el.type === "emoji") {
+                        ctx.font = `${el.fontSize}px Apple Color Emoji, Segoe UI Emoji, sans-serif`;
+                        ctx.fillText(el.content, el.x, el.y);
+                    }
+
+                    if (el === selectedElement) {
+                        ctx.strokeStyle = "#38BDF8";
+                        ctx.lineWidth = 4;
+                        ctx.setLineDash([10, 5]);
+                        const metrics = ctx.measureText(el.content);
+                        const width = metrics.width + 20;
+                        const height = el.fontSize + 20;
+                        ctx.strokeRect(
+                            el.x - width / 2,
+                            el.y - height / 2,
+                            width,
+                            height,
+                        );
+                    }
+                    ctx.restore();
+                });
+            }
+
+            // --- Interaction ---
+            canvas.addEventListener("mousedown", (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+
+                let clickedEl = null;
+                for (let i = elements.length - 1; i >= 0; i--) {
+                    const el = elements[i];
+                    ctx.font =
+                        el.type === "text"
+                            ? `${el.fontSize}px Inter`
+                            : `${el.fontSize}px serif`;
+                    const metrics = ctx.measureText(el.content);
+                    const w = metrics.width;
+                    const h = el.fontSize;
+
+                    if (
+                        x > el.x - w / 2 &&
+                        x < el.x + w / 2 &&
+                        y > el.y - h / 2 &&
+                        y < el.y + h / 2
+                    ) {
+                        clickedEl = el;
+                        break;
+                    }
+                }
+
+                if (clickedEl) {
+                    selectElement(clickedEl);
+                    isDragging = true;
+                    dragStartX = x - clickedEl.x;
+                    dragStartY = y - clickedEl.y;
+                } else {
+                    selectElement(null);
+                }
+            });
+
+            window.addEventListener("mousemove", (e) => {
+                if (!isDragging || !selectedElement) return;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+                selectedElement.x = x - dragStartX;
+                selectedElement.y = y - dragStartY;
+                render();
+            });
+
+            window.addEventListener("mouseup", () => {
+                isDragging = false;
+            });
+
+            function exportImage() {
+                if (!baseImage) return;
+                const tempSelected = selectedElement;
+                selectedElement = null;
+                render();
+                const link = document.createElement("a");
+                link.download = `marked-image-${Date.now()}.png`;
+                link.href = canvas.toDataURL("image/png", 1.0);
+                link.click();
+                selectedElement = tempSelected;
+                render();
+            }
+
+            window.addEventListener("paste", (e) => {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf("image") !== -1) {
+                        const blob = items[i].getAsFile();
+                        handleFile({ target: { files: [blob] } });
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
