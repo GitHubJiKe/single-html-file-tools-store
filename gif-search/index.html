@@ -373,6 +373,9 @@
                     card.innerHTML = `
                     <img src="${media.url}" alt="${item.content_description}" loading="lazy">
                     <div class="gif-actions">
+                        <div class="action-btn" onclick="copyImage('${fullUrl}', event)">
+                            <i data-lucide="copy" style="width:14px"></i> 复制
+                        </div>
                         <div class="action-btn" onclick="copyUrl('${fullUrl}', event)">
                             <i data-lucide="link-2" style="width:14px"></i> 链接
                         </div>
@@ -383,9 +386,9 @@
                 `;
                     grid.appendChild(card);
 
-                    // Add click behavior for preview
+                    // Add click behavior for direct image copy
                     card.addEventListener("click", () => {
-                        copyUrl(fullUrl);
+                        copyImage(fullUrl);
                     });
                 });
                 lucide.createIcons();
@@ -402,6 +405,23 @@
             }
 
             // --- Actions ---
+            window.copyImage = async (url, e) => {
+                if (e) e.stopPropagation();
+                showToast("正在准备表情包...");
+                try {
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+                    // Modern browsers support copying GIF blobs directly
+                    const item = new ClipboardItem({ [blob.type]: blob });
+                    await navigator.clipboard.write([item]);
+                    showToast("✨ 表情包已复制，可以直接粘贴！");
+                } catch (err) {
+                    console.error("Copy image failed:", err);
+                    showToast("复制失败，正在尝试复制链接...");
+                    copyUrl(url);
+                }
+            };
+
             window.copyUrl = (url, e) => {
                 if (e) e.stopPropagation();
                 navigator.clipboard.writeText(url).then(() => {
