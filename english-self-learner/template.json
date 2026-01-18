@@ -1,0 +1,935 @@
+[
+    {
+        "sentence": "The quick brown fox jumps over the lazy dog.",
+        "translation": "敏捷的棕色狐狸跃过了懒狗。",
+        "words": [
+            {
+                "word": "The",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "quick",
+                "translation": "快速的；敏捷的"
+            },
+            {
+                "word": "brown",
+                "translation": "棕色的"
+            },
+            {
+                "word": "fox",
+                "translation": "狐狸"
+            },
+            {
+                "word": "jumps",
+                "translation": "跳跃；跃过（动词第三人称单数）"
+            },
+            {
+                "word": "over",
+                "translation": "越过；在……上方"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "lazy",
+                "translation": "懒惰的"
+            },
+            {
+                "word": "dog",
+                "translation": "狗"
+            }
+        ],
+        "level": "easy"
+    },
+    {
+        "sentence": "She drinks a cup of warm milk every morning.",
+        "translation": "她每天早上喝一杯温牛奶。",
+        "words": [
+            {
+                "word": "She",
+                "translation": "她（主格）"
+            },
+            {
+                "word": "drinks",
+                "translation": "喝（动词第三人称单数）"
+            },
+            {
+                "word": "a",
+                "translation": "（不定冠词，一）"
+            },
+            {
+                "word": "cup",
+                "translation": "杯子"
+            },
+            {
+                "word": "of",
+                "translation": "……的（表示所属）"
+            },
+            {
+                "word": "warm",
+                "translation": "温暖的；温热的"
+            },
+            {
+                "word": "milk",
+                "translation": "牛奶"
+            },
+            {
+                "word": "every",
+                "translation": "每个"
+            },
+            {
+                "word": "morning",
+                "translation": "早上；上午"
+            }
+        ],
+        "level": "easy"
+    },
+    {
+        "sentence": "We planted some beautiful flowers in the garden.",
+        "translation": "我们在花园里种了一些漂亮的花。",
+        "words": [
+            {
+                "word": "We",
+                "translation": "我们（主格）"
+            },
+            {
+                "word": "planted",
+                "translation": "种植（动词过去式）"
+            },
+            {
+                "word": "some",
+                "translation": "一些"
+            },
+            {
+                "word": "beautiful",
+                "translation": "漂亮的；美丽的"
+            },
+            {
+                "word": "flowers",
+                "translation": "花（复数）"
+            },
+            {
+                "word": "in",
+                "translation": "在……里面"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "garden",
+                "translation": "花园"
+            }
+        ],
+        "level": "easy"
+    },
+    {
+        "sentence": "My little brother likes to play basketball after school.",
+        "translation": "我的小弟弟喜欢放学后打篮球。",
+        "words": [
+            {
+                "word": "My",
+                "translation": "我的（形容词性物主代词）"
+            },
+            {
+                "word": "little",
+                "translation": "小的；年幼的"
+            },
+            {
+                "word": "brother",
+                "translation": "兄弟；弟弟"
+            },
+            {
+                "word": "likes",
+                "translation": "喜欢（动词第三人称单数）"
+            },
+            {
+                "word": "to",
+                "translation": "（不定式符号，无实际含义）"
+            },
+            {
+                "word": "play",
+                "translation": "玩；打（球）"
+            },
+            {
+                "word": "basketball",
+                "translation": "篮球"
+            },
+            {
+                "word": "after",
+                "translation": "在……之后"
+            },
+            {
+                "word": "school",
+                "translation": "学校；上学"
+            }
+        ],
+        "level": "easy"
+    },
+    {
+        "sentence": "The sun rises in the east and sets in the west.",
+        "translation": "太阳从东方升起，西方落下。",
+        "words": [
+            {
+                "word": "The",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "sun",
+                "translation": "太阳"
+            },
+            {
+                "word": "rises",
+                "translation": "升起（动词第三人称单数）"
+            },
+            {
+                "word": "in",
+                "translation": "在……方向"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "east",
+                "translation": "东方"
+            },
+            {
+                "word": "and",
+                "translation": "和；并且"
+            },
+            {
+                "word": "sets",
+                "translation": "落下（动词第三人称单数）"
+            },
+            {
+                "word": "in",
+                "translation": "在……方向"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "west",
+                "translation": "西方"
+            }
+        ],
+        "level": "easy"
+    },
+    {
+        "sentence": "It is important to maintain a balanced diet and regular exercise.",
+        "translation": "保持均衡的饮食和规律的运动是很重要的。",
+        "words": [
+            {
+                "word": "It",
+                "translation": "（形式主语，无实际含义）"
+            },
+            {
+                "word": "is",
+                "translation": "是（系动词）"
+            },
+            {
+                "word": "important",
+                "translation": "重要的"
+            },
+            {
+                "word": "to",
+                "translation": "（不定式符号，无实际含义）"
+            },
+            {
+                "word": "maintain",
+                "translation": "维持；保持"
+            },
+            {
+                "word": "a",
+                "translation": "（不定冠词，一）"
+            },
+            {
+                "word": "balanced",
+                "translation": "均衡的"
+            },
+            {
+                "word": "diet",
+                "translation": "饮食"
+            },
+            {
+                "word": "and",
+                "translation": "和"
+            },
+            {
+                "word": "regular",
+                "translation": "规律的；定期的"
+            },
+            {
+                "word": "exercise",
+                "translation": "运动；锻炼"
+            }
+        ],
+        "level": "medium"
+    },
+    {
+        "sentence": "Scientists have made great progress in the field of artificial intelligence.",
+        "translation": "科学家们在人工智能领域取得了巨大的进展。",
+        "words": [
+            {
+                "word": "Scientists",
+                "translation": "科学家（复数）"
+            },
+            {
+                "word": "have",
+                "translation": "（助动词，构成现在完成时）"
+            },
+            {
+                "word": "made",
+                "translation": "取得；做（动词过去分词）"
+            },
+            {
+                "word": "great",
+                "translation": "巨大的；伟大的"
+            },
+            {
+                "word": "progress",
+                "translation": "进展；进步（不可数名词）"
+            },
+            {
+                "word": "in",
+                "translation": "在……领域"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "field",
+                "translation": "领域；田野"
+            },
+            {
+                "word": "of",
+                "translation": "……的（表示所属）"
+            },
+            {
+                "word": "artificial",
+                "translation": "人工的；人造的"
+            },
+            {
+                "word": "intelligence",
+                "translation": "智力；智能"
+            }
+        ],
+        "level": "medium"
+    },
+    {
+        "sentence": "The book which I borrowed from the library is about environmental protection.",
+        "translation": "我从图书馆借的那本书是关于环境保护的。",
+        "words": [
+            {
+                "word": "The",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "book",
+                "translation": "书"
+            },
+            {
+                "word": "which",
+                "translation": "（关系代词，指代book）"
+            },
+            {
+                "word": "I",
+                "translation": "我（主格）"
+            },
+            {
+                "word": "borrowed",
+                "translation": "借（动词过去式）"
+            },
+            {
+                "word": "from",
+                "translation": "从……（地方）"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "library",
+                "translation": "图书馆"
+            },
+            {
+                "word": "is",
+                "translation": "是（系动词）"
+            },
+            {
+                "word": "about",
+                "translation": "关于"
+            },
+            {
+                "word": "environmental",
+                "translation": "环境的"
+            },
+            {
+                "word": "protection",
+                "translation": "保护"
+            }
+        ],
+        "level": "medium"
+    },
+    {
+        "sentence": "If you had told me earlier, I would have helped you solve the problem.",
+        "translation": "如果你早点告诉我，我就会帮你解决这个问题了。",
+        "words": [
+            {
+                "word": "If",
+                "translation": "如果（引导条件状语从句）"
+            },
+            {
+                "word": "you",
+                "translation": "你（主格）"
+            },
+            {
+                "word": "had",
+                "translation": "（助动词，构成过去完成时）"
+            },
+            {
+                "word": "told",
+                "translation": "告诉（动词过去分词）"
+            },
+            {
+                "word": "me",
+                "translation": "我（宾格）"
+            },
+            {
+                "word": "earlier",
+                "translation": "更早地（副词比较级）"
+            },
+            {
+                "word": "I",
+                "translation": "我（主格）"
+            },
+            {
+                "word": "would",
+                "translation": "会（情态动词，表虚拟）"
+            },
+            {
+                "word": "have",
+                "translation": "（助动词，构成虚拟语气）"
+            },
+            {
+                "word": "helped",
+                "translation": "帮助（动词过去分词）"
+            },
+            {
+                "word": "you",
+                "translation": "你（宾格）"
+            },
+            {
+                "word": "solve",
+                "translation": "解决"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "problem",
+                "translation": "问题"
+            }
+        ],
+        "level": "medium"
+    },
+    {
+        "sentence": "More and more people are choosing to work remotely due to the development of the internet.",
+        "translation": "由于互联网的发展，越来越多的人选择远程工作。",
+        "words": [
+            {
+                "word": "More",
+                "translation": "更多的（形容词比较级）"
+            },
+            {
+                "word": "and",
+                "translation": "和（连接比较级）"
+            },
+            {
+                "word": "more",
+                "translation": "更多的（形容词比较级）"
+            },
+            {
+                "word": "people",
+                "translation": "人们"
+            },
+            {
+                "word": "are",
+                "translation": "是（系动词，构成现在进行时）"
+            },
+            {
+                "word": "choosing",
+                "translation": "选择（动词现在分词）"
+            },
+            {
+                "word": "to",
+                "translation": "（不定式符号，无实际含义）"
+            },
+            {
+                "word": "work",
+                "translation": "工作"
+            },
+            {
+                "word": "remotely",
+                "translation": "远程地（副词）"
+            },
+            {
+                "word": "due",
+                "translation": "由于"
+            },
+            {
+                "word": "to",
+                "translation": "（介词，表原因）"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "development",
+                "translation": "发展"
+            },
+            {
+                "word": "of",
+                "translation": "……的（表示所属）"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "internet",
+                "translation": "互联网"
+            }
+        ],
+        "level": "medium"
+    },
+    {
+        "sentence": "Not only does she excel in academic studies, but she also takes an active part in various social activities.",
+        "translation": "她不仅在学术学习上表现出色，还积极参与各类社会活动。",
+        "words": [
+            {
+                "word": "Not",
+                "translation": "不（表否定）"
+            },
+            {
+                "word": "only",
+                "translation": "仅仅；只"
+            },
+            {
+                "word": "does",
+                "translation": "（助动词，用于倒装句）"
+            },
+            {
+                "word": "she",
+                "translation": "她（主格）"
+            },
+            {
+                "word": "excel",
+                "translation": "擅长；表现出色"
+            },
+            {
+                "word": "in",
+                "translation": "在……方面"
+            },
+            {
+                "word": "academic",
+                "translation": "学术的"
+            },
+            {
+                "word": "studies",
+                "translation": "学习；研究（复数）"
+            },
+            {
+                "word": "but",
+                "translation": "但是；而且"
+            },
+            {
+                "word": "she",
+                "translation": "她（主格）"
+            },
+            {
+                "word": "also",
+                "translation": "也"
+            },
+            {
+                "word": "takes",
+                "translation": "参与；进行（动词第三人称单数）"
+            },
+            {
+                "word": "an",
+                "translation": "（不定冠词，一）"
+            },
+            {
+                "word": "active",
+                "translation": "积极的"
+            },
+            {
+                "word": "part",
+                "translation": "部分；角色"
+            },
+            {
+                "word": "in",
+                "translation": "在……中"
+            },
+            {
+                "word": "various",
+                "translation": "各种各样的"
+            },
+            {
+                "word": "social",
+                "translation": "社会的"
+            },
+            {
+                "word": "activities",
+                "translation": "活动（复数）"
+            }
+        ],
+        "level": "hard"
+    },
+    {
+        "sentence": "What makes the situation more complicated is that the data collected from different sources are inconsistent with each other.",
+        "translation": "让情况更加复杂的是，从不同来源收集的数据相互之间并不一致。",
+        "words": [
+            {
+                "word": "What",
+                "translation": "……的事情（引导主语从句）"
+            },
+            {
+                "word": "makes",
+                "translation": "使；让（动词第三人称单数）"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "situation",
+                "translation": "情况；形势"
+            },
+            {
+                "word": "more",
+                "translation": "更加（副词比较级）"
+            },
+            {
+                "word": "complicated",
+                "translation": "复杂的（形容词比较级）"
+            },
+            {
+                "word": "is",
+                "translation": "是（系动词）"
+            },
+            {
+                "word": "that",
+                "translation": "（连接词，引导表语从句）"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "data",
+                "translation": "数据（复数）"
+            },
+            {
+                "word": "collected",
+                "translation": "收集（动词过去分词，作定语）"
+            },
+            {
+                "word": "from",
+                "translation": "从……"
+            },
+            {
+                "word": "different",
+                "translation": "不同的"
+            },
+            {
+                "word": "sources",
+                "translation": "来源（复数）"
+            },
+            {
+                "word": "are",
+                "translation": "是（系动词）"
+            },
+            {
+                "word": "inconsistent",
+                "translation": "不一致的；矛盾的"
+            },
+            {
+                "word": "with",
+                "translation": "和……（搭配）"
+            },
+            {
+                "word": "each",
+                "translation": "每个"
+            },
+            {
+                "word": "other",
+                "translation": "其他的"
+            }
+        ],
+        "level": "hard"
+    },
+    {
+        "sentence": "Despite the fact that he has been confronted with numerous challenges, he has never given up his pursuit of dreams.",
+        "translation": "尽管他面临过无数的挑战，但他从未放弃过对梦想的追求。",
+        "words": [
+            {
+                "word": "Despite",
+                "translation": "尽管；不管（介词）"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "fact",
+                "translation": "事实"
+            },
+            {
+                "word": "that",
+                "translation": "（连接词，引导同位语从句）"
+            },
+            {
+                "word": "he",
+                "translation": "他（主格）"
+            },
+            {
+                "word": "has",
+                "translation": "（助动词，构成现在完成时）"
+            },
+            {
+                "word": "been",
+                "translation": "（助动词，构成被动语态）"
+            },
+            {
+                "word": "confronted",
+                "translation": "面临；面对（动词过去分词）"
+            },
+            {
+                "word": "with",
+                "translation": "和……（搭配）"
+            },
+            {
+                "word": "numerous",
+                "translation": "众多的；无数的"
+            },
+            {
+                "word": "challenges",
+                "translation": "挑战（复数）"
+            },
+            {
+                "word": "he",
+                "translation": "他（主格）"
+            },
+            {
+                "word": "has",
+                "translation": "（助动词，构成现在完成时）"
+            },
+            {
+                "word": "never",
+                "translation": "从未；绝不"
+            },
+            {
+                "word": "given",
+                "translation": "放弃；给予（动词过去分词）"
+            },
+            {
+                "word": "up",
+                "translation": "（副词，与give搭配表放弃）"
+            },
+            {
+                "word": "his",
+                "translation": "他的（形容词性物主代词）"
+            },
+            {
+                "word": "pursuit",
+                "translation": "追求"
+            },
+            {
+                "word": "of",
+                "translation": "……的（表示所属）"
+            },
+            {
+                "word": "dreams",
+                "translation": "梦想（复数）"
+            }
+        ],
+        "level": "hard"
+    },
+    {
+        "sentence": "It is generally acknowledged that the sustainable development of society relies on the harmony between humans and nature.",
+        "translation": "人们普遍认为，社会的可持续发展依赖于人与自然的和谐相处。",
+        "words": [
+            {
+                "word": "It",
+                "translation": "（形式主语，无实际含义）"
+            },
+            {
+                "word": "is",
+                "translation": "是（系动词）"
+            },
+            {
+                "word": "generally",
+                "translation": "普遍地；通常地（副词）"
+            },
+            {
+                "word": "acknowledged",
+                "translation": "承认；认为（动词过去分词，表被动）"
+            },
+            {
+                "word": "that",
+                "translation": "（连接词，引导主语从句）"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "sustainable",
+                "translation": "可持续的"
+            },
+            {
+                "word": "development",
+                "translation": "发展"
+            },
+            {
+                "word": "of",
+                "translation": "……的（表示所属）"
+            },
+            {
+                "word": "society",
+                "translation": "社会"
+            },
+            {
+                "word": "relies",
+                "translation": "依赖；依靠（动词第三人称单数）"
+            },
+            {
+                "word": "on",
+                "translation": "依靠；依赖（介词搭配）"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "harmony",
+                "translation": "和谐"
+            },
+            {
+                "word": "between",
+                "translation": "在……之间"
+            },
+            {
+                "word": "humans",
+                "translation": "人类（复数）"
+            },
+            {
+                "word": "and",
+                "translation": "和"
+            },
+            {
+                "word": "nature",
+                "translation": "自然"
+            }
+        ],
+        "level": "hard"
+    },
+    {
+        "sentence": "Had we realized the potential risks in advance, we could have adopted more effective measures to prevent the accident from happening.",
+        "translation": "要是我们提前意识到了潜在的风险，就可以采取更有效的措施来阻止这场事故的发生了。",
+        "words": [
+            {
+                "word": "Had",
+                "translation": "（助动词，用于倒装虚拟句）"
+            },
+            {
+                "word": "we",
+                "translation": "我们（主格）"
+            },
+            {
+                "word": "realized",
+                "translation": "意识到；认识到（动词过去分词）"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "potential",
+                "translation": "潜在的；可能的"
+            },
+            {
+                "word": "risks",
+                "translation": "风险（复数）"
+            },
+            {
+                "word": "in",
+                "translation": "在……方面"
+            },
+            {
+                "word": "advance",
+                "translation": "提前；预先"
+            },
+            {
+                "word": "we",
+                "translation": "我们（主格）"
+            },
+            {
+                "word": "could",
+                "translation": "能够（情态动词，表虚拟）"
+            },
+            {
+                "word": "have",
+                "translation": "（助动词，构成虚拟语气）"
+            },
+            {
+                "word": "adopted",
+                "translation": "采取；采纳（动词过去分词）"
+            },
+            {
+                "word": "more",
+                "translation": "更（副词比较级）"
+            },
+            {
+                "word": "effective",
+                "translation": "有效的"
+            },
+            {
+                "word": "measures",
+                "translation": "措施（复数）"
+            },
+            {
+                "word": "to",
+                "translation": "（不定式符号，表目的）"
+            },
+            {
+                "word": "prevent",
+                "translation": "阻止；防止"
+            },
+            {
+                "word": "the",
+                "translation": "（定冠词，无实际含义）"
+            },
+            {
+                "word": "accident",
+                "translation": "事故"
+            },
+            {
+                "word": "from",
+                "translation": "（介词，与prevent搭配）"
+            },
+            {
+                "word": "happening",
+                "translation": "发生（动词现在分词）"
+            }
+        ],
+        "level": "hard"
+    }
+]

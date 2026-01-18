@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SaaS Overseas - Modern Landing Page Template</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css"
+            rel="stylesheet"
+            type="text/css"
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script
+            defer
+            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+        ></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                font-family: "Outfit", sans-serif;
+                background-color: #0f172a;
+            }
+            .glow-border {
+                position: relative;
+                overflow: hidden;
+            }
+            .glow-border::before {
+                content: "";
+                position: absolute;
+                inset: -1px;
+                background: linear-gradient(45deg, #3b82f6, #a855f7, #3b82f6);
+                background-size: 200% 200%;
+                animation: border-rotate 4s linear infinite;
+                z-index: -1;
+                border-radius: inherit;
+            }
+            @keyframes border-rotate {
+                0% {
+                    background-position: 0% 50%;
+                }
+                50% {
+                    background-position: 100% 50%;
+                }
+                100% {
+                    background-position: 0% 50%;
+                }
+            }
+            .glass-card {
+                background: rgba(30, 41, 59, 0.7);
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .gradient-text {
+                background: linear-gradient(to right, #60a5fa, #c084fc);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+        </style>
+    </head>
+    <body
+        x-data="{ 
+    isAnnual: false,
+    waitlistEmail: '',
+    submitted: false,
+    submitWaitlist() {
+        if (this.waitlistEmail) {
+            this.submitted = true;
+            setTimeout(() => this.submitted = false, 3000);
+            this.waitlistEmail = '';
+        }
+    }
+}"
+        class="text-slate-200"
+    >
+        <!-- Header -->
+        <header
+            class="sticky top-0 z-50 transition-all duration-300 backdrop-blur-md border-b border-slate-800"
+        >
+            <div class="container mx-auto navbar py-4">
+                <div class="navbar-start">
+                    <a class="flex items-center gap-2 group cursor-pointer">
+                        <div
+                            class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:rotate-12 transition-transform"
+                        >
+                            <svg
+                                class="w-6 h-6 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                                />
+                            </svg>
+                        </div>
+                        <span class="text-2xl font-black tracking-tight"
+                            >Vortex<span class="text-primary">SaaS</span></span
+                        >
+                    </a>
+                </div>
+                <div class="navbar-center hidden lg:flex">
+                    <ul class="menu menu-horizontal px-1 font-medium gap-2">
+                        <li>
+                            <a
+                                href="#features"
+                                class="hover:text-primary transition-colors"
+                                >Features</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="#pricing"
+                                class="hover:text-primary transition-colors"
+                                >Pricing</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="#faq"
+                                class="hover:text-primary transition-colors"
+                                >FAQ</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <div class="navbar-end gap-3">
+                    <a
+                        href="#waitlist"
+                        class="btn btn-primary btn-sm md:btn-md rounded-full px-6 shadow-lg shadow-primary/25 border-none"
+                        >Get Early Access</a
+                    >
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Hero Section -->
+            <section class="relative pt-20 pb-32 overflow-hidden">
+                <div class="absolute inset-0 z-0">
+                    <div
+                        class="absolute top-20 left-1/2 -translate-x-1/2 w-full h-[600px] bg-primary/10 blur-[120px] rounded-full"
+                    ></div>
+                </div>
+                <div class="container mx-auto px-6 relative z-10 text-center">
+                    <div
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-full border border-slate-700 mb-8 animate-bounce"
+                    >
+                        <span
+                            class="flex h-2 w-2 rounded-full bg-primary animate-ping"
+                        ></span>
+                        <span class="text-sm font-semibold"
+                            >Join 5,000+ early adopters</span
+                        >
+                    </div>
+                    <h1
+                        class="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 max-w-5xl mx-auto leading-[0.9]"
+                    >
+                        Ship your SaaS <br />
+                        <span class="gradient-text">faster than ever.</span>
+                    </h1>
+                    <p
+                        class="text-xl md:text-2xl text-slate-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed"
+                    >
+                        The ultimate starter kit for founders moving to global
+                        markets. 100% customizable, high-conversion landing page
+                        library.
+                    </p>
+                    <div
+                        id="waitlist"
+                        class="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto mb-16"
+                    >
+                        <div class="relative w-full">
+                            <input
+                                x-model="waitlistEmail"
+                                type="email"
+                                placeholder="you@example.com"
+                                class="input input-bordered w-full rounded-full bg-slate-900/50 border-slate-700 focus:border-primary px-6 h-14"
+                            />
+                        </div>
+                        <button
+                            @click="submitWaitlist()"
+                            class="btn btn-primary w-full sm:w-auto rounded-full h-14 px-8 border-none"
+                            :disabled="submitted"
+                        >
+                            <span x-show="!submitted">Join Waitlist</span>
+                            <span
+                                x-show="submitted"
+                                class="flex items-center gap-2"
+                            >
+                                <svg
+                                    class="w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="3"
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                                Success
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Preview Card -->
+                    <div class="mt-8 relative max-w-5xl mx-auto group">
+                        <div
+                            class="absolute -inset-1 bg-gradient-to-r from-primary to-purple-500 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"
+                        ></div>
+                        <div
+                            class="relative glass-card p-4 md:p-8 rounded-3xl shadow-2xl border-white/5 overflow-hidden"
+                        >
+                            <div
+                                class="flex items-center gap-2 mb-4 border-b border-white/10 pb-4"
+                            >
+                                <div
+                                    class="w-3 h-3 rounded-full bg-red-500/50"
+                                ></div>
+                                <div
+                                    class="w-3 h-3 rounded-full bg-yellow-500/50"
+                                ></div>
+                                <div
+                                    class="w-3 h-3 rounded-full bg-green-500/50"
+                                ></div>
+                            </div>
+                            <div
+                                class="aspect-video bg-slate-900/80 rounded-xl flex items-center justify-center border border-white/5"
+                            >
+                                <div class="text-center">
+                                    <svg
+                                        class="w-20 h-20 text-slate-700 mx-auto mb-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="1.5"
+                                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                        />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="1.5"
+                                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                    <p
+                                        class="text-slate-500 font-mono text-sm underline cursor-pointer hover:text-primary transition-colors"
+                                    >
+                                        Watch Demo Video
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Social Proof -->
+            <section class="py-12 border-y border-slate-800 bg-slate-900/30">
+                <div class="container mx-auto px-6">
+                    <p
+                        class="text-center text-slate-500 text-sm font-semibold tracking-widest uppercase mb-10"
+                    >
+                        Trusted by modern engineering teams
+                    </p>
+                    <div
+                        class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all"
+                    >
+                        <span class="text-2xl font-bold flex items-center gap-2"
+                            >ACME <span class="bg-slate-700 w-px h-6"></span
+                        ></span>
+                        <span
+                            class="text-2xl font-bold flex items-center gap-2 italic"
+                            >Sphere <span class="bg-slate-700 w-px h-6"></span
+                        ></span>
+                        <span
+                            class="text-2xl font-bold flex items-center gap-2 tracking-tighter"
+                            >PROTO <span class="bg-slate-700 w-px h-6"></span
+                        ></span>
+                        <span class="text-2xl font-bold flex items-center gap-2"
+                            >LOGOS <span class="bg-slate-700 w-px h-6"></span
+                        ></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bento Grid Features -->
+            <section id="features" class="py-24 bg-slate-950">
+                <div class="container mx-auto px-6">
+                    <div class="mb-16 text-center">
+                        <h2 class="text-3xl md:text-5xl font-black mb-4">
+                            Everything you need to
+                            <span class="gradient-text">scale.</span>
+                        </h2>
+                        <p class="text-slate-500 text-lg">
+                            Focus on your shipping code, we handle the
+                            aesthetics.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-6">
+                        <!-- Feature 1 -->
+                        <div
+                            class="md:col-span-4 glass-card p-10 rounded-3xl group hover:border-primary/30 transition-all flex flex-col justify-between"
+                        >
+                            <div>
+                                <div
+                                    class="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6"
+                                >
+                                    <svg
+                                        class="w-6 h-6"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                        />
+                                    </svg>
+                                </div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">
+                                    Deep Analytics Integration
+                                </h3>
+                                <p class="text-slate-400 text-lg max-w-md">
+                                    Understand your traffic from day one with
+                                    built-in patterns for Google Analytics,
+                                    Mixpanel, and PostHog.
+                                </p>
+                            </div>
+                            <div class="mt-8 flex gap-4 overflow-hidden">
+                                <div
+                                    class="h-1 bg-primary w-full rounded-full opacity-20"
+                                ></div>
+                                <div
+                                    class="h-1 bg-primary w-2/3 rounded-full opacity-40"
+                                ></div>
+                                <div
+                                    class="h-1 bg-primary w-1/2 rounded-full opacity-60"
+                                ></div>
+                            </div>
+                        </div>
+                        <!-- Feature 2 -->
+                        <div
+                            class="md:col-span-2 glass-card p-10 rounded-3xl hover:border-primary/30 transition-all"
+                        >
+                            <div
+                                class="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-400 mb-6"
+                            >
+                                <svg
+                                    class="w-6 h-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                    />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold mb-4">
+                                Secure by Default
+                            </h3>
+                            <p class="text-slate-400">
+                                SOC2 compliant components and GDPR ready cookie
+                                modals included.
+                            </p>
+                        </div>
+                        <!-- Feature 3 -->
+                        <div
+                            class="md:col-span-2 glass-card p-10 rounded-3xl hover:border-primary/30 transition-all"
+                        >
+                            <div
+                                class="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-400 mb-6"
+                            >
+                                <svg
+                                    class="w-6 h-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                                    />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold mb-4">
+                                Blazing Fast
+                            </h3>
+                            <p class="text-slate-400">
+                                Optimized for LCP and SEO with static
+                                single-file delivery.
+                            </p>
+                        </div>
+                        <!-- Feature 4 -->
+                        <div
+                            class="md:col-span-4 glass-card p-10 rounded-3xl hover:border-primary/30 transition-all flex flex-col md:flex-row gap-8 items-center"
+                        >
+                            <div class="flex-1">
+                                <div
+                                    class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400 mb-6"
+                                >
+                                    <svg
+                                        class="w-6 h-6"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                </div>
+                                <h3 class="text-2xl font-bold mb-4">
+                                    Go Global, Instantly
+                                </h3>
+                                <p class="text-slate-400 text-lg">
+                                    Multi-region support and RTL layout
+                                    compatibility built directly into the
+                                    structure.
+                                </p>
+                            </div>
+                            <div class="flex-1 grid grid-cols-2 gap-4">
+                                <div
+                                    class="bg-slate-800/50 p-4 rounded-xl border border-white/5 text-center"
+                                >
+                                    🌍 US-East
+                                </div>
+                                <div
+                                    class="bg-slate-800/50 p-4 rounded-xl border border-white/5 text-center"
+                                >
+                                    🌏 AS-West
+                                </div>
+                                <div
+                                    class="bg-slate-800/50 p-4 rounded-xl border border-white/5 text-center"
+                                >
+                                    🇪🇺 EU-Central
+                                </div>
+                                <div
+                                    class="bg-slate-800/50 p-4 rounded-xl border border-white/5 text-center"
+                                >
+                                    🌎 SA-East
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Section -->
+            <section id="pricing" class="py-24 bg-slate-900/20">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-16">
+                        <h2 class="text-3xl md:text-5xl font-black mb-6">
+                            Fair pricing for
+                            <span class="gradient-text">every stage.</span>
+                        </h2>
+
+                        <!-- Toggle Switching -->
+                        <div
+                            class="flex justify-center items-center gap-4 mb-12"
+                        >
+                            <span
+                                class="font-medium"
+                                :class="!isAnnual ? 'text-white' : 'text-slate-500'"
+                                >Monthly</span
+                            >
+                            <input
+                                type="checkbox"
+                                class="toggle toggle-primary toggle-lg"
+                                x-model="isAnnual"
+                            />
+                            <span
+                                class="font-medium"
+                                :class="isAnnual ? 'text-white' : 'text-slate-500'"
+                                >Yearly
+                                <span
+                                    class="badge badge-primary badge-outline ml-2"
+                                    >-20%</span
+                                ></span
+                            >
+                        </div>
+                    </div>
+
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
+                    >
+                        <!-- Starter -->
+                        <div
+                            class="glass-card p-10 rounded-3xl flex flex-col hover:scale-[1.02] transition-transform"
+                        >
+                            <h3 class="text-xl font-bold mb-2">Starter</h3>
+                            <p class="text-slate-500 mb-6">
+                                Perfect for side projects.
+                            </p>
+                            <div class="text-4xl font-black mb-8">
+                                $<span x-text="isAnnual ? '0' : '0'"></span
+                                ><span
+                                    class="text-lg font-normal text-slate-500"
+                                    >/mo</span
+                                >
+                            </div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-2">
+                                    <svg
+                                        class="w-5 h-5 text-primary"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                    >
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd"
+                                        />
+                                    </svg>
+                                    Up to 1,000 users
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <svg
+                                        class="w-5 h-5 text-primary"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                    >
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd"
+                                        />
+                                    </svg>
+                                    Basic Analytics
+                                </li>
+                                <li
+                                    class="flex items-center gap-2 font-light text-slate-600"
+                                >
+                                    <s>Priority Support</s>
+                                </li>
+                            </ul>
+                            <button
+                                class="btn btn-outline btn-primary rounded-full w-full"
+                            >
+                                Start for Free
+                            </button>
+                        </div>
+
+                        <!-- Pro -->
+                        <div
+                            class="glass-card p-1 shadow-2xl shadow-primary/10 rounded-3xl flex flex-col group relative"
+                        >
+                            <div
+                                class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold uppercase px-3 py-1 rounded-full"
+                            >
+                                Most Popular
+                            </div>
+                            <div
+                                class="p-10 flex-1 flex flex-col h-full bg-slate-900/50 rounded-[inherit]"
+                            >
+                                <h3 class="text-xl font-bold mb-2">Pro</h3>
+                                <p class="text-slate-500 mb-6">
+                                    For professional founders.
+                                </p>
+                                <div class="text-4xl font-black mb-8">
+                                    $<span
+                                        x-text="isAnnual ? '39' : '49'"
+                                    ></span
+                                    ><span
+                                        class="text-lg font-normal text-slate-500"
+                                        >/mo</span
+                                    >
+                                </div>
+                                <ul class="space-y-4 mb-10 flex-1">
+                                    <li class="flex items-center gap-2">
+                                        <svg
+                                            class="w-5 h-5 text-primary"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                        Unlimited users
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <svg
+                                            class="w-5 h-5 text-primary"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                        Advanced Metrics
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <svg
+                                            class="w-5 h-5 text-primary"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                        Priority Email Support
+                                    </li>
+                                </ul>
+                                <button
+                                    class="btn btn-primary rounded-full w-full border-none shadow-lg shadow-primary/20"
+                                >
+                                    Upgrade Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Enterprise -->
+                        <div class="glass-card p-10 rounded-3xl flex flex-col">
+                            <h3 class="text-xl font-bold mb-2">Enterprise</h3>
+                            <p class="text-slate-500 mb-6">
+                                Scaling without limits.
+                            </p>
+                            <div class="text-4xl font-black mb-8">Custom</div>
+                            <ul class="space-y-4 mb-10 flex-1">
+                                <li class="flex items-center gap-2">
+                                    <svg
+                                        class="w-5 h-5 text-primary"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                    >
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd"
+                                        />
+                                    </svg>
+                                    White-label solution
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <svg
+                                        class="w-5 h-5 text-primary"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                    >
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd"
+                                        />
+                                    </svg>
+                                    SLA Guaranteed
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <svg
+                                        class="w-5 h-5 text-primary"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                    >
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd"
+                                        />
+                                    </svg>
+                                    24/7 Dedicated Manager
+                                </li>
+                            </ul>
+                            <button class="btn btn-outline rounded-full w-full">
+                                Contact Sales
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ Section -->
+            <section id="faq" class="py-24 bg-slate-950">
+                <div class="container mx-auto px-6 max-w-4xl">
+                    <h2
+                        class="text-3xl md:text-5xl font-black mb-12 text-center"
+                    >
+                        Frequently asked
+                        <span class="gradient-text">questions.</span>
+                    </h2>
+                    <div class="space-y-4">
+                        <div
+                            class="collapse collapse-plus glass-card rounded-2xl border-white/5"
+                        >
+                            <input
+                                type="radio"
+                                name="my-accordion-3"
+                                checked="checked"
+                            />
+                            <div class="collapse-title text-xl font-medium">
+                                Is this a monthly subscription?
+                            </div>
+                            <div class="collapse-content text-slate-400">
+                                <p>
+                                    Yes, we offer both monthly and yearly plans.
+                                    You can cancel at any time with no hidden
+                                    fees.
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="collapse collapse-plus glass-card rounded-2xl border-white/5"
+                        >
+                            <input type="radio" name="my-accordion-3" />
+                            <div class="collapse-title text-xl font-medium">
+                                Do you support international payments?
+                            </div>
+                            <div class="collapse-content text-slate-400">
+                                <p>
+                                    Absolutely. We use Stripe to process global
+                                    payments and support over 135 currencies.
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="collapse collapse-plus glass-card rounded-2xl border-white/5"
+                        >
+                            <input type="radio" name="my-accordion-3" />
+                            <div class="collapse-title text-xl font-medium">
+                                Can I export my data?
+                            </div>
+                            <div class="collapse-content text-slate-400">
+                                <p>
+                                    Data ownership is core to our philosophy.
+                                    You can export all your metrics and user
+                                    data in CSV or JSON format at any time.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CTA Footer Section -->
+            <section class="py-24 relative overflow-hidden">
+                <div class="container mx-auto px-6 relative z-10">
+                    <div
+                        class="glass-card rounded-[3rem] p-12 md:p-24 text-center border-white/10 relative overflow-hidden group"
+                    >
+                        <div
+                            class="absolute -top-24 -right-24 w-96 h-96 bg-primary/20 blur-[100px] rounded-full group-hover:bg-primary/30 transition-colors"
+                        ></div>
+                        <h2
+                            class="text-4xl md:text-6xl font-black mb-8 leading-tight"
+                        >
+                            Ready to transform <br />
+                            your business?
+                        </h2>
+                        <p
+                            class="text-xl text-slate-400 mb-12 max-w-xl mx-auto"
+                        >
+                            Start your 14-day free trial today. No credit card
+                            required.
+                        </p>
+                        <div
+                            class="flex flex-col sm:flex-row gap-4 justify-center"
+                        >
+                            <a
+                                href="#waitlist"
+                                class="btn btn-primary btn-lg rounded-full px-12 border-none"
+                                >Get Started Now</a
+                            >
+                            <button
+                                class="btn btn-outline btn-lg rounded-full px-12"
+                            >
+                                View Documentation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-950 pt-24 pb-12 border-t border-slate-900">
+            <div class="container mx-auto px-6">
+                <div
+                    class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16 font-light"
+                >
+                    <div class="col-span-2 lg:col-span-2">
+                        <div class="flex items-center gap-2 mb-6">
+                            <div
+                                class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center"
+                            >
+                                <svg
+                                    class="w-5 h-5 text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                                    />
+                                </svg>
+                            </div>
+                            <span
+                                class="text-xl font-bold tracking-tight text-white"
+                                >VortexSaaS</span
+                            >
+                        </div>
+                        <p class="text-slate-500 max-w-xs leading-relaxed">
+                            Helping founders build the next generation of
+                            software products. Based in Tokyo, shipping
+                            globally.
+                        </p>
+                    </div>
+                    <div>
+                        <h4
+                            class="font-bold text-white mb-6 uppercase text-xs tracking-widest"
+                        >
+                            Product
+                        </h4>
+                        <ul class="space-y-4 text-slate-500">
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >Features</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >Integrations</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >Enterprise</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >Changelog</a
+                                >
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4
+                            class="font-bold text-white mb-6 uppercase text-xs tracking-widest"
+                        >
+                            Resources
+                        </h4>
+                        <ul class="space-y-4 text-slate-500">
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >Documentation</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >Guides</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >Help Center</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >API Status</a
+                                >
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4
+                            class="font-bold text-white mb-6 uppercase text-xs tracking-widest"
+                        >
+                            Company
+                        </h4>
+                        <ul class="space-y-4 text-slate-500">
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >About Us</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >Careers</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >Privacy Policy</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    class="hover:text-primary transition-colors"
+                                    >Terms of Service</a
+                                >
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div
+                    class="pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-slate-600"
+                >
+                    <p>© 2026 VortexSaaS Inc. All rights reserved.</p>
+                    <div class="flex gap-6">
+                        <a href="#" class="hover:text-white transition-colors"
+                            >Twitter</a
+                        >
+                        <a href="#" class="hover:text-white transition-colors"
+                            >GitHub</a
+                        >
+                        <a href="#" class="hover:text-white transition-colors"
+                            >LinkedIn</a
+                        >
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Meta-Tags for SEO -->
+        <!-- Description: A modern, high-conversion SaaS landing page template built with Tailwind CSS, DaisyUI and Alpine.js. -->
+        <!-- Keywords: SaaS, Landing Page, Template, Overseas, Overseas Growth, Tailwind, DaisyUI, Alpinejs, Single HTML -->
+    </body>
+</html>
