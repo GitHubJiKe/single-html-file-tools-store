@@ -1,552 +1,482 @@
 <!doctype html>
 <html lang="en" data-theme="light">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>English Self Learner</title>
-        <link
-            href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css"
-            rel="stylesheet"
-            type="text/css"
-        />
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script
-            defer
-            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
-        ></script>
-        <style>
-            .cloze-input {
-                border: none;
-                border-bottom: 2px solid #e2e8f0;
-                background: transparent;
-                text-align: center;
-                font-size: 1.125rem;
-                padding-bottom: 0.125rem;
-                transition: all 0.3s ease;
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>English Self Learner | 英语自学助手 - 交互式分词完形填空练习</title>
+    <meta name="description" content="一个基于交互式分词完形填空的英语自学工具。支持导入自定义句子，通过拼写练习强化记忆，100% 离线运行，保护学习隐私。" />
+    <meta name="keywords" content="英语自学, 拼写练习, 完形填空, 单词记忆, 离线英语工具, HackerPot" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.hackerpot.online/english-self-learner/index.html" />
+    <meta property="og:title" content="English Self Learner | 英语自修室" />
+    <meta property="og:description" content="通过交互式填空练习，高效记忆英文句子。离线优先，隐私安全。" />
+    <meta property="og:image" content="https://www.hackerpot.online/android-chrome-512x512.png" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "English Self Learner",
+      "url": "https://www.hackerpot.online/english-self-learner/index.html",
+      "description": "An interactive cloze-test tool for English self-learning.",
+      "applicationCategory": "EducationApplication",
+      "operatingSystem": "Web",
+      "author": {
+        "@type": "Organization",
+        "name": "HackerPot"
+      }
+    }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        .cloze-input {
+            border: none;
+            border-bottom: 2px solid #e2e8f0;
+            background: transparent;
+            text-align: center;
+            font-size: 1.125rem;
+            padding-bottom: 0.125rem;
+            transition: all 0.3s ease;
+        }
+
+        .cloze-input:focus {
+            outline: none;
+            border-bottom-color: #3b82f6;
+        }
+
+        .cloze-input.success {
+            border-bottom-color: #22c55e;
+            color: #22c55e;
+        }
+
+        .cloze-input.error {
+            border-bottom-color: #ef4444;
+            color: #ef4444;
+            animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        .cloze-input.hint {
+            border-bottom-color: #cbd5e1;
+            color: #94a3b8;
+        }
+
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translate3d(-1px, 0, 0);
             }
-            .cloze-input:focus {
-                outline: none;
-                border-bottom-color: #3b82f6;
+
+            20%,
+            80% {
+                transform: translate3d(2px, 0, 0);
             }
-            .cloze-input.success {
-                border-bottom-color: #22c55e;
-                color: #22c55e;
+
+            30%,
+            50%,
+            70% {
+                transform: translate3d(-4px, 0, 0);
             }
-            .cloze-input.error {
-                border-bottom-color: #ef4444;
-                color: #ef4444;
-                animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+
+            40%,
+            60% {
+                transform: translate3d(4px, 0, 0);
             }
-            .cloze-input.hint {
-                border-bottom-color: #cbd5e1;
-                color: #94a3b8;
-            }
-            @keyframes shake {
-                10%,
-                90% {
-                    transform: translate3d(-1px, 0, 0);
-                }
-                20%,
-                80% {
-                    transform: translate3d(2px, 0, 0);
-                }
-                30%,
-                50%,
-                70% {
-                    transform: translate3d(-4px, 0, 0);
-                }
-                40%,
-                60% {
-                    transform: translate3d(4px, 0, 0);
-                }
-            }
-            [x-cloak] {
-                display: none !important;
-            }
-        </style>
-    </head>
-    <body class="bg-slate-50 min-h-screen p-4 md:p-8 font-sans text-slate-800">
-        <div
-            x-data="learnerApp"
-            x-init="init()"
-            class="max-w-12xl mx-auto bg-white border-slate-900 rounded-lg shadow-xl overflow-hidden min-h-[600px] flex flex-col"
-            x-cloak
-        >
-            <!-- Header -->
-            <header
-                class="p-6 border-b-2 border-slate-900 flex justify-between items-center bg-white sticky top-0 z-10"
-            >
-                <h1 class="text-2xl font-black tracking-tight">
-                    英文 <span class="text-blue-600">自学者</span>
-                </h1>
-                <div class="flex gap-2">
-                    <button
-                        @click="showImportModal = true"
-                        class="btn btn-ghost btn-sm rounded-full bg-slate-100 hover:bg-slate-200"
-                    >
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen p-4 md:p-8 font-sans text-slate-800">
+    <div x-data="learnerApp" x-init="init()"
+        @keydown.enter.window="if (!showImportModal && sentences.length > 0 && wordStates.every(s => s.revealed)) nextSentence()"
+        class="max-w-12xl mx-auto bg-white border-slate-900 rounded-lg shadow-xl overflow-hidden min-h-[600px] flex flex-col"
+        x-cloak>
+        <!-- Header -->
+        <header class="p-6 border-b-2 border-slate-900 flex justify-between items-center bg-white sticky top-0 z-10">
+            <h1 class="text-2xl font-black tracking-tight">
+                英文 <span class="text-blue-600">自学者</span>
+            </h1>
+            <div class="flex gap-2">
+                <button @click="showImportModal = true"
+                    class="btn btn-ghost btn-sm rounded-full bg-slate-100 hover:bg-slate-200">
+                    导入
+                </button>
+                <button @click="exportData()" class="btn btn-ghost btn-sm rounded-full bg-slate-100 hover:bg-slate-200">
+                    导出
+                </button>
+            </div>
+        </header>
+
+        <!-- Tool Body -->
+        <main class="flex-grow flex flex-col items-center justify-center p-8 md:p-20 relative">
+            <template x-if="sentences.length > 0">
+                <div class="w-full text-center space-y-16">
+                    <!-- Target Sentence (Chinese) -->
+                    <div class="space-y-4">
+                        <p class="text-slate-400 text-sm font-medium tracking-widest uppercase">
+                            目标句子
+                        </p>
+                        <h2 class="text-3xl md:text-4xl font-bold text-slate-900" x-text="currentSentence.translation">
+                        </h2>
+                    </div>
+
+                    <!-- Cloze Test Area -->
+                    <div class="flex flex-wrap justify-center items-end gap-x-8 gap-y-12 select-none">
+                        <template x-for="(wordData, index) in currentSentence.words" :key="index + '-' + currentIndex">
+                            <div class="flex flex-col items-center min-w-[60px] max-w-[200px] space-y-3">
+                                <!-- Top: Word Interface -->
+                                <div class="relative w-full">
+                                    <template x-if="wordStates[index].revealed">
+                                        <div class="text-xl font-bold text-center tracking-wide"
+                                            :class="wordStates[index].isHint ? 'text-slate-400' : 'text-green-500'"
+                                            x-text="wordData.word"></div>
+                                    </template>
+                                    <template x-if="!wordStates[index].revealed">
+                                        <input type="text" class="cloze-input w-full"
+                                            :class="wordStates[index].error ? 'error' : ''"
+                                            x-model="wordStates[index].userInput"
+                                            @input="wordStates[index].error = false"
+                                            @keydown.enter.stop="checkWord(index)"
+                                            :placeholder="'_'.repeat(wordData.word.length)" :id="'word-' + index"
+                                            :style="{ width: Math.max(wordData.word.length * 1.2, 4) + 'ch' }"
+                                            autocomplete="off" autocorrect="off" autocapitalize="off"
+                                            spellcheck="false" />
+                                    </template>
+                                </div>
+                                <!-- Bottom: Meaning -->
+                                <div class="text-sm text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis w-full text-center"
+                                    x-text="wordData.translation"></div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Progress & Controls -->
+                    <div class="pt-12 flex flex-col items-center gap-6">
+                        <div class="flex items-center gap-4">
+                            <span class="text-sm font-bold text-slate-400">句子
+                                <span x-text="currentIndex + 1"></span> /
+                                <span x-text="sentences.length"></span></span>
+                        </div>
+                        <div class="flex gap-4">
+                            <button @click="prevSentence()" :disabled="currentIndex === 0"
+                                class="btn btn-circle btn-ghost btn-sm border-slate-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            <button @click="nextSentence()" :disabled="currentIndex === sentences.length - 1"
+                                class="btn btn-circle btn-ghost btn-sm border-slate-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Empty State -->
+            <template x-if="sentences.length === 0">
+                <div class="text-center space-y-6">
+                    <div class="text-6xl">📖</div>
+                    <h2 class="text-2xl font-bold">没有数据</h2>
+                    <p class="text-slate-500">
+                        导入你的句子 JSON 文件开始吧。
+                    </p>
+                    <button @click="showImportModal = true" class="btn btn-primary rounded-full px-8">
                         导入
                     </button>
-                    <button
-                        @click="exportData()"
-                        class="btn btn-ghost btn-sm rounded-full bg-slate-100 hover:bg-slate-200"
-                    >
-                        导出
+                </div>
+            </template>
+        </main>
+
+        <!-- Import Modal -->
+        <div x-show="showImportModal"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+            x-transition x-cloak>
+            <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full border-2 border-slate-900 space-y-6"
+                @click.away="showImportModal = false">
+                <h3 class="text-xl font-bold">导入句子数据</h3>
+                <p class="text-slate-500 text-sm">
+                    在这里粘贴你的 JSON 数组。遵循
+                    <code class="bg-slate-100 px-1 rounded">template.json</code>
+                    模式。
+                </p>
+                <textarea x-model="importText"
+                    class="textarea textarea-bordered w-full h-64 font-mono text-xs focus:border-blue-500"
+                    placeholder="[{ 'sentence': '...', 'translation': '...', 'words': [...] }, ...]"></textarea>
+                <div class="flex justify-end gap-3">
+                    <button @click="showImportModal = false" class="btn btn-ghost rounded-full">
+                        取消
+                    </button>
+                    <button @click="importData()" class="btn btn-primary rounded-full px-8">
+                        确认
                     </button>
                 </div>
-            </header>
-
-            <!-- Tool Body -->
-            <main
-                class="flex-grow flex flex-col items-center justify-center p-8 md:p-20 relative"
-            >
-                <template x-if="sentences.length > 0">
-                    <div class="w-full text-center space-y-16">
-                        <!-- Target Sentence (Chinese) -->
-                        <div class="space-y-4">
-                            <p
-                                class="text-slate-400 text-sm font-medium tracking-widest uppercase"
-                            >
-                                目标句子
-                            </p>
-                            <h2
-                                class="text-3xl md:text-4xl font-bold text-slate-900"
-                                x-text="currentSentence.translation"
-                            ></h2>
-                        </div>
-
-                        <!-- Cloze Test Area -->
-                        <div
-                            class="flex flex-wrap justify-center items-end gap-x-8 gap-y-12 select-none"
-                        >
-                            <template
-                                x-for="(wordData, index) in currentSentence.words"
-                                :key="index + '-' + currentIndex"
-                            >
-                                <div
-                                    class="flex flex-col items-center min-w-[60px] max-w-[200px] space-y-3"
-                                >
-                                    <!-- Top: Word Interface -->
-                                    <div class="relative w-full">
-                                        <template
-                                            x-if="wordStates[index].revealed"
-                                        >
-                                            <div
-                                                class="text-xl font-bold text-center tracking-wide"
-                                                :class="wordStates[index].isHint ? 'text-slate-400' : 'text-green-500'"
-                                                x-text="wordData.word"
-                                            ></div>
-                                        </template>
-                                        <template
-                                            x-if="!wordStates[index].revealed"
-                                        >
-                                            <input
-                                                type="text"
-                                                class="cloze-input w-full"
-                                                :class="wordStates[index].error ? 'error' : ''"
-                                                x-model="wordStates[index].userInput"
-                                                @input="wordStates[index].error = false"
-                                                @keydown.enter="checkWord(index)"
-                                                :placeholder="'_'.repeat(wordData.word.length)"
-                                                :id="'word-' + index"
-                                                :style="{ width: Math.max(wordData.word.length * 1.2, 4) + 'ch' }"
-                                                autocomplete="off"
-                                                autocorrect="off"
-                                                autocapitalize="off"
-                                                spellcheck="false"
-                                            />
-                                        </template>
-                                    </div>
-                                    <!-- Bottom: Meaning -->
-                                    <div
-                                        class="text-sm text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis w-full text-center"
-                                        x-text="wordData.translation"
-                                    ></div>
-                                </div>
-                            </template>
-                        </div>
-
-                        <!-- Progress & Controls -->
-                        <div class="pt-12 flex flex-col items-center gap-6">
-                            <div class="flex items-center gap-4">
-                                <span class="text-sm font-bold text-slate-400"
-                                    >句子
-                                    <span x-text="currentIndex + 1"></span> /
-                                    <span x-text="sentences.length"></span
-                                ></span>
-                            </div>
-                            <div class="flex gap-4">
-                                <button
-                                    @click="prevSentence()"
-                                    :disabled="currentIndex === 0"
-                                    class="btn btn-circle btn-ghost btn-sm border-slate-200"
-                                >
-                                    <svg
-                                        class="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M15 19l-7-7 7-7"
-                                        />
-                                    </svg>
-                                </button>
-                                <button
-                                    @click="nextSentence()"
-                                    :disabled="currentIndex === sentences.length - 1"
-                                    class="btn btn-circle btn-ghost btn-sm border-slate-200"
-                                >
-                                    <svg
-                                        class="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 5l7 7-7 7"
-                                        />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Empty State -->
-                <template x-if="sentences.length === 0">
-                    <div class="text-center space-y-6">
-                        <div class="text-6xl">📖</div>
-                        <h2 class="text-2xl font-bold">没有数据</h2>
-                        <p class="text-slate-500">
-                            导入你的句子 JSON 文件开始吧。
-                        </p>
-                        <button
-                            @click="showImportModal = true"
-                            class="btn btn-primary rounded-full px-8"
-                        >
-                            导入
-                        </button>
-                    </div>
-                </template>
-            </main>
-
-            <!-- Import Modal -->
-            <div
-                x-show="showImportModal"
-                class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
-                x-transition
-                x-cloak
-            >
-                <div
-                    class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full border-2 border-slate-900 space-y-6"
-                    @click.away="showImportModal = false"
-                >
-                    <h3 class="text-xl font-bold">导入句子数据</h3>
-                    <p class="text-slate-500 text-sm">
-                        在这里粘贴你的 JSON 数组。遵循
-                        <code class="bg-slate-100 px-1 rounded"
-                            >template.json</code
-                        >
-                        模式。
-                    </p>
-                    <textarea
-                        x-model="importText"
-                        class="textarea textarea-bordered w-full h-64 font-mono text-xs focus:border-blue-500"
-                        placeholder="[{ 'sentence': '...', 'translation': '...', 'words': [...] }, ...]"
-                    ></textarea>
-                    <div class="flex justify-end gap-3">
-                        <button
-                            @click="showImportModal = false"
-                            class="btn btn-ghost rounded-full"
-                        >
-                            取消
-                        </button>
-                        <button
-                            @click="importData()"
-                            class="btn btn-primary rounded-full px-8"
-                        >
-                            确认
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Next Sentence Countdown Overlay -->
-            <div
-                x-show="showCountdown"
-                class="fixed top-18 right-8 z-40 transition-all duration-500"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-x-12"
-                x-transition:enter-end="opacity-100 translate-x-0"
-                x-cloak
-            >
-                <div class="flex items-center gap-4 bg-white shadow-2xl rounded-2xl p-4 border-2 border-slate-900">
-                    <div class="text-right hidden md:block">
-                        <h3 class="text-lg font-black text-slate-900 italic">太棒了！</h3>
-                        <p class="text-xs text-slate-500 font-bold">即将下一关</p>
-                    </div>
-
-                    <button
-                        @click="skipCountdown()"
-                        class="relative w-16 h-16 rounded-full border-4 border-slate-100 flex items-center justify-center group hover:border-blue-500 transition-all cursor-pointer bg-white"
-                    >
-                        <span
-                            class="text-2xl font-black text-slate-900"
-                            x-text="countdownValue"
-                        ></span>
-                        
-                        <!-- Circular Progress SVG -->
-                        <svg class="absolute inset-0 -rotate-90 w-full h-full">
-                            <circle
-                                cx="50%"
-                                cy="50%"
-                                r="40%"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="4"
-                                class="text-blue-500 transition-all duration-1000 ease-linear"
-                                :stroke-dasharray="2 * Math.PI * 40 + '%'"
-                                :stroke-dashoffset="(2 * Math.PI * 40) * (1 - countdownValue / 10) + '%'"
-                            ></circle>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Notification Toast -->
-            <div class="toast toast-bottom toast-center z-50">
-                <template x-for="(toast, i) in toasts" :key="i">
-                    <div
-                        :class="'alert alert-' + toast.type"
-                        class="rounded-full shadow-lg border-2 border-slate-900 shadow-slate-200"
-                    >
-                        <span
-                            x-text="toast.message"
-                            class="font-bold text-sm"
-                        ></span>
-                    </div>
-                </template>
             </div>
         </div>
+
+        <!-- Next Sentence Countdown Overlay -->
+        <div x-show="showCountdown" class="fixed top-18 right-8 z-40 transition-all duration-500"
+            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-12"
+            x-transition:enter-end="opacity-100 translate-x-0" x-cloak>
+            <div class="flex items-center gap-4 bg-white shadow-2xl rounded-2xl p-4 border-2 border-slate-900">
+                <div class="text-right hidden md:block">
+                    <h3 class="text-lg font-black text-slate-900 italic">太棒了！</h3>
+                    <p class="text-xs text-slate-500 font-bold">即将下一关</p>
+                </div>
+
+                <button @click="skipCountdown()"
+                    class="relative w-16 h-16 rounded-full border-4 border-slate-100 flex items-center justify-center group hover:border-blue-500 transition-all cursor-pointer bg-white">
+                    <span class="text-2xl font-black text-slate-900" x-text="countdownValue"></span>
+
+                    <!-- Circular Progress SVG -->
+                    <svg class="absolute inset-0 -rotate-90 w-full h-full">
+                        <circle cx="50%" cy="50%" r="40%" fill="none" stroke="currentColor" stroke-width="4"
+                            class="text-blue-500 transition-all duration-1000 ease-linear"
+                            :stroke-dasharray="2 * Math.PI * 40 + '%'"
+                            :stroke-dashoffset="(2 * Math.PI * 40) * (1 - countdownValue / 10) + '%'"></circle>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div class="toast toast-bottom toast-center z-50">
+            <template x-for="(toast, i) in toasts" :key="i">
+                <div :class="'alert alert-' + toast.type"
+                    class="rounded-full shadow-lg border-2 border-slate-900 shadow-slate-200">
+                    <span x-text="toast.message" class="font-bold text-sm"></span>
+                </div>
+            </template>
+        </div>
+    </div>
     </div>
 
-        <script>
-            document.addEventListener("alpine:init", () => {
-                Alpine.data("learnerApp", () => ({
-                    sentences: [],
-                    currentIndex: 0,
-                    wordStates: [],
-                    showImportModal: false,
-                    importText: "",
-                    toasts: [],
-                    showCountdown: false,
-                    countdownValue: 10,
-                    countdownTimer: null,
+    <script>
+        document.addEventListener("alpine:init", () => {
+            Alpine.data("learnerApp", () => ({
+                sentences: [],
+                currentIndex: 0,
+                wordStates: [],
+                showImportModal: false,
+                importText: "",
+                toasts: [],
+                showCountdown: false,
+                countdownValue: 10,
+                countdownTimer: null,
 
-                    init() {
-                        // Try to load from localStorage first
-                        const saved = localStorage.getItem(
-                            "english-learner-data",
-                        );
-                        if (saved) {
-                            try {
-                                this.sentences = JSON.parse(saved);
-                                this.initSentence();
-                            } catch (e) {
-                                console.error("Failed to parse saved data", e);
-                                this.sentences = [];
-                            }
-                        } else {
-                            // Load default if available or stay empty
+                init() {
+                    // Try to load from localStorage first
+                    const saved = localStorage.getItem(
+                        "english-learner-data",
+                    );
+                    if (saved) {
+                        try {
+                            this.sentences = JSON.parse(saved);
+                            this.initSentence();
+                        } catch (e) {
+                            console.error("Failed to parse saved data", e);
                             this.sentences = [];
                         }
-                    },
+                    } else {
+                        // Load default if available or stay empty
+                        this.sentences = [];
+                    }
+                },
 
-                    initSentence() {
-                        if (this.sentences.length === 0) return;
-                        const sentence = this.sentences[this.currentIndex];
-                        this.wordStates = sentence.words.map((w) => ({
-                            userInput: "",
-                            revealed: false,
-                            failures: 0,
-                            error: false,
-                            isHint: false,
-                        }));
+                initSentence() {
+                    if (this.sentences.length === 0) return;
+                    const sentence = this.sentences[this.currentIndex];
+                    this.wordStates = sentence.words.map((w) => ({
+                        userInput: "",
+                        revealed: false,
+                        failures: 0,
+                        error: false,
+                        isHint: false,
+                    }));
 
-                        // Focus first input
-                        this.$nextTick(() => {
-                            const firstInput =
-                                document.getElementById("word-0");
-                            if (firstInput) firstInput.focus();
-                        });
-                    },
+                    // Focus first input
+                    this.$nextTick(() => {
+                        const firstInput =
+                            document.getElementById("word-0");
+                        if (firstInput) firstInput.focus();
+                    });
+                },
 
-                    get currentSentence() {
-                        return (
-                            this.sentences[this.currentIndex] || {
-                                translation: "",
-                                words: [],
-                            }
-                        );
-                    },
+                get currentSentence() {
+                    return (
+                        this.sentences[this.currentIndex] || {
+                            translation: "",
+                            words: [],
+                        }
+                    );
+                },
 
-                    checkWord(index) {
-                        const state = this.wordStates[index];
-                        const correctWord = this.currentSentence.words[
-                            index
-                        ].word
-                            .toLowerCase()
-                            .replace(/[^a-z0-9]/g, "");
-                        const userInput = state.userInput
-                            .toLowerCase()
-                            .replace(/[^a-z0-9]/g, "");
+                checkWord(index) {
+                    const state = this.wordStates[index];
+                    const correctWord = this.currentSentence.words[
+                        index
+                    ].word
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]/g, "");
+                    const userInput = state.userInput
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]/g, "");
 
-                        if (userInput === correctWord) {
-                            this.showToast("正确!", "success");
+                    if (userInput === correctWord) {
+                        this.showToast("正确!", "success");
+                        state.revealed = true;
+                        state.error = false;
+                        this.focusNext(index);
+                    } else {
+                        state.failures++;
+                        state.error = true;
+                        if (state.failures >= 3) {
+                            this.showToast(
+                                "失败三次。这里是一个提示。",
+                                "info",
+                            );
                             state.revealed = true;
+                            state.isHint = true;
                             state.error = false;
                             this.focusNext(index);
                         } else {
-                            state.failures++;
-                            state.error = true;
-                            if (state.failures >= 3) {
-                                this.showToast(
-                                    "失败三次。这里是一个提示。",
-                                    "info",
-                                );
-                                state.revealed = true;
-                                state.isHint = true;
-                                state.error = false;
-                                this.focusNext(index);
-                            } else {
-                                this.showToast(
-                                    `错误 (${state.failures}/3)`,
-                                    "error",
-                                );
-                            }
-                        }
-
-                        // Check if sentence is complete
-                        if (this.wordStates.every((s) => s.revealed)) {
-                            setTimeout(() => {
-                                if (
-                                    this.currentIndex <
-                                    this.sentences.length - 1
-                                ) {
-                                    this.startCountdown();
-                                } else {
-                                    this.showToast(
-                                        "已完成所有句子！",
-                                        "success",
-                                    );
-                                }
-                            }, 1000);
-                        }
-                    },
-
-                    focusNext(index) {
-                        this.$nextTick(() => {
-                            const nextIndex = index + 1;
-                            const nextInput = document.getElementById(
-                                "word-" + nextIndex,
+                            this.showToast(
+                                `错误 (${state.failures}/3)`,
+                                "error",
                             );
-                            if (nextInput) {
-                                nextInput.focus();
-                            }
-                        });
-                    },
-
-                    nextSentence() {
-                        if (this.currentIndex < this.sentences.length - 1) {
-                            this.currentIndex++;
-                            this.initSentence();
-                            this.showCountdown = false;
-                            clearInterval(this.countdownTimer);
                         }
-                    },
+                    }
 
-                    startCountdown() {
-                        this.countdownValue = 10;
-                        this.showCountdown = true;
-                        if (this.countdownTimer)
-                            clearInterval(this.countdownTimer);
-
-                        this.countdownTimer = setInterval(() => {
-                            if (this.countdownValue > 1) {
-                                this.countdownValue--;
+                    // Check if sentence is complete
+                    if (this.wordStates.every((s) => s.revealed)) {
+                        setTimeout(() => {
+                            if (
+                                this.currentIndex <
+                                this.sentences.length - 1
+                            ) {
+                                this.startCountdown();
                             } else {
-                                this.nextSentence();
+                                this.showToast(
+                                    "已完成所有句子！",
+                                    "success",
+                                );
                             }
                         }, 1000);
-                    },
+                    }
+                },
 
-                    skipCountdown() {
-                        this.nextSentence();
-                    },
-
-                    prevSentence() {
-                        if (this.currentIndex > 0) {
-                            this.currentIndex--;
-                            this.initSentence();
-                        }
-                    },
-
-                    importData() {
-                        try {
-                            const data = JSON.parse(this.importText);
-                            if (Array.isArray(data)) {
-                                this.sentences = data;
-                                this.currentIndex = 0;
-                                localStorage.setItem(
-                                    "english-learner-data",
-                                    JSON.stringify(data),
-                                );
-                                this.initSentence();
-                                this.showImportModal = false;
-                                this.importText = "";
-                                this.showToast("数据导入成功！", "success");
-                            } else {
-                                this.showToast(
-                                    "无效格式。必须是数组。",
-                                    "error",
-                                );
-                            }
-                        } catch (e) {
-                            this.showToast("无效 JSON。", "error");
-                        }
-                    },
-
-                    exportData() {
-                        const blob = new Blob(
-                            [JSON.stringify(this.sentences, null, 2)],
-                            { type: "application/json" },
+                focusNext(index) {
+                    this.$nextTick(() => {
+                        const nextIndex = index + 1;
+                        const nextInput = document.getElementById(
+                            "word-" + nextIndex,
                         );
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = "sentences.json";
-                        a.click();
-                        URL.revokeObjectURL(url);
-                        this.showToast("数据导出成功！", "info");
-                    },
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                    });
+                },
 
-                    showToast(message, type = "info") {
-                        const id = Date.now();
-                        this.toasts.push({ id, message, type });
-                        setTimeout(() => {
-                            this.toasts = this.toasts.filter(
-                                (t) => t.id !== id,
+                nextSentence() {
+                    if (this.currentIndex < this.sentences.length - 1) {
+                        this.currentIndex++;
+                        this.initSentence();
+                        this.showCountdown = false;
+                        clearInterval(this.countdownTimer);
+                    }
+                },
+
+                startCountdown() {
+                    this.countdownValue = 10;
+                    this.showCountdown = true;
+                    if (this.countdownTimer)
+                        clearInterval(this.countdownTimer);
+
+                    this.countdownTimer = setInterval(() => {
+                        if (this.countdownValue > 1) {
+                            this.countdownValue--;
+                        } else {
+                            this.nextSentence();
+                        }
+                    }, 1000);
+                },
+
+                skipCountdown() {
+                    this.nextSentence();
+                },
+
+                prevSentence() {
+                    if (this.currentIndex > 0) {
+                        this.currentIndex--;
+                        this.initSentence();
+                    }
+                },
+
+                importData() {
+                    try {
+                        const data = JSON.parse(this.importText);
+                        if (Array.isArray(data)) {
+                            this.sentences = data;
+                            this.currentIndex = 0;
+                            localStorage.setItem(
+                                "english-learner-data",
+                                JSON.stringify(data),
                             );
-                        }, 2000);
-                    },
-                }));
-            });
-        </script>
-    </body>
+                            this.initSentence();
+                            this.showImportModal = false;
+                            this.importText = "";
+                            this.showToast("数据导入成功！", "success");
+                        } else {
+                            this.showToast(
+                                "无效格式。必须是数组。",
+                                "error",
+                            );
+                        }
+                    } catch (e) {
+                        this.showToast("无效 JSON。", "error");
+                    }
+                },
+
+                exportData() {
+                    const blob = new Blob(
+                        [JSON.stringify(this.sentences, null, 2)],
+                        { type: "application/json" },
+                    );
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "sentences.json";
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    this.showToast("数据导出成功！", "info");
+                },
+
+                showToast(message, type = "info") {
+                    const id = Date.now();
+                    this.toasts.push({ id, message, type });
+                    setTimeout(() => {
+                        this.toasts = this.toasts.filter(
+                            (t) => t.id !== id,
+                        );
+                    }, 2000);
+                },
+            }));
+        });
+    </script>
+</body>
+
 </html>
