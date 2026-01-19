@@ -1,492 +1,545 @@
 <!doctype html>
 <html lang="zh">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Online Tools Hub | 实用 Web 工具集</title>
-        <link rel="icon" type="image/x-icon" href="./favicon.ico" />
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800&display=swap"
-            rel="stylesheet"
-        />
-        <style>
-            :root {
-                --bg: #f8fafc;
-                --surface: #ffffff;
-                --text: #0f172a;
-                --text-muted: #64748b;
-                --border: #e2e8f0;
-                --border-hover: #cbd5e1;
-                --accent: #2563eb;
-                --font-body: "Inter", system-ui, sans-serif;
-                --font-title: "Outfit", sans-serif;
-                --transition: all 0.15s ease-out;
-            }
 
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Online Tools Hub | 实用 Web 工具集 - 离线优先、极简高效的开发者工具箱</title>
+    <meta name="description"
+        content="一个精选的在线工具集合，涵盖 JSON 格式化、二维码生成、Markdown 编辑、Base64 编解码等 20+ 实用功能。遵循 Simon Willison 单文件哲学，离线优先，不上传数据，保障绝对隐私。" />
+    <meta name="keywords" content="在线工具, Web工具, 开发者工具, JSON格式化, 二维码生成, Markdown编辑, 简历构建, 离线工具, 隐私保护" />
 
-            body {
-                font-family: var(--font-body);
-                background-color: var(--bg);
-                color: var(--text);
-                line-height: 1.4;
-                padding-bottom: 40px;
-            }
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.hackerpot.online" />
+    <meta property="og:title" content="Online Tools Hub | 实用 Web 工具集" />
+    <meta property="og:description" content="精选 20+ 离线优先、自包含的单文件 Web 工具，保障您的效率与隐私。" />
+    <meta property="og:image" content="https://www.hackerpot.online/android-chrome-512x512.png" />
 
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://www.hackerpot.online" />
+    <meta property="twitter:title" content="Online Tools Hub | 实用 Web 工具集" />
+    <meta property="twitter:description" content="精选 20+ 离线优先、自包含的单文件 Web 工具，保障您的效率与隐私。" />
+    <meta property="twitter:image" content="https://www.hackerpot.online/android-chrome-512x512.png" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Online Tools Hub",
+          "url": "https://www.hackerpot.online",
+          "description": "一个精选的在线工具集合，离线优先，隐私安全。",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Web",
+          "keywords": "JSON, Markdown, QRCode, Base64, Excel",
+          "author": {
+            "@type": "Organization",
+            "name": "开发实验室"
+          }
+        }
+        </script>
+
+    <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --accent: #2563eb;
+            --font-body: "Inter", system-ui, sans-serif;
+            --font-title: "Outfit", sans-serif;
+            --transition: all 0.15s ease-out;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.4;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* --- Compact Header --- */
+        header {
+            padding: 40px 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        h1 {
+            font-family: var(--font-title);
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .stat-number {
+            font-family: var(--font-title);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* --- Search (Sticky & Compact) --- */
+        .search-section {
+            position: sticky;
+            top: 0;
+            background-color: var(--bg);
+            padding: 12px 0;
+            z-index: 100;
+            margin-bottom: 24px;
+            transition: var(--transition);
+        }
+
+        .search-section.scrolled {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-input {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            padding: 12px 20px;
+            font-size: 14px;
+            border-radius: 6px;
+            outline: none;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+        }
+
+        /* --- High Density Grid --- */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        .tool-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 20px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: var(--transition);
+            border-radius: 6px;
+        }
+
+        .tool-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .tool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tool-icon {
+            font-size: 24px;
+        }
+
+        .tool-title {
+            font-family: var(--font-title);
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .tool-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            flex-grow: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .tool-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            background: #f1f5f9;
+            color: #64748b;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        /* --- Footer --- */
+        footer {
+            margin-top: 60px;
+            padding: 24px 0;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        footer a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
             .container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 0 40px;
+                padding: 0 20px;
             }
 
-            /* --- Compact Header --- */
             header {
-                padding: 40px 0 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-end;
-                flex-wrap: wrap;
-                gap: 20px;
-            }
-
-            .brand {
-                display: flex;
+                padding: 30px 0 10px;
                 flex-direction: column;
-                gap: 4px;
+                align-items: flex-start;
             }
 
-            h1 {
-                font-family: var(--font-title);
-                font-size: 32px;
-                font-weight: 800;
-                letter-spacing: -0.03em;
-                line-height: 1;
-                color: var(--text);
-            }
-
-            .subtitle {
-                font-size: 14px;
-                color: var(--text-muted);
-            }
-
-            .stats {
-                display: flex;
-                gap: 24px;
-            }
-
-            .stat-item {
-                display: flex;
-                align-items: baseline;
-                gap: 6px;
-            }
-
-            .stat-number {
-                font-family: var(--font-title);
-                font-size: 18px;
-                font-weight: 700;
-                color: var(--accent);
-            }
-
-            .stat-label {
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                color: var(--text-muted);
-                font-weight: 600;
-            }
-
-            /* --- Search (Sticky & Compact) --- */
-            .search-section {
-                position: sticky;
-                top: 0;
-                background-color: var(--bg);
-                padding: 12px 0;
-                z-index: 100;
-                margin-bottom: 24px;
-                transition: var(--transition);
-            }
-
-            .search-section.scrolled {
-                border-bottom: 1px solid var(--border);
-            }
-
-            .search-input {
-                width: 100%;
-                border: 1px solid var(--border);
-                background: var(--surface);
-                padding: 12px 20px;
-                font-size: 14px;
-                border-radius: 6px;
-                outline: none;
-                font-family: inherit;
-                transition: var(--transition);
-            }
-
-            .search-input:focus {
-                border-color: var(--accent);
-                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
-            }
-
-            /* --- High Density Grid --- */
             .tools-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-                gap: 16px;
+                grid-template-columns: 1fr;
             }
+        }
+    </style>
+</head>
 
-            .tool-card {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                padding: 20px;
-                text-decoration: none;
-                color: inherit;
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-                transition: var(--transition);
-                border-radius: 6px;
-            }
-
-            .tool-card:hover {
-                border-color: var(--border-hover);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-            }
-
-            .tool-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .tool-icon {
-                font-size: 24px;
-            }
-
-            .tool-title {
-                font-family: var(--font-title);
-                font-size: 16px;
-                font-weight: 700;
-                letter-spacing: -0.01em;
-            }
-
-            .tool-desc {
-                font-size: 13px;
-                color: var(--text-muted);
-                line-height: 1.5;
-                flex-grow: 1;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-            }
-
-            .tool-tags {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-
-            .tag {
-                font-size: 10px;
-                font-weight: 700;
-                padding: 2px 8px;
-                background: #f1f5f9;
-                color: #64748b;
-                border-radius: 4px;
-                text-transform: uppercase;
-                letter-spacing: 0.03em;
-            }
-
-            /* --- Footer --- */
-            footer {
-                margin-top: 60px;
-                padding: 24px 0;
-                border-top: 1px solid var(--border);
-                display: flex;
-                justify-content: space-between;
-                color: var(--text-muted);
-                font-size: 12px;
-            }
-
-            footer a {
-                color: var(--text);
-                text-decoration: none;
-                font-weight: 600;
-            }
-
-            /* --- Responsive --- */
-            @media (max-width: 768px) {
-                .container {
-                    padding: 0 20px;
-                }
-                header {
-                    padding: 30px 0 10px;
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-                .tools-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <header>
-                <div class="brand">
-                    <h1>精选工具。</h1>
-                    <p class="subtitle">简单、快速、离线优先的实用工具集。</p>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <h1>精选工具。</h1>
+                <p class="subtitle">简单、快速、离线优先的实用工具集。</p>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number">21</span>
+                    <span class="stat-label">个工具</span>
                 </div>
-                <div class="stats">
-                    <div class="stat-item">
-                        <span class="stat-number">21</span>
-                        <span class="stat-label">个工具</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">100%</span>
-                        <span class="stat-label">隐私安全</span>
-                    </div>
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">隐私安全</span>
                 </div>
-            </header>
+            </div>
+        </header>
 
-            <main>
-                <div class="search-section" id="search-section">
-                    <input
-                        type="text"
-                        class="search-input"
-                        id="search-input"
-                        placeholder="快速搜索功能或名称..."
-                        autocomplete="off"
-                    />
-                </div>
+        <main>
+            <div class="search-section" id="search-section">
+                <input type="text" class="search-input" id="search-input" placeholder="快速搜索功能或名称..."
+                    autocomplete="off" />
+            </div>
 
-                <div class="tools-grid" id="tools-container">
-                    <!-- JS Injection -->
-                </div>
+            <div class="tools-grid" id="tools-container">
+                <!-- JS Injection -->
+            </div>
 
-                <div
-                    class="no-results"
-                    id="no-results"
-                    style="
+            <!-- SEO Crawler Friendly Links (Hidden) -->
+            <div style="display: none;" aria-hidden="true">
+                <ul>
+                    <li><a href="./json-formatter.html">JSON 格式化</a></li>
+                    <li><a href="./qrcode-gen.html">二维码生成</a></li>
+                    <li><a href="./url-parser.html">URL 解析器</a></li>
+                    <li><a href="./base64-codec.html">Base64 转换</a></li>
+                    <li><a href="./canvas-gif-maker.html">Canvas GIF 制作</a></li>
+                    <li><a href="./canvas-drawing-board.html">在线画板</a></li>
+                    <li><a href="./markdown-to-wechat.html">公众号排版</a></li>
+                    <li><a href="./resume-builder.html">简历构建器</a></li>
+                    <li><a href="./image-mosaic.html">图片马赛克</a></li>
+                    <li><a href="./excel-to-json.html">Excel 转 JSON</a></li>
+                    <li><a href="./epub-reader.html">EPUB 阅读器</a></li>
+                    <li><a href="./excel-manager.html">Excel 在线编辑</a></li>
+                    <li><a href="./url-text-compressor.html">URL 文本压缩</a></li>
+                    <li><a href="./web-3d-animation.html">3D 动画预览</a></li>
+                    <li><a href="./excel-to-word.html">Excel 转 Word</a></li>
+                    <li><a href="./form-builder.html">动态表单构建</a></li>
+                    <li><a href="./local-bookmark-manager/local-bookmark-manager.html">站点收藏管理</a></li>
+                    <li><a href="./github-md-editor.html">GitHub MD 编辑</a></li>
+                    <li><a href="./image-editor/index.html">Image Mark 标记</a></li>
+                    <li><a href="./gif-search/index.html">GIF Quest 搜索</a></li>
+                    <li><a href="./english-self-learner/index.html">英语自学者</a></li>
+                </ul>
+            </div>
+
+            <div class="no-results" id="no-results" style="
                         display: none;
                         text-align: center;
                         padding: 40px;
                         color: var(--text-muted);
-                    "
-                >
-                    <div>未找到匹配项。</div>
-                </div>
-            </main>
+                    ">
+                <div>未找到匹配项。</div>
+            </div>
+        </main>
 
-            <footer>
-                <p>
-                    遵循
-                    <a
-                        href="https://simonwillison.net/2025/Dec/10/html-tools/"
-                        target="_blank"
-                        >Simon Willison 单文件哲学</a
-                    >。
-                </p>
-                <p>&copy; 2026 开发实验室。数据本地存储。</p>
-            </footer>
-        </div>
+        <footer>
+            <p>
+                遵循
+                <a href="https://simonwillison.net/2025/Dec/10/html-tools/" target="_blank">Simon Willison 单文件哲学</a>。
+            </p>
+            <p>&copy; 2026 开发实验室。数据本地存储。</p>
+        </footer>
+    </div>
 
-        <script>
-            const tools = [
-                {
-                    id: "json-formatter",
-                    title: "JSON 格式化",
-                    description:
-                        "快速美化、压缩 JSON 数据。支持字段折叠与语法高亮。",
-                    icon: "📋",
-                    url: "./json-formatter.html",
-                    tags: ["JSON", "DEV"],
-                },
-                {
-                    id: "qrcode-gen",
-                    title: "二维码生成",
-                    description: "将文本或 URL 快速转换为离线二维码图片。",
-                    icon: "📱",
-                    url: "./qrcode-gen.html",
-                    tags: ["IMAGE", "UTILS"],
-                },
-                {
-                    id: "url-parser",
-                    title: "URL 解析器",
-                    description: "深度解析 URL 参数与协议结构，开发者必备。",
-                    icon: "🔗",
-                    url: "./url-parser.html",
-                    tags: ["URL", "DEV"],
-                },
-                {
-                    id: "base64-codec",
-                    title: "Base64 转换",
-                    description: "支持文本与文件的离线 Base64 编解码。",
-                    icon: "🔐",
-                    url: "./base64-codec.html",
-                    tags: ["CODEC", "FILE"],
-                },
-                {
-                    id: "canvas-gif-maker",
-                    title: "Canvas GIF 制作",
-                    description: "基于画板的多图层 GIF 合成与导出。",
-                    icon: "🎨",
-                    url: "./canvas-gif-maker.html",
-                    tags: ["IMAGE", "GIF"],
-                },
-                {
-                    id: "canvas-drawing-board",
-                    title: "在线画板",
-                    description: "极简画板工具，支持撤销重做与多种笔触。",
-                    icon: "✏️",
-                    url: "./canvas-drawing-board.html",
-                    tags: ["DRAW", "IMAGE"],
-                },
-                {
-                    id: "markdown-to-wechat",
-                    title: "公众号排版",
-                    description: "Markdown 转公众号美化，支持多种极简主题。",
-                    icon: "📝",
-                    url: "./markdown-to-wechat.html",
-                    tags: ["MARKDOWN", "WRITING"],
-                },
-                {
-                    id: "resume-builder",
-                    title: "简历构建器",
-                    description: "Markdown 驱动的简历制作工具，离线 PDF 导出。",
-                    icon: "📄",
-                    url: "./resume-builder.html",
-                    tags: ["JOB", "OFFICE"],
-                },
-                {
-                    id: "image-mosaic",
-                    title: "图片马赛克",
-                    description: "四种风格的马赛克处理，完美保护隐私。",
-                    icon: "🖌️",
-                    url: "./image-mosaic.html",
-                    tags: ["IMAGE", "PRIVACY"],
-                },
-                {
-                    id: "excel-to-json",
-                    title: "Excel 转 JSON",
-                    description: "快速解析 Excel 文档并转换为可用的数据流。",
-                    icon: "📊",
-                    url: "./excel-to-json.html",
-                    tags: ["EXCEL", "DATA"],
-                },
-                {
-                    id: "epub-reader",
-                    title: "EPUB 阅读器",
-                    description: "本地电子书阅读，支持暗黑模式与进度记忆。",
-                    icon: "📚",
-                    url: "./epub-reader.html",
-                    tags: ["BOOK", "READER"],
-                },
-                {
-                    id: "excel-manager",
-                    title: "Excel 在线编辑",
-                    description:
-                        "功能完备的 Excel 管理，基于 IndexedDB 本地存档。",
-                    icon: "📈",
-                    url: "./excel-manager.html",
-                    tags: ["EXCEL", "OFFICE"],
-                },
-                {
-                    id: "url-text-compressor",
-                    title: "URL 文本压缩",
-                    description: "将长文本压缩并嵌入 URL，实现无限制分享。",
-                    icon: "🗜️",
-                    url: "./url-text-compressor.html",
-                    tags: ["UTILS", "URL"],
-                },
-                {
-                    id: "web-3d-animation",
-                    title: "3D 动画预览",
-                    description: "高性能 3D 模型渲染，支持关键帧动画导出。",
-                    icon: "🎬",
-                    url: "./web-3d-animation.html",
-                    tags: ["3D", "THREEJS"],
-                },
-                {
-                    id: "excel-to-word",
-                    title: "Excel 转 Word",
-                    description: "批量将表格数据填充至 Word 模板并打包导出。",
-                    icon: "📃",
-                    url: "./excel-to-word.html",
-                    tags: ["EXCEL", "AUTO"],
-                },
-                {
-                    id: "form-builder",
-                    title: "动态表单构建",
-                    description: "拖拽式表单配置，完整的本地数据收集闭环。",
-                    icon: "📋",
-                    url: "./form-builder.html",
-                    tags: ["FORM", "DATA"],
-                },
-                {
-                    id: "local-bookmark-manager",
-                    title: "站点收藏管理",
-                    description: "离线优先的书签管理，支持全文搜索与标签。",
-                    icon: "🔖",
-                    url: "./local-bookmark-manager/local-bookmark-manager.html",
-                    tags: ["FAV", "UTILS"],
-                },
-                {
-                    id: "github-md-editor",
-                    title: "GitHub MD 编辑",
-                    description: "直接与 GitHub 同步的 Markdown 专业级编辑器。",
-                    icon: "🐙",
-                    url: "./github-md-editor.html",
-                    tags: ["GITHUB", "DEV"],
-                },
-                {
-                    id: "image-editor",
-                    title: "Image Mark 标记",
-                    description: "轻量级图片标记，支持文字、Emoji 与原图导出。",
-                    icon: "🖼️",
-                    url: "./image-editor/index.html",
-                    tags: ["IMAGE", "MARKUP"],
-                },
-                {
-                    id: "gif-search",
-                    title: "GIF Quest 搜索",
-                    description:
-                        "极速表情包搜索，Cyber Neon 风格，支持一键复制代码。",
-                    icon: "⚡",
-                    url: "./gif-search/index.html",
-                    tags: ["GIF", "TENOR"],
-                },
-                {
-                    id: "english-self-learner",
-                    title: "英语自学者",
-                    description:
-                        "基于交互式分词完形填空的英语自学系统，支持实时校验与复习。",
-                    icon: "🎓",
-                    url: "./english-self-learner/index.html",
-                    tags: ["EDU", "ENGLISH"],
-                },
-            ];
+    <script>
+        const tools = [
+            {
+                id: "json-formatter",
+                title: "JSON 格式化",
+                description:
+                    "快速美化、压缩 JSON 数据。支持字段折叠与语法高亮。",
+                icon: "📋",
+                url: "./json-formatter.html",
+                tags: ["JSON", "DEV"],
+            },
+            {
+                id: "qrcode-gen",
+                title: "二维码生成",
+                description: "将文本或 URL 快速转换为离线二维码图片。",
+                icon: "📱",
+                url: "./qrcode-gen.html",
+                tags: ["IMAGE", "UTILS"],
+            },
+            {
+                id: "url-parser",
+                title: "URL 解析器",
+                description: "深度解析 URL 参数与协议结构，开发者必备。",
+                icon: "🔗",
+                url: "./url-parser.html",
+                tags: ["URL", "DEV"],
+            },
+            {
+                id: "base64-codec",
+                title: "Base64 转换",
+                description: "支持文本与文件的离线 Base64 编解码。",
+                icon: "🔐",
+                url: "./base64-codec.html",
+                tags: ["CODEC", "FILE"],
+            },
+            {
+                id: "canvas-gif-maker",
+                title: "Canvas GIF 制作",
+                description: "基于画板的多图层 GIF 合成与导出。",
+                icon: "🎨",
+                url: "./canvas-gif-maker.html",
+                tags: ["IMAGE", "GIF"],
+            },
+            {
+                id: "canvas-drawing-board",
+                title: "在线画板",
+                description: "极简画板工具，支持撤销重做与多种笔触。",
+                icon: "✏️",
+                url: "./canvas-drawing-board.html",
+                tags: ["DRAW", "IMAGE"],
+            },
+            {
+                id: "markdown-to-wechat",
+                title: "公众号排版",
+                description: "Markdown 转公众号美化，支持多种极简主题。",
+                icon: "📝",
+                url: "./markdown-to-wechat.html",
+                tags: ["MARKDOWN", "WRITING"],
+            },
+            {
+                id: "resume-builder",
+                title: "简历构建器",
+                description: "Markdown 驱动的简历制作工具，离线 PDF 导出。",
+                icon: "📄",
+                url: "./resume-builder.html",
+                tags: ["JOB", "OFFICE"],
+            },
+            {
+                id: "image-mosaic",
+                title: "图片马赛克",
+                description: "四种风格的马赛克处理，完美保护隐私。",
+                icon: "🖌️",
+                url: "./image-mosaic.html",
+                tags: ["IMAGE", "PRIVACY"],
+            },
+            {
+                id: "excel-to-json",
+                title: "Excel 转 JSON",
+                description: "快速解析 Excel 文档并转换为可用的数据流。",
+                icon: "📊",
+                url: "./excel-to-json.html",
+                tags: ["EXCEL", "DATA"],
+            },
+            {
+                id: "epub-reader",
+                title: "EPUB 阅读器",
+                description: "本地电子书阅读，支持暗黑模式与进度记忆。",
+                icon: "📚",
+                url: "./epub-reader.html",
+                tags: ["BOOK", "READER"],
+            },
+            {
+                id: "excel-manager",
+                title: "Excel 在线编辑",
+                description:
+                    "功能完备的 Excel 管理，基于 IndexedDB 本地存档。",
+                icon: "📈",
+                url: "./excel-manager.html",
+                tags: ["EXCEL", "OFFICE"],
+            },
+            {
+                id: "url-text-compressor",
+                title: "URL 文本压缩",
+                description: "将长文本压缩并嵌入 URL，实现无限制分享。",
+                icon: "🗜️",
+                url: "./url-text-compressor.html",
+                tags: ["UTILS", "URL"],
+            },
+            {
+                id: "web-3d-animation",
+                title: "3D 动画预览",
+                description: "高性能 3D 模型渲染，支持关键帧动画导出。",
+                icon: "🎬",
+                url: "./web-3d-animation.html",
+                tags: ["3D", "THREEJS"],
+            },
+            {
+                id: "excel-to-word",
+                title: "Excel 转 Word",
+                description: "批量将表格数据填充至 Word 模板并打包导出。",
+                icon: "📃",
+                url: "./excel-to-word.html",
+                tags: ["EXCEL", "AUTO"],
+            },
+            {
+                id: "form-builder",
+                title: "动态表单构建",
+                description: "拖拽式表单配置，完整的本地数据收集闭环。",
+                icon: "📋",
+                url: "./form-builder.html",
+                tags: ["FORM", "DATA"],
+            },
+            {
+                id: "local-bookmark-manager",
+                title: "站点收藏管理",
+                description: "离线优先的书签管理，支持全文搜索与标签。",
+                icon: "🔖",
+                url: "./local-bookmark-manager/local-bookmark-manager.html",
+                tags: ["FAV", "UTILS"],
+            },
+            {
+                id: "github-md-editor",
+                title: "GitHub MD 编辑",
+                description: "直接与 GitHub 同步的 Markdown 专业级编辑器。",
+                icon: "🐙",
+                url: "./github-md-editor.html",
+                tags: ["GITHUB", "DEV"],
+            },
+            {
+                id: "image-editor",
+                title: "Image Mark 标记",
+                description: "轻量级图片标记，支持文字、Emoji 与原图导出。",
+                icon: "🖼️",
+                url: "./image-editor/index.html",
+                tags: ["IMAGE", "MARKUP"],
+            },
+            {
+                id: "gif-search",
+                title: "GIF Quest 搜索",
+                description:
+                    "极速表情包搜索，Cyber Neon 风格，支持一键复制代码。",
+                icon: "⚡",
+                url: "./gif-search/index.html",
+                tags: ["GIF", "TENOR"],
+            },
+            {
+                id: "english-self-learner",
+                title: "英语自学者",
+                description:
+                    "基于交互式分词完形填空的英语自学系统，支持实时校验与复习。",
+                icon: "🎓",
+                url: "./english-self-learner/index.html",
+                tags: ["EDU", "ENGLISH"],
+            },
+        ];
 
-            function renderTools(list) {
-                const container = document.getElementById("tools-container");
-                const noResults = document.getElementById("no-results");
-                container.innerHTML = "";
-                if (list.length === 0) {
-                    noResults.style.display = "block";
-                } else {
-                    noResults.style.display = "none";
-                    list.forEach((tool) => {
-                        const card = document.createElement("a");
-                        card.className = "tool-card";
-                        card.href = tool.url;
-                        card.innerHTML = `
+        function renderTools(list) {
+            const container = document.getElementById("tools-container");
+            const noResults = document.getElementById("no-results");
+            container.innerHTML = "";
+            if (list.length === 0) {
+                noResults.style.display = "block";
+            } else {
+                noResults.style.display = "none";
+                list.forEach((tool) => {
+                    const card = document.createElement("a");
+                    card.className = "tool-card";
+                    card.href = tool.url;
+                    card.innerHTML = `
             <div class="tool-header">
               <span class="tool-title">${tool.title}</span>
               <span class="tool-icon">${tool.icon}</span>
@@ -494,34 +547,35 @@
             <div class="tool-desc">${tool.description}</div>
             <div class="tool-tags">${tool.tags.map((t) => `<span class="tag">${t}</span>`).join("")}</div>
           `;
-                        container.appendChild(card);
-                    });
-                }
+                    container.appendChild(card);
+                });
             }
+        }
 
-            const searchInput = document.getElementById("search-input");
-            const searchSection = document.getElementById("search-section");
+        const searchInput = document.getElementById("search-input");
+        const searchSection = document.getElementById("search-section");
 
-            searchInput.addEventListener("input", (e) => {
-                const q = e.target.value.toLowerCase();
-                const filtered = tools.filter(
-                    (t) =>
-                        t.title.toLowerCase().includes(q) ||
-                        t.description.toLowerCase().includes(q) ||
-                        t.tags.some((tag) => tag.toLowerCase().includes(q)),
-                );
-                renderTools(filtered);
-            });
+        searchInput.addEventListener("input", (e) => {
+            const q = e.target.value.toLowerCase();
+            const filtered = tools.filter(
+                (t) =>
+                    t.title.toLowerCase().includes(q) ||
+                    t.description.toLowerCase().includes(q) ||
+                    t.tags.some((tag) => tag.toLowerCase().includes(q)),
+            );
+            renderTools(filtered);
+        });
 
-            window.addEventListener("scroll", () => {
-                if (window.scrollY > 100) {
-                    searchSection.classList.add("scrolled");
-                } else {
-                    searchSection.classList.remove("scrolled");
-                }
-            });
+        window.addEventListener("scroll", () => {
+            if (window.scrollY > 100) {
+                searchSection.classList.add("scrolled");
+            } else {
+                searchSection.classList.remove("scrolled");
+            }
+        });
 
-            renderTools(tools);
-        </script>
-    </body>
+        renderTools(tools);
+    </script>
+</body>
+
 </html>

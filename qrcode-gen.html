@@ -1,51 +1,135 @@
 <!-- 字符串转二维码单文件工具（原生HTML+qrious，无需构建，可直接用） -->
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>二维码生成器 - 支持下载/复制</title>
+  <title>二维码生成工具 | 隐私优先、离线生成</title>
+  <meta name="description" content="在线二维码生成工具，支持文本、URL 转换。纯本地 JavaScript 处理，不上传数据，保障隐私。生成后可直接保存为图片。" />
+  <meta name="keywords" content="二维码生成, 在线扫码, QRCode生成, 离线二维码" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "二维码生成工具",
+    "url": "https://www.hackerpot.online/qrcode-gen.html",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web"
+  }
+  </script>
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
   <style>
-    body { font-family: system-ui, Arial, sans-serif; margin:0; padding:24px 8px 12px 8px; background:#f7f8fa; }
-    h1 { font-size: 22px; margin-bottom: 10px; }
-    textarea {
-      width:100%; min-height:64px; font-size:15px; font-family:monospace;
-      border:1px solid #d5d8db; border-radius:7px; padding:10px; box-sizing:border-box;
-      margin-bottom:12px;
-      resize:vertical;
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0;
+      padding: 24px 8px 12px 8px;
+      background: #f7f8fa;
     }
-    .flex-row { display: flex; gap: 12px; align-items:center; margin-bottom:12px; }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 64px;
+      font-size: 15px;
+      font-family: monospace;
+      border: 1px solid #d5d8db;
+      border-radius: 7px;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+      resize: vertical;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
     button {
       font-size: 16px;
       min-width: 88px;
       min-height: 44px;
-      margin-right:4px;
+      margin-right: 4px;
       background: #105cff;
       color: #fff;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      transition:background 0.17s;
+      transition: background 0.17s;
     }
-    button:active { background:#06396c; }
-    .btn-copy, .btn-dl { background:#03a772; }
-    .btn-copy:active, .btn-dl:active { background:#055c3b; }
+
+    button:active {
+      background: #06396c;
+    }
+
+    .btn-copy,
+    .btn-dl {
+      background: #03a772;
+    }
+
+    .btn-copy:active,
+    .btn-dl:active {
+      background: #055c3b;
+    }
+
     .qr-preview {
-      background:#fff; border-radius:7px; box-shadow:0 1px 7px #0001; padding:18px; display:inline-block;
-      margin-bottom:12px;
+      background: #fff;
+      border-radius: 7px;
+      box-shadow: 0 1px 7px #0001;
+      padding: 18px;
+      display: inline-block;
+      margin-bottom: 12px;
     }
-    .hide { display:none; }
-    #error-msg { color:#c42b2b; background:#fff1f1; border:1px solid #f2acac; border-radius:5px; padding:5px 10px; margin:0 0 8px 0; }
-    .debug-panel { border:1px dashed #bababa; margin:7px 0 0 0; background:#fcfcfd; padding:7px 10px; font-size:13px; }
+
+    .hide {
+      display: none;
+    }
+
+    #error-msg {
+      color: #c42b2b;
+      background: #fff1f1;
+      border: 1px solid #f2acac;
+      border-radius: 5px;
+      padding: 5px 10px;
+      margin: 0 0 8px 0;
+    }
+
+    .debug-panel {
+      border: 1px dashed #bababa;
+      margin: 7px 0 0 0;
+      background: #fcfcfd;
+      padding: 7px 10px;
+      font-size: 13px;
+    }
+
     @media (max-width:600px) {
-      button{ min-width:44px;font-size:15px; }
-      textarea{font-size:14px}
-      .qr-preview{padding:8px;}
+      button {
+        min-width: 44px;
+        font-size: 15px;
+      }
+
+      textarea {
+        font-size: 14px
+      }
+
+      .qr-preview {
+        padding: 8px;
+      }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js" onerror="alert('依赖加载失败，请检查CDN链接')"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"
+    onerror="alert('依赖加载失败，请检查CDN链接')"></script>
 </head>
+
 <body>
   <h1>二维码生成工具</h1>
   <textarea id="input" placeholder="请输入待编码字符串（支持URL/文本）"></textarea>
@@ -84,28 +168,28 @@
         return;
       }
       try {
-        if (!qr) qr = new QRious({element: qrCanvas, size: 224});
-        qr.set({value:str, size:224, background: 'white', foreground:'#222'});
+        if (!qr) qr = new QRious({ element: qrCanvas, size: 224 });
+        qr.set({ value: str, size: 224, background: 'white', foreground: '#222' });
         qrWrap.classList.remove('hide');
-        debugPanel.innerText = debugToggle.checked ? 'base64:' + qr.toDataURL('image/png').slice(0,110)+'...\n文本:' + str : '';
-      } catch(e) {
-        errorMsg.textContent = '二维码生成失败：'+e.message;
+        debugPanel.innerText = debugToggle.checked ? 'base64:' + qr.toDataURL('image/png').slice(0, 110) + '...\n文本:' + str : '';
+      } catch (e) {
+        errorMsg.textContent = '二维码生成失败：' + e.message;
         errorMsg.classList.remove('hide');
         qrWrap.classList.add('hide');
-        debugPanel.innerText = debugToggle.checked ? '异常：'+e.message+'\n原文:'+str : '';
+        debugPanel.innerText = debugToggle.checked ? '异常：' + e.message + '\n原文:' + str : '';
       }
     }
     genBtn.onclick = renderQR;
     // 快捷键 Ctrl+Enter
-    input.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();renderQR();}});
+    input.addEventListener('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); renderQR(); } });
     // 复制二维码到剪贴板
-    copyBtn.onclick = function() {
+    copyBtn.onclick = function () {
       if (qr && qrCanvas) {
-        qrCanvas.toBlob(function(blob) {
-          const item = new ClipboardItem({'image/png': blob});
-          navigator.clipboard.write([item]).then(function(){
-            copyBtn.textContent='已复制!';setTimeout(()=>copyBtn.textContent='复制二维码',1100);
-          },function(){
+        qrCanvas.toBlob(function (blob) {
+          const item = new ClipboardItem({ 'image/png': blob });
+          navigator.clipboard.write([item]).then(function () {
+            copyBtn.textContent = '已复制!'; setTimeout(() => copyBtn.textContent = '复制二维码', 1100);
+          }, function () {
             alert('复制失败，建议手动保存。');
           });
         });
@@ -114,8 +198,8 @@
       }
     };
     // 下载二维码图片
-    dlBtn.onclick = function() {
-      if(qr&&qrCanvas) {
+    dlBtn.onclick = function () {
+      if (qr && qrCanvas) {
         const url = qrCanvas.toDataURL("image/png");
         const a = document.createElement('a');
         a.href = url;
@@ -128,17 +212,18 @@
       }
     };
     // 调试面板
-    debugToggle.onchange = function(){
+    debugToggle.onchange = function () {
       debugPanel.style.display = debugToggle.checked ? '' : 'none';
       if (qr && qrCanvas && debugToggle.checked) {
-        debugPanel.innerText = 'base64:' + qr.toDataURL('image/png').slice(0,110)+'...\n文本:' + getStr();
+        debugPanel.innerText = 'base64:' + qr.toDataURL('image/png').slice(0, 110) + '...\n文本:' + getStr();
       }
     };
     // 支持url参数自动生成
-    window.onload = function(){
+    window.onload = function () {
       const params = new URLSearchParams(location.search);
-      if(params.get('str')){
-        try{const val=decodeURIComponent(params.get('str'));input.value=val;renderQR();}catch{}}
+      if (params.get('str')) {
+        try { const val = decodeURIComponent(params.get('str')); input.value = val; renderQR(); } catch { }
+      }
     };
   </script>
   <!--
@@ -148,4 +233,5 @@
     最后修改：2025-12-19
   -->
 </body>
+
 </html>
