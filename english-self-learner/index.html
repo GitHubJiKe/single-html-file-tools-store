@@ -286,6 +286,16 @@
                     if (saved) {
                         try {
                             this.sentences = JSON.parse(saved);
+
+                            // Load progress
+                            const savedIndex = localStorage.getItem("english-learner-progress");
+                            if (savedIndex !== null) {
+                                const index = parseInt(savedIndex);
+                                if (index >= 0 && index < this.sentences.length) {
+                                    this.currentIndex = index;
+                                }
+                            }
+
                             this.initSentence();
                         } catch (e) {
                             console.error("Failed to parse saved data", e);
@@ -394,6 +404,7 @@
                 nextSentence() {
                     if (this.currentIndex < this.sentences.length - 1) {
                         this.currentIndex++;
+                        localStorage.setItem("english-learner-progress", this.currentIndex);
                         this.initSentence();
                         this.showCountdown = false;
                         clearInterval(this.countdownTimer);
@@ -422,6 +433,7 @@
                 prevSentence() {
                     if (this.currentIndex > 0) {
                         this.currentIndex--;
+                        localStorage.setItem("english-learner-progress", this.currentIndex);
                         this.initSentence();
                     }
                 },
@@ -432,6 +444,7 @@
                         if (Array.isArray(data)) {
                             this.sentences = data;
                             this.currentIndex = 0;
+                            localStorage.setItem("english-learner-progress", 0);
                             localStorage.setItem(
                                 "english-learner-data",
                                 JSON.stringify(data),
