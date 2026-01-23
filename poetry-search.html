@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>古诗词检索 | 纸墨之间</title>
+        <!-- Google Fonts: Noto Serif SC -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css"
+            rel="stylesheet"
+            type="text/css"
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script
+            defer
+            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+        ></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            ivory: "#FDFBF7",
+                            ink: "#1A1A1A",
+                            cinnabar: "#991B1B",
+                            parchment: "#E5E2D9",
+                        },
+                        fontFamily: {
+                            serif: ['"Noto Serif SC"', "serif"],
+                        },
+                    },
+                },
+            };
+        </script>
+        <style>
+            [x-cloak] {
+                display: none !important;
+            }
+            body {
+                background-color: #fdfbf7; /* ivory */
+                color: #1a1a1a; /* ink */
+                font-family: "Noto Serif SC", serif;
+            }
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 4px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #e5e2d9;
+                border-radius: 10px;
+            }
+            .poem-content {
+                line-height: 2.2;
+                letter-spacing: 0.1em;
+            }
+        </style>
+    </head>
+    <body
+        class="min-h-screen flex flex-col p-6 md:p-12 selection:bg-cinnabar selection:text-white"
+    >
+        <div
+            x-data="poetryApp"
+            class="max-w-4xl mx-auto w-full flex-grow flex flex-col"
+            x-cloak
+        >
+            <!-- Header -->
+            <header
+                class="flex flex-col md:flex-row justify-between items-center mb-12 gap-8"
+            >
+                <div class="text-center md:text-left">
+                    <h1
+                        class="text-4xl md:text-5xl font-black mb-2 tracking-tighter"
+                    >
+                        纸墨之间。
+                    </h1>
+                    <p
+                        class="text-parchment font-bold text-sm tracking-[0.3em] uppercase"
+                    >
+                        Between Ink and Paper
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="relative group">
+                        <input
+                            type="text"
+                            x-model="searchQuery"
+                            placeholder="检索：题、人、句..."
+                            class="bg-transparent border-b-2 border-ink py-2 px-1 focus:outline-none focus:border-cinnabar transition-colors w-48 md:w-64 placeholder:text-parchment"
+                        />
+                        <div
+                            class="absolute bottom-0 left-0 h-[2px] w-0 bg-cinnabar group-hover:w-full transition-all duration-300"
+                        ></div>
+                    </div>
+                    <button
+                        @click="showFavorites = !showFavorites"
+                        class="btn btn-ghost btn-circle"
+                        :class="showFavorites ? 'text-cinnabar' : 'text-ink'"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                            />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main
+                class="flex-grow flex flex-col md:flex-row gap-12 overflow-hidden"
+            >
+                <!-- List View -->
+                <section
+                    x-show="!viewingPoem"
+                    class="flex-grow overflow-y-auto custom-scrollbar pr-4 space-y-4"
+                    x-transition
+                >
+                    <div class="flex flex-wrap gap-2 mb-8">
+                        <template x-for="tag in availableTags">
+                            <button
+                                @click="searchQuery = (searchQuery === tag ? '' : tag)"
+                                class="px-3 py-1 text-xs border rounded-full transition-all"
+                                :class="searchQuery === tag ? 'bg-ink text-ivory border-ink' : 'border-parchment text-parchment hover:border-ink hover:text-ink'"
+                                x-text="tag"
+                            ></button>
+                        </template>
+                    </div>
+
+                    <template x-for="poem in filteredPoems" :key="poem.id">
+                        <div
+                            @click="openPoem(poem)"
+                            class="border-b border-parchment/30 pb-4 group cursor-pointer hover:border-cinnabar transition-colors"
+                        >
+                            <div
+                                class="flex justify-between items-baseline mb-1"
+                            >
+                                <h3
+                                    class="text-xl font-bold group-hover:text-cinnabar transition-colors"
+                                    x-text="poem.title"
+                                ></h3>
+                                <span
+                                    class="text-xs text-parchment font-bold"
+                                    x-text="poem.author + ' · ' + poem.dynasty"
+                                ></span>
+                            </div>
+                            <p
+                                class="text-sm text-parchment line-clamp-1 italic"
+                                x-text="poem.content[0]"
+                            ></p>
+                        </div>
+                    </template>
+
+                    <div
+                        x-show="filteredPoems.length === 0"
+                        class="text-center py-20 opacity-30"
+                    >
+                        <p class="text-2xl">无觅处</p>
+                        <p class="text-sm">Not found in this universe</p>
+                    </div>
+                </section>
+
+                <!-- Detail View -->
+                <section
+                    x-show="viewingPoem"
+                    class="flex-grow flex flex-col items-center justify-center p-4 md:p-8"
+                    x-transition:enter="transition ease-out duration-500"
+                    x-transition:enter-start="opacity-0 translate-y-8"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                >
+                    <div class="w-full max-w-2xl text-center space-y-12">
+                        <div class="space-y-4">
+                            <button
+                                @click="viewingPoem = null"
+                                class="text-parchment hover:text-ink flex items-center gap-2 mx-auto text-sm transition-colors mb-8"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                                    />
+                                </svg>
+                                <span>归去</span>
+                            </button>
+                            <h2
+                                class="text-4xl md:text-5xl font-black text-ink"
+                                x-text="viewingPoem?.title"
+                            ></h2>
+                        </div>
+
+                        <div
+                            class="flex items-center justify-center gap-4 text-parchment font-bold"
+                        >
+                            <span class="border-t border-parchment w-8"></span>
+                            <span x-text="viewingPoem?.dynasty"></span>
+                            <span x-text="viewingPoem?.author"></span>
+                            <span class="border-t border-parchment w-8"></span>
+                        </div>
+
+                        <div
+                            class="poem-content text-xl md:text-2xl text-ink font-medium leading-relaxed md:leading-loose whitespace-pre-wrap"
+                        >
+                            <template x-for="line in viewingPoem?.content">
+                                <p x-text="line" class="mb-4"></p>
+                            </template>
+                        </div>
+
+                        <div class="pt-12 flex justify-center gap-8">
+                            <button
+                                @click="toggleFavorite(viewingPoem)"
+                                class="flex flex-col items-center gap-2 group"
+                                :class="isFavorite(viewingPoem?.id) ? 'text-cinnabar' : 'text-parchment'"
+                            >
+                                <div
+                                    class="w-12 h-12 rounded-full border border-current flex items-center justify-center group-hover:bg-current group-hover:bg-opacity-5 transition-all"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="h-6 w-6"
+                                        :fill="isFavorite(viewingPoem?.id) ? 'currentColor' : 'none'"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                        />
+                                    </svg>
+                                </div>
+                                <span
+                                    class="text-xs uppercase tracking-widest font-bold"
+                                    x-text="isFavorite(viewingPoem?.id) ? '已藏' : '收藏'"
+                                ></span>
+                            </button>
+
+                            <button
+                                @click="copyPoem(viewingPoem)"
+                                class="flex flex-col items-center gap-2 group text-parchment"
+                            >
+                                <div
+                                    class="w-12 h-12 rounded-full border border-current flex items-center justify-center group-hover:bg-current group-hover:bg-opacity-5 transition-all"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="h-6 w-6"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                        />
+                                    </svg>
+                                </div>
+                                <span
+                                    class="text-xs uppercase tracking-widest font-bold"
+                                    >复制</span
+                                >
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Footer -->
+            <footer
+                class="mt-12 py-6 border-t border-parchment/20 text-center text-[10px] text-parchment font-bold tracking-[0.5em] uppercase"
+            >
+                汲取千年风雅 · 藏于此方墨间
+            </footer>
+
+            <!-- Toast -->
+            <div class="toast toast-bottom toast-center z-50">
+                <template x-for="msg in toasts" :key="msg.id">
+                    <div
+                        class="alert bg-ink text-ivory border-none rounded-none shadow-2xl py-2 px-6"
+                    >
+                        <span
+                            x-text="msg.text"
+                            class="text-xs tracking-widest"
+                        ></span>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("alpine:init", () => {
+                Alpine.data("poetryApp", () => ({
+                    searchQuery: "",
+                    viewingPoem: null,
+                    showFavorites: false,
+                    favorites: JSON.parse(
+                        localStorage.getItem("poetry_favs") || "[]",
+                    ),
+                    toasts: [],
+                    availableTags: [
+                        "唐诗",
+                        "宋词",
+                        "诗经",
+                        "李白",
+                        "苏轼",
+                        "豪放",
+                        "婉约",
+                    ],
+                    poems: [
+                        {
+                            id: 1,
+                            title: "将进酒",
+                            author: "李白",
+                            dynasty: "唐",
+                            tags: ["唐诗", "李白", "豪放"],
+                            content: [
+                                "君不见，黄河之水天上来，奔流到海不复回。",
+                                "君不见，高堂明镜悲白发，朝如青丝暮成雪。",
+                                "人生得意须尽欢，莫使金樽空对月。",
+                                "天生我材必有用，千金散尽还复来。",
+                            ],
+                        },
+                        {
+                            id: 2,
+                            title: "定风波",
+                            author: "苏轼",
+                            dynasty: "宋",
+                            tags: ["宋词", "苏轼", "豪放"],
+                            content: [
+                                "莫听穿林打叶声，何妨吟啸且徐行。",
+                                "竹杖芒鞋轻胜马，谁怕？",
+                                "一蓑烟雨任平生。",
+                                "料峭春风吹酒醒，微冷，山头斜照却相迎。",
+                                "回首向来萧瑟处，归去，也无风雨也无晴。",
+                            ],
+                        },
+                        {
+                            id: 3,
+                            title: "关雎",
+                            author: "佚名",
+                            dynasty: "先秦",
+                            tags: ["诗经"],
+                            content: [
+                                "关关雎鸠，在河之洲。",
+                                "窈窕淑女，君子好逑。",
+                                "参差荇菜，左右流之。",
+                                "窈窕淑女，寤寐求之。",
+                            ],
+                        },
+                        {
+                            id: 4,
+                            title: "静夜思",
+                            author: "李白",
+                            dynasty: "唐",
+                            tags: ["唐诗", "李白"],
+                            content: [
+                                "床前明月光，疑是地上霜。",
+                                "举头望明月，低头思故乡。",
+                            ],
+                        },
+                        {
+                            id: 5,
+                            title: "虞美人",
+                            author: "李煜",
+                            dynasty: "五代",
+                            tags: ["婉约"],
+                            content: [
+                                "春花秋月何时了？往事知多少。",
+                                "小楼昨夜又东风，故国不堪回首月明中。",
+                                "雕栏玉砌应犹在，只是朱颜改。",
+                                "问君能有几多愁？恰似一江春水向东流。",
+                            ],
+                        },
+                        {
+                            id: 6,
+                            title: "青玉案·元夕",
+                            author: "辛弃疾",
+                            dynasty: "宋",
+                            tags: ["宋词", "豪放"],
+                            content: [
+                                "东风夜放花千树，更吹落、星如雨。",
+                                "宝马雕车香满路。",
+                                "凤箫声动，玉壶光转，一夜鱼龙舞。",
+                                "蛾儿雪柳黄金缕，笑语盈盈暗香去。",
+                                "众里寻他千百度，蓦然回首，那人却在，灯火阑珊处。",
+                            ],
+                        },
+                        {
+                            id: 7,
+                            title: "望庐山瀑布",
+                            author: "李白",
+                            dynasty: "唐",
+                            tags: ["唐诗", "李白"],
+                            content: [
+                                "日照香炉生紫烟，遥看瀑布挂前川。",
+                                "飞流直下三千尺，疑是银河落九天。",
+                            ],
+                        },
+                        {
+                            id: 8,
+                            title: "水调歌头",
+                            author: "苏轼",
+                            dynasty: "宋",
+                            tags: ["宋词", "苏轼"],
+                            content: [
+                                "明月几时有？把酒问青天。",
+                                "不知天上宫阙，今夕是何年。",
+                                "我欲乘风归去，又恐琼楼玉宇，高处不胜寒。",
+                                "起舞弄清影，何似在人间。",
+                            ],
+                        },
+                        {
+                            id: 9,
+                            title: "锦瑟",
+                            author: "李商隐",
+                            dynasty: "唐",
+                            tags: ["唐诗"],
+                            content: [
+                                "锦瑟无端五十弦，一弦一柱思华年。",
+                                "庄生晓梦迷蝴蝶，望帝春心托杜鹃。",
+                                "沧海月明珠有泪，蓝田日暖玉生烟。",
+                                "此情可待成追忆？只是当时已惘然。",
+                            ],
+                        },
+                    ],
+
+                    get filteredPoems() {
+                        let results = this.showFavorites
+                            ? this.poems.filter((p) =>
+                                  this.favorites.includes(p.id),
+                              )
+                            : this.poems;
+
+                        if (this.searchQuery) {
+                            const q = this.searchQuery.toLowerCase();
+                            results = results.filter(
+                                (p) =>
+                                    p.title.includes(q) ||
+                                    p.author.includes(q) ||
+                                    p.dynasty.includes(q) ||
+                                    p.content.some((l) => l.includes(q)) ||
+                                    p.tags.some((t) => t.includes(q)),
+                            );
+                        }
+                        return results;
+                    },
+
+                    openPoem(poem) {
+                        this.viewingPoem = poem;
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                    },
+
+                    toggleFavorite(poem) {
+                        if (this.isFavorite(poem.id)) {
+                            this.favorites = this.favorites.filter(
+                                (id) => id !== poem.id,
+                            );
+                            this.showToast("已移出珍藏");
+                        } else {
+                            this.favorites.push(poem.id);
+                            this.showToast("已入卷珍藏");
+                        }
+                        localStorage.setItem(
+                            "poetry_favs",
+                            JSON.stringify(this.favorites),
+                        );
+                    },
+
+                    isFavorite(id) {
+                        return this.favorites.includes(id);
+                    },
+
+                    copyPoem(poem) {
+                        const text = `${poem.title}\n[${poem.dynasty}] ${poem.author}\n\n${poem.content.join("\n")}`;
+                        navigator.clipboard.writeText(text).then(() => {
+                            this.showToast("诗文已拓印");
+                        });
+                    },
+
+                    showToast(text) {
+                        const id = Date.now();
+                        this.toasts.push({ id, text });
+                        setTimeout(() => {
+                            this.toasts = this.toasts.filter(
+                                (t) => t.id !== id,
+                            );
+                        }, 2000);
+                    },
+                }));
+            });
+        </script>
+    </body>
+</html>
